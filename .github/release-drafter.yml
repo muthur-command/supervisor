@@ -1,5 +1,6 @@
 change-template: "- #$NUMBER $TITLE @$AUTHOR"
 sort-direction: ascending
+filter-by-commitish: false
 
 categories:
   - title: ":boom: Breaking Changes"

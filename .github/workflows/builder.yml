@@ -219,7 +219,7 @@ jobs:
   version:
     name: Update version
     if: github.repository_owner == 'muthur-command'
-    needs: ["init", "run_supervisor"]
+    needs: ["init", "build"]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout the repository
