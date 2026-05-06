@@ -17,9 +17,9 @@ from ..dbus.udisks2.drive import UDisks2Drive
 from ..exceptions import (
     DBusError,
     DBusObjectError,
-    HassOSDataDiskError,
-    HassOSError,
-    HassOSJobError,
+    McosDataDiskError,
+    McosError,
+    McosJobError,
     HostError,
 )
 from ..jobs.const import JobConcurrency, JobCondition
@@ -204,8 +204,8 @@ class DataDisk(CoreSysAttributes):
 
     @Job(
         name="data_disk_migrate",
-        conditions=[JobCondition.HAOS, JobCondition.OS_AGENT, JobCondition.HEALTHY],
-        on_condition=HassOSJobError,
+        conditions=[JobCondition.MCOS, JobCondition.OS_AGENT, JobCondition.HEALTHY],
+        on_condition=McosJobError,
         concurrency=JobConcurrency.REJECT,
     )
     async def migrate_disk(self, new_disk: str) -> None:
@@ -219,7 +219,7 @@ class DataDisk(CoreSysAttributes):
             if disk.id == new_disk or disk.device_path.as_posix() == new_disk
         ]
         if len(target_disk) != 1:
-            raise HassOSDataDiskError(
+            raise McosDataDiskError(
                 f"'{new_disk}' not a valid data disk target!", _LOGGER.error
             ) from None
 
@@ -235,7 +235,7 @@ class DataDisk(CoreSysAttributes):
                 and block.drive != target_disk[0].object_path
             ]
         ):
-            raise HassOSDataDiskError(
+            raise McosDataDiskError(
                 f"Partition(s) {', '.join([conflict.device.as_posix() for conflict in conflicts])} have name 'hassos-data-external' which prevents migration. Remove or rename them first.",
                 _LOGGER.error,
             )
@@ -247,7 +247,7 @@ class DataDisk(CoreSysAttributes):
                     target_disk[0].device_path
                 )
             except DBusError as err:
-                raise HassOSDataDiskError(
+                raise McosDataDiskError(
                     f"Can't move data partition to {new_disk!s}: {err!s}", _LOGGER.error
                 ) from err
         else:
@@ -272,7 +272,7 @@ class DataDisk(CoreSysAttributes):
                         PARTITION_NAME_OLD_EXTERNAL_DATA_DISK
                     )
                 except DBusError as err:
-                    raise HassOSDataDiskError(
+                    raise McosDataDiskError(
                         f"Could not rename existing external data disk to prevent name conflict: {err!s}",
                         _LOGGER.error,
                     ) from err
@@ -280,7 +280,7 @@ class DataDisk(CoreSysAttributes):
             partition = await self._format_device_with_single_partition(target_disk[0])
 
             if current_block and current_block.size > partition.size:
-                raise HassOSDataDiskError(
+                raise McosDataDiskError(
                     f"Cannot use {new_disk} as data disk as it is smaller then the current one (new: {partition.size}, current: {current_block.size})",
                     _LOGGER.error,
                 )
@@ -288,7 +288,7 @@ class DataDisk(CoreSysAttributes):
             try:
                 await self.sys_dbus.agent.datadisk.mark_data_move()
             except DBusError as err:
-                raise HassOSDataDiskError(
+                raise McosDataDiskError(
                     f"Unable to create data disk migration marker: {err!s}",
                     _LOGGER.error,
                 ) from err
@@ -297,15 +297,15 @@ class DataDisk(CoreSysAttributes):
         try:
             await self.sys_host.control.reboot()
         except HostError as err:
-            raise HassOSError(
+            raise McosError(
                 f"Can't restart device to finish disk migration: {err!s}",
                 _LOGGER.warning,
             ) from err
 
     @Job(
         name="data_disk_wipe",
-        conditions=[JobCondition.HAOS, JobCondition.OS_AGENT, JobCondition.HEALTHY],
-        on_condition=HassOSJobError,
+        conditions=[JobCondition.MCOS, JobCondition.OS_AGENT, JobCondition.HEALTHY],
+        on_condition=McosJobError,
         concurrency=JobConcurrency.REJECT,
     )
     async def wipe_disk(self) -> None:
@@ -313,12 +313,12 @@ class DataDisk(CoreSysAttributes):
         _LOGGER.info("Scheduling wipe of data disk on next reboot")
         try:
             if not await self.sys_dbus.agent.system.schedule_wipe_device():
-                raise HassOSDataDiskError(
+                raise McosDataDiskError(
                     "Can't schedule wipe of data disk, check host logs for details",
                     _LOGGER.error,
                 )
         except DBusError as err:
-            raise HassOSDataDiskError(
+            raise McosDataDiskError(
                 f"Can't schedule wipe of data disk: {err!s}", _LOGGER.error
             ) from err
 
@@ -326,7 +326,7 @@ class DataDisk(CoreSysAttributes):
         try:
             await self.sys_host.control.reboot()
         except (HostError, DBusError) as err:
-            raise HassOSError(
+            raise McosError(
                 f"Can't restart device to finish data disk wipe: {err!s}",
                 _LOGGER.warning,
             ) from err
@@ -343,13 +343,13 @@ class DataDisk(CoreSysAttributes):
             await block_device.format(FormatType.GPT)
         except DBusError as err:
             await async_capture_exception(err)
-            raise HassOSDataDiskError(
+            raise McosDataDiskError(
                 f"Could not format {new_disk.id}: {err!s}", _LOGGER.error
             ) from err
 
         await block_device.check_type()
         if not block_device.partition_table:
-            raise HassOSDataDiskError(
+            raise McosDataDiskError(
                 "Block device does not contain a partition table after format, cannot create data partition",
                 _LOGGER.error,
             )
@@ -360,7 +360,7 @@ class DataDisk(CoreSysAttributes):
             )
         except DBusError as err:
             await async_capture_exception(err)
-            raise HassOSDataDiskError(
+            raise McosDataDiskError(
                 f"Could not create new data partition: {err!s}", _LOGGER.error
             ) from err
 
@@ -369,7 +369,7 @@ class DataDisk(CoreSysAttributes):
                 partition, self.sys_dbus.connected_bus, sync_properties=False
             )
         except DBusError as err:
-            raise HassOSDataDiskError(
+            raise McosDataDiskError(
                 f"New data partition at {partition} is missing or unusable",
                 _LOGGER.error,
             ) from err

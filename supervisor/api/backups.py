@@ -17,7 +17,7 @@ from voluptuous.humanize import humanize_error
 
 from ..backups.backup import Backup
 from ..backups.const import LOCATION_CLOUD_BACKUP, LOCATION_TYPE
-from ..backups.validate import ALL_FOLDERS, FOLDER_HOMEASSISTANT, days_until_stale
+from ..backups.validate import ALL_FOLDERS, FOLDER_MUTHURCOMMAND, days_until_stale
 from ..const import (
     ATTR_ADDONS,
     ATTR_BACKUPS,
@@ -28,10 +28,10 @@ from ..const import (
     ATTR_EXTRA,
     ATTR_FILENAME,
     ATTR_FOLDERS,
-    ATTR_HOMEASSISTANT,
-    ATTR_HOMEASSISTANT_EXCLUDE_DATABASE,
     ATTR_JOB_ID,
     ATTR_LOCATION,
+    ATTR_MUTHURCOMMAND,
+    ATTR_MUTHURCOMMAND_EXCLUDE_DATABASE,
     ATTR_NAME,
     ATTR_PASSWORD,
     ATTR_PROTECTED,
@@ -69,7 +69,7 @@ RE_BACKUP_FILENAME = re.compile(r"^[^\\\/]+\.tar$")
 
 # Backwards compatible
 # Remove: 2022.08
-_ALL_FOLDERS = ALL_FOLDERS + [FOLDER_HOMEASSISTANT]
+_ALL_FOLDERS = ALL_FOLDERS + [FOLDER_MUTHURCOMMAND]
 
 
 def _ensure_list(item: Any) -> list:
@@ -101,7 +101,7 @@ SCHEMA_RESTORE_FULL = vol.Schema(
 
 SCHEMA_RESTORE_PARTIAL = SCHEMA_RESTORE_FULL.extend(
     {
-        vol.Optional(ATTR_HOMEASSISTANT): vol.Boolean(),
+        vol.Optional(ATTR_MUTHURCOMMAND): vol.Boolean(),
         vol.Optional(ATTR_ADDONS): vol.All([str], vol.Unique()),
         vol.Optional(ATTR_FOLDERS): SCHEMA_FOLDERS,
     }
@@ -114,7 +114,7 @@ SCHEMA_BACKUP_FULL = vol.Schema(
         vol.Optional(ATTR_PASSWORD): vol.Maybe(str),
         vol.Optional(ATTR_COMPRESSED): vol.Maybe(vol.Boolean()),
         vol.Optional(ATTR_LOCATION): SCHEMA_LOCATION_LIST,
-        vol.Optional(ATTR_HOMEASSISTANT_EXCLUDE_DATABASE): vol.Boolean(),
+        vol.Optional(ATTR_MUTHURCOMMAND_EXCLUDE_DATABASE): vol.Boolean(),
         vol.Optional(ATTR_BACKGROUND, default=False): vol.Boolean(),
         vol.Optional(ATTR_EXTRA): dict,
     }
@@ -126,7 +126,7 @@ SCHEMA_BACKUP_PARTIAL = SCHEMA_BACKUP_FULL.extend(
             ALL_ADDONS_FLAG, vol.All([str], vol.Unique())
         ),
         vol.Optional(ATTR_FOLDERS): SCHEMA_FOLDERS,
-        vol.Optional(ATTR_HOMEASSISTANT): vol.Boolean(),
+        vol.Optional(ATTR_MUTHURCOMMAND): vol.Boolean(),
     }
 )
 
@@ -171,7 +171,7 @@ class APIBackups(CoreSysAttributes):
                 ATTR_LOCATION_ATTRIBUTES: self._make_location_attributes(backup),
                 ATTR_COMPRESSED: backup.compressed,
                 ATTR_CONTENT: {
-                    ATTR_HOMEASSISTANT: backup.homeassistant_version is not None,
+                    ATTR_MUTHURCOMMAND: backup.muthurcommand_version is not None,
                     ATTR_ADDONS: backup.addon_list,
                     ATTR_FOLDERS: backup.folders,
                 },
@@ -242,13 +242,13 @@ class APIBackups(CoreSysAttributes):
             ATTR_PROTECTED: backup.protected,
             ATTR_LOCATION_ATTRIBUTES: self._make_location_attributes(backup),
             ATTR_SUPERVISOR_VERSION: backup.supervisor_version,
-            ATTR_HOMEASSISTANT: backup.homeassistant_version,
+            ATTR_MUTHURCOMMAND: backup.muthurcommand_version,
             ATTR_LOCATION: backup.location,
             ATTR_LOCATIONS: backup.locations,
             ATTR_ADDONS: data_addons,
             ATTR_REPOSITORIES: backup.repositories,
             ATTR_FOLDERS: backup.folders,
-            ATTR_HOMEASSISTANT_EXCLUDE_DATABASE: backup.homeassistant_exclude_database,
+            ATTR_MUTHURCOMMAND_EXCLUDE_DATABASE: backup.muthurcommand_exclude_database,
             ATTR_EXTRA: backup.extra,
         }
 
@@ -278,7 +278,7 @@ class APIBackups(CoreSysAttributes):
             location = [location]
         if (
             LOCATION_CLOUD_BACKUP in location
-            and request.get(REQUEST_FROM) != self.sys_homeassistant
+            and request.get(REQUEST_FROM) != self.sys_muthurcommand
         ):
             raise APIForbidden(
                 f"Location {LOCATION_CLOUD_BACKUP} is only available for Home Assistant"

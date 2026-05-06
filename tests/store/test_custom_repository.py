@@ -202,7 +202,7 @@ async def test_preinstall_valid_repository(
         def validate():
             assert store_manager.get("core").validate()
             assert store_manager.get("local").validate()
-            assert store_manager.get("a0d7b954").validate()
+            assert store_manager.get("170b4e4c").validate()
             assert store_manager.get("5c53de3b").validate()
             assert store_manager.get("d5369777").validate()
 
@@ -353,8 +353,6 @@ async def test_repositories_loaded_ignore_updates(
 
     assert len(coresys.resolution.issues) == 0
     assert (
-        "https://github.com/hassio-addons/repository" in coresys.store.repository_urls
-    )
-    assert (
-        "https://github.com/hassio-addons/repository" in coresys.store.repository_urls
+        "https://github.com/mcio-addons/addons-repository"
+        in coresys.store.repository_urls
     )

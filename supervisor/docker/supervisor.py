@@ -68,7 +68,7 @@ class DockerSupervisor(DockerInterface):
             return
 
         # Attach to network
-        _LOGGER.info("Connecting Supervisor to hassio-network")
+        _LOGGER.info("Connecting Supervisor to mcio-network")
         await self.sys_docker.network.attach_container(
             docker_container.id,
             self.name,

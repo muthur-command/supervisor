@@ -1,7 +1,7 @@
 {
   "channel": "stable",
   "supervisor": "2024.10.0",
-  "homeassistant": {
+  "muthurcommand": {
     "default": "2024.10.4",
     "qemux86": "2024.10.4",
     "qemux86-64": "2024.10.4",
@@ -26,7 +26,7 @@
     "odroid-n2": "2024.10.4",
     "odroid-xu": "2024.10.4"
   },
-  "hassos": {
+  "mcos": {
     "ova": "13.2",
     "rpi3-64": "13.2",
     "rpi4-64": "13.2",
@@ -42,7 +42,7 @@
     "generic-aarch64": "13.2",
     "khadas-vim3": "13.2"
   },
-  "hassos-upgrade": {
+  "mcos_upgrade": {
     "11": "11.5",
     "10": "10.5",
     "9": "9.5",
@@ -53,28 +53,36 @@
     "4": "4.20",
     "3": "3.13"
   },
-  "ota": "https://os-artifacts.home-assistant.io/{version}/{os_name}_{board}-{version}.raucb",
+  "ota": "https://os-artifacts.muthur-command.com/{version}/{os_name}_{board}-{version}.raucb",
   "cli": "2024.09.0",
   "dns": "2024.04.0",
   "audio": "2023.12.0",
   "multicast": "2024.03.0",
   "observer": "2023.06.0",
+  "mc_bd": "0.1.0",
+  "mc_fd": "0.1.0",
+  "postgresql": "16.3",
+  "redis": "7.2.4",
   "image": {
-    "core": "homeassistant/{machine}-homeassistant",
-    "supervisor": "homeassistant/{arch}-hassio-supervisor",
-    "cli": "homeassistant/{arch}-hassio-cli",
-    "audio": "homeassistant/{arch}-hassio-audio",
-    "dns": "homeassistant/{arch}-hassio-dns",
-    "observer": "homeassistant/{arch}-hassio-observer",
-    "multicast": "homeassistant/{arch}-hassio-multicast"
+    "muthurcommand": "muthur-command/{arch}-muthurcommand-{machine}",
+    "supervisor": "muthur-command/{arch}-mcio-supervisor",
+    "cli": "muthur-command/{arch}-mcio-cli",
+    "audio": "muthur-command/{arch}-mcio-audio",
+    "dns": "muthur-command/{arch}-mcio-dns",
+    "observer": "muthur-command/{arch}-mcio-observer",
+    "multicast": "muthur-command/{arch}-mcio-multicast"
   },
   "images": {
-    "core": "ghcr.io/home-assistant/{machine}-homeassistant",
-    "supervisor": "ghcr.io/home-assistant/{arch}-hassio-supervisor",
-    "cli": "ghcr.io/home-assistant/{arch}-hassio-cli",
-    "audio": "ghcr.io/home-assistant/{arch}-hassio-audio",
-    "dns": "ghcr.io/home-assistant/{arch}-hassio-dns",
-    "observer": "ghcr.io/home-assistant/{arch}-hassio-observer",
-    "multicast": "ghcr.io/home-assistant/{arch}-hassio-multicast"
+    "muthurcommand": "ghcr.io/muthur-command/{arch}-muthurcommand-{machine}",
+    "supervisor": "ghcr.io/muthur-command/{arch}-mcio-supervisor",
+    "cli": "ghcr.io/muthur-command/{arch}-mcio-cli",
+    "audio": "ghcr.io/muthur-command/{arch}-mcio-audio",
+    "dns": "ghcr.io/muthur-command/{arch}-mcio-dns",
+    "observer": "ghcr.io/muthur-command/{arch}-mcio-observer",
+    "multicast": "ghcr.io/muthur-command/{arch}-mcio-multicast",
+    "mc_bd": "ghcr.io/muthur-command/{arch}-mc-bd",
+    "mc_fd": "ghcr.io/muthur-command/mc-fd",
+    "postgresql": "docker.io/library/postgres",
+    "redis": "docker.io/library/redis"
   }
 }

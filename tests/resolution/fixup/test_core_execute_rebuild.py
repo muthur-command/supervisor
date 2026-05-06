@@ -11,7 +11,7 @@ import pytest
 from supervisor.coresys import CoreSys
 from supervisor.docker.interface import DockerInterface
 from supervisor.docker.manager import DockerAPI
-from supervisor.homeassistant.core import HomeAssistantCore
+from supervisor.muthurcommand.core import MuthurCommandCore
 from supervisor.resolution.const import ContextType, IssueType, SuggestionType
 from supervisor.resolution.fixups.core_execute_rebuild import FixupCoreExecuteRebuild
 
@@ -40,10 +40,10 @@ async def test_fixup(docker: DockerAPI, coresys: CoreSys):
 
     coresys.resolution.create_issue(
         IssueType.DOCKER_CONFIG,
-        ContextType.CORE,
+        ContextType.MC_BD,
         suggestions=[SuggestionType.EXECUTE_REBUILD],
     )
-    with patch.object(HomeAssistantCore, "rebuild") as rebuild:
+    with patch.object(MuthurCommandCore, "rebuild") as rebuild:
         await core_execute_rebuild()
         rebuild.assert_called_once()
 
@@ -61,16 +61,16 @@ async def test_fixup_stopped_core(
 
     coresys.resolution.create_issue(
         IssueType.DOCKER_CONFIG,
-        ContextType.CORE,
+        ContextType.MC_BD,
         suggestions=[SuggestionType.EXECUTE_REBUILD],
     )
-    with patch.object(HomeAssistantCore, "rebuild") as rebuild:
+    with patch.object(MuthurCommandCore, "rebuild") as rebuild:
         await core_execute_rebuild()
         rebuild.assert_not_called()
 
     assert not coresys.resolution.issues
     assert not coresys.resolution.suggestions
-    (await docker.containers.get("homeassistant")).delete.assert_called_once_with(
+    (await docker.containers.get("muthurcommand")).delete.assert_called_once_with(
         force=True, v=True
     )
     assert "Home Assistant is stopped" in caplog.text
@@ -88,11 +88,11 @@ async def test_fixup_unknown_core(
 
     coresys.resolution.create_issue(
         IssueType.DOCKER_CONFIG,
-        ContextType.CORE,
+        ContextType.MC_BD,
         suggestions=[SuggestionType.EXECUTE_REBUILD],
     )
     with (
-        patch.object(HomeAssistantCore, "rebuild") as rebuild,
+        patch.object(MuthurCommandCore, "rebuild") as rebuild,
         patch.object(DockerInterface, "stop") as stop,
     ):
         await core_execute_rebuild()

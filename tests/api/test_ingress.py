@@ -34,7 +34,7 @@ async def test_validate_session(api_client: TestClient, coresys: CoreSys):
 
     with patch(
         "aiohttp.web_request.BaseRequest.__getitem__",
-        return_value=coresys.homeassistant,
+        return_value=coresys.muthurcommand,
     ):
         resp = await api_client.post("/ingress/session")
         result = await resp.json()
@@ -68,7 +68,7 @@ async def test_validate_session_with_user_id(
 
     with patch(
         "aiohttp.web_request.BaseRequest.__getitem__",
-        return_value=coresys.homeassistant,
+        return_value=coresys.muthurcommand,
     ):
         ha_ws_client.async_send_command.return_value = [
             {"id": "some-id", "name": "Some Name", "username": "sn"}

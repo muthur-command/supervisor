@@ -92,7 +92,7 @@ class APIHost(CoreSysAttributes):
         """Check if HA has an offline migration in progress and raise if not forced."""
         if (
             not force
-            and (state := await self.sys_homeassistant.api.get_api_state())
+            and (state := await self.sys_muthurcommand.api.get_api_state())
             and state.offline_db_migration
         ):
             raise APIDBMigrationInProgress(
@@ -363,7 +363,7 @@ class APIHost(CoreSysAttributes):
                 "share": self.sys_config.path_share,
                 "backup": self.sys_config.path_backup,
                 "ssl": self.sys_config.path_ssl,
-                "homeassistant": self.sys_config.path_homeassistant,
+                "muthurcommand": self.sys_config.path_muthurcommand,
             },
             max_depth,
         )

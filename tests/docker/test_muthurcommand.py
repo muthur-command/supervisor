@@ -14,30 +14,30 @@ from supervisor.docker.const import (
     MountType,
     PropagationMode,
 )
-from supervisor.docker.homeassistant import DockerHomeAssistant
+from supervisor.docker.muthurcommand import DockerMuthurCommand
 from supervisor.docker.manager import DockerAPI
-from supervisor.homeassistant.const import LANDINGPAGE
+from supervisor.muthurcommand.const import LANDINGPAGE
 
 from . import DEV_MOUNT
 
 
 @pytest.mark.usefixtures("tmp_supervisor_data", "path_extern")
-async def test_homeassistant_start(coresys: CoreSys, container: DockerContainer):
+async def test_muthurcommand_start(coresys: CoreSys, container: DockerContainer):
     """Test starting homeassistant."""
-    coresys.homeassistant.version = AwesomeVersion("2023.8.1")
+    coresys.muthurcommand.version = AwesomeVersion("2023.8.1")
 
     with (
         patch.object(DockerAPI, "run", return_value=container.show.return_value) as run,
         patch.object(
-            DockerHomeAssistant, "is_running", side_effect=[False, False, True]
+            DockerMuthurCommand, "is_running", side_effect=[False, False, True]
         ),
-        patch("supervisor.homeassistant.core.asyncio.sleep"),
+        patch("supervisor.muthurcommand.core.asyncio.sleep"),
     ):
-        await coresys.homeassistant.core.start()
+        await coresys.muthurcommand.core.start()
 
         run.assert_called_once()
-        assert run.call_args.kwargs["name"] == "homeassistant"
-        assert run.call_args.kwargs["hostname"] == "homeassistant"
+        assert run.call_args.kwargs["name"] == "muthurcommand"
+        assert run.call_args.kwargs["hostname"] == "muthurcommand"
         assert run.call_args.kwargs["privileged"] is True
         assert run.call_args.kwargs["oom_score_adj"] == -300
         assert run.call_args.kwargs["device_cgroup_rules"]
@@ -69,7 +69,7 @@ async def test_homeassistant_start(coresys: CoreSys, container: DockerContainer)
             ),
             DockerMount(
                 type=MountType.BIND,
-                source=coresys.config.path_extern_homeassistant.as_posix(),
+                source=coresys.config.path_extern_muthurcommand.as_posix(),
                 target="/config",
                 read_only=False,
             ),
@@ -95,7 +95,7 @@ async def test_homeassistant_start(coresys: CoreSys, container: DockerContainer)
             ),
             DockerMount(
                 type=MountType.BIND,
-                source=coresys.homeassistant.path_extern_pulse.as_posix(),
+                source=coresys.muthurcommand.path_extern_pulse.as_posix(),
                 target="/etc/pulse/client.conf",
                 read_only=True,
             ),
@@ -122,21 +122,21 @@ async def test_homeassistant_start(coresys: CoreSys, container: DockerContainer)
 
 
 @pytest.mark.usefixtures("tmp_supervisor_data", "path_extern")
-async def test_homeassistant_start_with_duplicate_log_file(
+async def test_muthurcommand_start_with_duplicate_log_file(
     coresys: CoreSys, container: DockerContainer
 ):
     """Test starting homeassistant with duplicate_log_file enabled."""
-    coresys.homeassistant.version = AwesomeVersion("2025.12.0")
-    coresys.homeassistant.duplicate_log_file = True
+    coresys.muthurcommand.version = AwesomeVersion("2025.12.0")
+    coresys.muthurcommand.duplicate_log_file = True
 
     with (
         patch.object(DockerAPI, "run", return_value=container.show.return_value) as run,
         patch.object(
-            DockerHomeAssistant, "is_running", side_effect=[False, False, True]
+            DockerMuthurCommand, "is_running", side_effect=[False, False, True]
         ),
-        patch("supervisor.homeassistant.core.asyncio.sleep"),
+        patch("supervisor.muthurcommand.core.asyncio.sleep"),
     ):
-        await coresys.homeassistant.core.start()
+        await coresys.muthurcommand.core.start()
 
         run.assert_called_once()
         env = run.call_args.kwargs["environment"]
@@ -147,17 +147,17 @@ async def test_homeassistant_start_with_duplicate_log_file(
 @pytest.mark.usefixtures("tmp_supervisor_data", "path_extern")
 async def test_landingpage_start(coresys: CoreSys, container: DockerContainer):
     """Test starting landingpage."""
-    coresys.homeassistant.version = LANDINGPAGE
+    coresys.muthurcommand.version = LANDINGPAGE
 
     with (
         patch.object(DockerAPI, "run", return_value=container.show.return_value) as run,
-        patch.object(DockerHomeAssistant, "is_running", return_value=False),
+        patch.object(DockerMuthurCommand, "is_running", return_value=False),
     ):
-        await coresys.homeassistant.core.start()
+        await coresys.muthurcommand.core.start()
 
         run.assert_called_once()
-        assert run.call_args.kwargs["name"] == "homeassistant"
-        assert run.call_args.kwargs["hostname"] == "homeassistant"
+        assert run.call_args.kwargs["name"] == "muthurcommand"
+        assert run.call_args.kwargs["hostname"] == "muthurcommand"
         assert run.call_args.kwargs["privileged"] is False
         assert run.call_args.kwargs["oom_score_adj"] == -300
         assert not run.call_args.kwargs["device_cgroup_rules"]
@@ -189,7 +189,7 @@ async def test_landingpage_start(coresys: CoreSys, container: DockerContainer):
             ),
             DockerMount(
                 type=MountType.BIND,
-                source=coresys.config.path_extern_homeassistant.as_posix(),
+                source=coresys.config.path_extern_muthurcommand.as_posix(),
                 target="/config",
                 read_only=False,
             ),
@@ -205,11 +205,11 @@ async def test_landingpage_start(coresys: CoreSys, container: DockerContainer):
 
 async def test_timeout(coresys: CoreSys, container: DockerContainer):
     """Test timeout for set from S6_SERVICES_GRACETIME."""
-    assert coresys.homeassistant.core.instance.timeout == 260
+    assert coresys.muthurcommand.core.instance.timeout == 260
 
     # Env missing, remain at default
-    await coresys.homeassistant.core.instance.attach(AwesomeVersion("2024.3.0"))
-    assert coresys.homeassistant.core.instance.timeout == 260
+    await coresys.muthurcommand.core.instance.attach(AwesomeVersion("2024.3.0"))
+    assert coresys.muthurcommand.core.instance.timeout == 260
 
     # Set a mock value for env in attrs, see that it changes
     container.show.return_value["Config"] = {
@@ -228,5 +228,5 @@ async def test_timeout(coresys: CoreSys, container: DockerContainer):
             "S6_SERVICES_GRACETIME=300000",
         ]
     }
-    await coresys.homeassistant.core.instance.attach(AwesomeVersion("2024.3.0"))
-    assert coresys.homeassistant.core.instance.timeout == 320
+    await coresys.muthurcommand.core.instance.attach(AwesomeVersion("2024.3.0"))
+    assert coresys.muthurcommand.core.instance.timeout == 320

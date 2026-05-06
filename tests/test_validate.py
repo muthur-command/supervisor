@@ -17,12 +17,12 @@ DNS_GOOD_V6 = [
 ]
 DNS_BAD = ["hello world", "https://foo.bar", "", "dns://example.com"]
 IMAGE_NAME_GOOD = [
-    "ghcr.io/home-assistant/{machine}-homeassistant",
-    "ghcr.io/home-assistant/{arch}-homeassistant",
-    "homeassistant/{arch}-homeassistant",
-    "doocker.io/homeassistant/{arch}-homeassistant",
-    "ghcr.io/home-assistant/amd64-homeassistant",
-    "homeassistant/amd64-homeassistant",
+    "ghcr.io/muthur-command/{arch}-muthurcommand-{machine}",
+    "ghcr.io/muthur-command/{arch}-mcio-cli",
+    "muthurcommand/{arch}-muthurcommand",
+    "doocker.io/muthurcommand/{arch}-muthurcommand",
+    "ghcr.io/muthur-command/amd64-muthurcommand",
+    "muthurcommand/amd64-muthurcommand",
     "ttl.sh/homeassistant",
     "myreg.local:8080/homeassistant",
     "localhost/myimage",
@@ -34,14 +34,14 @@ IMAGE_NAME_GOOD = [
     "ghcr.io/blakeblackshear/frigate",
 ]
 IMAGE_NAME_BAD = [
-    "ghcr.io/home-assistant/homeassistant:123",
+    "ghcr.io/muthur-command/muthurcommand:123",
     "ghcr.io/blakeblackshear/frigate:stable-rocm",
-    ".ghcr.io/home-assistant/homeassistant",
-    "HOMEASSISTANT/homeassistant",
-    "homeassistant/HOMEASSISTANT",
-    "homeassistant/_homeassistant",
-    "homeassistant/-homeassistant",
-    "GHCR.IO/home-assistant/homeassistant",
+    ".ghcr.io/muthur-command/muthurcommand",
+    "MUTHURCOMMAND/muthurcommand",
+    "muthurcommand/MUTHURCOMMAND",
+    "muthurcommand/_muthurcommand",
+    "muthurcommand/-muthurcommand",
+    "GHCR.IO/muthur-command/muthurcommand",
 ]
 
 

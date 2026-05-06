@@ -36,10 +36,6 @@ from ..const import (
     ATTR_FIELDS,
     ATTR_FULL_ACCESS,
     ATTR_GPIO,
-    ATTR_HASSIO_API,
-    ATTR_HASSIO_ROLE,
-    ATTR_HOMEASSISTANT,
-    ATTR_HOMEASSISTANT_API,
     ATTR_HOST_DBUS,
     ATTR_HOST_IPC,
     ATTR_HOST_NETWORK,
@@ -60,6 +56,10 @@ from ..const import (
     ATTR_LOCATION,
     ATTR_MACHINE,
     ATTR_MAP,
+    ATTR_MCIO_API,
+    ATTR_MCIO_ROLE,
+    ATTR_MUTHURCOMMAND,
+    ATTR_MUTHURCOMMAND_API,
     ATTR_NAME,
     ATTR_NETWORK,
     ATTR_OPTIONS,
@@ -132,7 +132,7 @@ from .options import RE_SCHEMA_ELEMENT
 _LOGGER: logging.Logger = logging.getLogger(__name__)
 
 RE_VOLUME = re.compile(
-    r"^(data|config|ssl|addons|backup|share|media|homeassistant_config|all_addon_configs|addon_config)(?::(rw|ro))?$"
+    r"^(data|config|ssl|addons|backup|share|media|muthurcommand_config|all_addon_configs|addon_config)(?::(rw|ro))?$"
 )
 RE_SERVICE = re.compile(r"^(?P<service>mqtt|mysql):(?P<rights>provide|want|need)$")
 
@@ -354,13 +354,13 @@ def _migrate_addon_config(protocol=False):
             if any(
                 volume
                 and volume[ATTR_TYPE]
-                in {MappingType.ADDON_CONFIG, MappingType.HOMEASSISTANT_CONFIG}
+                in {MappingType.ADDON_CONFIG, MappingType.MUTHURCOMMAND_CONFIG}
                 for volume in volumes
             ):
                 _LOGGER.warning(
                     "App config using incompatible map options, '%s' and '%s' are ignored if '%s' is included. Please report this to the maintainer of %s",
                     MappingType.ADDON_CONFIG,
-                    MappingType.HOMEASSISTANT_CONFIG,
+                    MappingType.MUTHURCOMMAND_CONFIG,
                     MappingType.CONFIG,
                     name,
                 )
@@ -368,7 +368,7 @@ def _migrate_addon_config(protocol=False):
                 _LOGGER.debug(
                     "App config using deprecated map option '%s' instead of '%s'. Please report this to the maintainer of %s",
                     MappingType.CONFIG,
-                    MappingType.HOMEASSISTANT_CONFIG,
+                    MappingType.MUTHURCOMMAND_CONFIG,
                     name,
                 )
 
@@ -413,7 +413,7 @@ _SCHEMA_ADDON_CONFIG = vol.Schema(
         vol.Optional(ATTR_PANEL_ICON, default="mdi:puzzle"): str,
         vol.Optional(ATTR_PANEL_TITLE): str,
         vol.Optional(ATTR_PANEL_ADMIN, default=True): vol.Boolean(),
-        vol.Optional(ATTR_HOMEASSISTANT): version_tag,
+        vol.Optional(ATTR_MUTHURCOMMAND): version_tag,
         vol.Optional(ATTR_HOST_NETWORK, default=False): vol.Boolean(),
         vol.Optional(ATTR_HOST_PID, default=False): vol.Boolean(),
         vol.Optional(ATTR_HOST_IPC, default=False): vol.Boolean(),
@@ -443,9 +443,9 @@ _SCHEMA_ADDON_CONFIG = vol.Schema(
         vol.Optional(ATTR_DEVICETREE, default=False): vol.Boolean(),
         vol.Optional(ATTR_KERNEL_MODULES, default=False): vol.Boolean(),
         vol.Optional(ATTR_REALTIME, default=False): vol.Boolean(),
-        vol.Optional(ATTR_HASSIO_API, default=False): vol.Boolean(),
-        vol.Optional(ATTR_HASSIO_ROLE, default=ROLE_DEFAULT): vol.In(ROLE_ALL),
-        vol.Optional(ATTR_HOMEASSISTANT_API, default=False): vol.Boolean(),
+        vol.Optional(ATTR_MCIO_API, default=False): vol.Boolean(),
+        vol.Optional(ATTR_MCIO_ROLE, default=ROLE_DEFAULT): vol.In(ROLE_ALL),
+        vol.Optional(ATTR_MUTHURCOMMAND_API, default=False): vol.Boolean(),
         vol.Optional(ATTR_STDIN, default=False): vol.Boolean(),
         vol.Optional(ATTR_LEGACY, default=False): vol.Boolean(),
         vol.Optional(ATTR_DOCKER_API, default=False): vol.Boolean(),

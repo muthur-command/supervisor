@@ -22,7 +22,7 @@ class EvaluateVirtualizationImage(EvaluateBase):
     @property
     def on_failure(self) -> str:
         """Return a string that is printed when self.evaluate is True."""
-        return "Image of Home Assistant OS in use does not support virtualization."
+        return "The Muthur Command OS image in use does not support virtualization."
 
     @property
     def states(self) -> list[CoreState]:

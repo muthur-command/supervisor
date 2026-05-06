@@ -5,7 +5,7 @@ import logging
 from typing import Self
 
 from ..coresys import CoreSys, CoreSysAttributes
-from ..exceptions import HassioError
+from ..exceptions import McioError
 from ..resolution.const import ContextType, IssueType, SuggestionType
 from ..utils.sentry import async_capture_exception
 from .audio import PluginAudio
@@ -106,7 +106,7 @@ class PluginManager(CoreSysAttributes):
             )
             try:
                 await plugin.update()
-            except HassioError as ex:
+            except McioError as ex:
                 _LOGGER.error(
                     "Can't update %s to %s: %s",
                     plugin.slug,

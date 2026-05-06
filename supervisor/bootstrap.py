@@ -19,7 +19,7 @@ from .auth import Auth
 from .backups.manager import BackupManager
 from .bus import Bus
 from .const import (
-    ENV_HOMEASSISTANT_REPOSITORY,
+    ENV_MUTHURCOMMAND_REPOSITORY,
     ENV_SUPERVISOR_MACHINE,
     ENV_SUPERVISOR_NAME,
     ENV_SUPERVISOR_SHARE,
@@ -33,13 +33,14 @@ from .dbus.manager import DBusManager
 from .discovery import Discovery
 from .docker.manager import DockerAPI
 from .hardware.manager import HardwareManager
-from .homeassistant.module import HomeAssistant
 from .host.manager import HostManager
 from .ingress import Ingress
 from .jobs import JobManager
+from .misc.mc_stack import MCStack
 from .misc.scheduler import Scheduler
 from .misc.tasks import Tasks
 from .mounts.manager import MountManager
+from .muthurcommand.module import MuthurCommand
 from .os.manager import OSManager
 from .plugins.manager import PluginManager
 from .resolution.module import ResolutionManager
@@ -77,7 +78,8 @@ async def initialize_coresys() -> CoreSys:
     coresys.updater = await Updater(coresys).load_config()
     coresys.api = RestAPI(coresys)
     coresys.supervisor = Supervisor(coresys)
-    coresys.homeassistant = await HomeAssistant(coresys).load_config()
+    coresys.muthurcommand = await MuthurCommand(coresys).load_config()
+    coresys.mc_stack = MCStack(coresys)
     coresys.addons = await AddonManager(coresys).load_config()
     coresys.backups = await BackupManager(coresys).load_config()
     coresys.host = await HostManager(coresys).post_init()
@@ -117,13 +119,13 @@ def initialize_system(coresys: CoreSys) -> None:
     """Set up the default configuration and create folders."""
     config = coresys.config
 
-    # Home Assistant configuration folder
-    if not config.path_homeassistant.is_dir():
+    # Muthur Command application configuration folder
+    if not config.path_muthurcommand.is_dir():
         _LOGGER.debug(
-            "Creating Home Assistant configuration folder at '%s'",
-            config.path_homeassistant,
+            "Creating Muthur Command configuration folder at '%s'",
+            config.path_muthurcommand,
         )
-        config.path_homeassistant.mkdir()
+        config.path_muthurcommand.mkdir()
 
     # Supervisor ssl folder
     if not config.path_ssl.is_dir():
@@ -231,6 +233,22 @@ def initialize_system(coresys: CoreSys) -> None:
         _LOGGER.debug("Creating Docker cidfiles folder at '%s'", config.path_cid_files)
         config.path_cid_files.mkdir()
 
+    # MC application stack data folders (PostgreSQL / Redis / mc_bd)
+    if not config.path_mc_stack.is_dir():
+        _LOGGER.debug(
+            "Creating Supervisor MC stack data folder at '%s'", config.path_mc_stack
+        )
+        config.path_mc_stack.mkdir(parents=True)
+
+    for path in (
+        config.path_mc_backend,
+        config.path_mc_postgres,
+        config.path_mc_redis,
+    ):
+        if not path.is_dir():
+            _LOGGER.debug("Creating MC stack data folder at '%s'", path)
+            path.mkdir(parents=True)
+
 
 def warning_handler(message, category, filename, lineno, file=None, line=None):
     """Warning handler which logs warnings using the logging module."""
@@ -283,12 +301,14 @@ def check_environment() -> None:
             _LOGGER.critical("Can't find '%s' environment variable!", key)
 
     # Check Machine info
-    if not os.environ.get(ENV_HOMEASSISTANT_REPOSITORY) and not os.environ.get(
+    if not os.environ.get(ENV_MUTHURCOMMAND_REPOSITORY) and not os.environ.get(
         ENV_SUPERVISOR_MACHINE
     ):
-        _LOGGER.critical("Can't find any kind of machine/homeassistant details!")
+        _LOGGER.critical("Can't find any kind of machine / Muthur Command details!")
     elif not os.environ.get(ENV_SUPERVISOR_MACHINE):
-        _LOGGER.info("Use the old homeassistant repository for machine extraction")
+        _LOGGER.info(
+            "Using deprecated MUTHURCOMMAND_REPOSITORY env for machine extraction"
+        )
 
     # check docker socket
     if not SOCKET_DOCKER.is_socket():

@@ -4,7 +4,7 @@ from dbus_fast.service import PropertyAccess, dbus_property
 
 from .base import DBusServiceMock
 
-BUS_NAME = "io.hass.os"
+BUS_NAME = "io.muthurcommand.os"
 
 
 def setup(object_path: str | None = None) -> DBusServiceMock:
@@ -15,11 +15,11 @@ def setup(object_path: str | None = None) -> DBusServiceMock:
 class OSAgent(DBusServiceMock):
     """OS-agent mock.
 
-    gdbus introspect --system --dest io.hass.os --object-path /io/hass/os
+    gdbus introspect --system --dest io.muthurcommand.os --object-path /io/muthurcommand/os
     """
 
-    object_path = "/io/hass/os"
-    interface = "io.hass.os"
+    object_path = "/io/muthurcommand/os"
+    interface = "io.muthurcommand.os"
 
     @dbus_property(access=PropertyAccess.READ)
     def Version(self) -> "s":

@@ -11,7 +11,7 @@ from supervisor.const import CoreState
 from supervisor.coresys import CoreSys
 from supervisor.dbus.const import InterfaceMethod
 from supervisor.exceptions import HostNotSupportedError
-from supervisor.homeassistant.const import WSEvent, WSType
+from supervisor.muthurcommand.const import WSEvent, WSType
 from supervisor.host.const import WifiMode
 
 from tests.dbus_service_mocks.base import DBusServiceMock

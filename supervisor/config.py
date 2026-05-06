@@ -22,7 +22,7 @@ from .const import (
     ATTR_VERSION,
     ATTR_WAIT_BOOT,
     ENV_SUPERVISOR_SHARE,
-    FILE_HASSIO_CONFIG,
+    FILE_MCIO_CONFIG,
     SUPERVISOR_DATA,
     LogLevel,
 )
@@ -32,9 +32,9 @@ from .validate import SCHEMA_SUPERVISOR_CONFIG
 
 _LOGGER: logging.Logger = logging.getLogger(__name__)
 
-HOMEASSISTANT_CONFIG = PurePath("homeassistant")
+MUTHURCOMMAND_CONFIG = PurePath("muthurcommand")
 
-HASSIO_SSL = PurePath("ssl")
+MCIO_SSL = PurePath("ssl")
 
 ADDONS_CORE = PurePath("addons/core")
 ADDONS_LOCAL = PurePath("addons/local")
@@ -56,6 +56,11 @@ ADDON_CONFIGS = PurePath("addon_configs")
 CORE_BACKUP_DATA = PurePath("core/backup")
 CID_FILES = PurePath("cid_files")
 
+MC_STACK_DATA = PurePath("mc_stack")
+MC_STACK_BACKEND_DATA = MC_STACK_DATA / "mc_bd"
+MC_STACK_POSTGRES_DATA = MC_STACK_DATA / "postgresql"
+MC_STACK_REDIS_DATA = MC_STACK_DATA / "redis"
+
 DEFAULT_BOOT_TIME = datetime.fromtimestamp(0, UTC).isoformat()
 
 # We filter out UTC because it's the system default fallback
@@ -69,7 +74,7 @@ class CoreConfig(FileConfiguration):
 
     def __init__(self) -> None:
         """Initialize config object."""
-        super().__init__(FILE_HASSIO_CONFIG, SCHEMA_SUPERVISOR_CONFIG)
+        super().__init__(FILE_MCIO_CONFIG, SCHEMA_SUPERVISOR_CONFIG)
         self._timezone_tzinfo: tzinfo | None = None
 
     @property
@@ -221,24 +226,24 @@ class CoreConfig(FileConfiguration):
         return PurePath(os.environ[ENV_SUPERVISOR_SHARE])
 
     @property
-    def path_extern_homeassistant(self) -> PurePath:
+    def path_extern_muthurcommand(self) -> PurePath:
         """Return config path external for Docker."""
-        return PurePath(self.path_extern_supervisor, HOMEASSISTANT_CONFIG)
+        return PurePath(self.path_extern_supervisor, MUTHURCOMMAND_CONFIG)
 
     @property
-    def path_homeassistant(self) -> Path:
+    def path_muthurcommand(self) -> Path:
         """Return config path inside supervisor."""
-        return self.path_supervisor / HOMEASSISTANT_CONFIG
+        return self.path_supervisor / MUTHURCOMMAND_CONFIG
 
     @property
     def path_extern_ssl(self) -> PurePath:
         """Return SSL path external for Docker."""
-        return PurePath(self.path_extern_supervisor, HASSIO_SSL)
+        return PurePath(self.path_extern_supervisor, MCIO_SSL)
 
     @property
     def path_ssl(self) -> Path:
         """Return SSL path inside supervisor."""
-        return self.path_supervisor / HASSIO_SSL
+        return self.path_supervisor / MCIO_SSL
 
     @property
     def path_addons_core(self) -> Path:
@@ -409,6 +414,46 @@ class CoreConfig(FileConfiguration):
     def path_extern_cid_files(self) -> PurePath:
         """Return CID files folder."""
         return PurePath(self.path_extern_supervisor, CID_FILES)
+
+    @property
+    def path_mc_stack(self) -> Path:
+        """Return root MC application stack data folder."""
+        return self.path_supervisor / MC_STACK_DATA
+
+    @property
+    def path_extern_mc_stack(self) -> PurePath:
+        """Return root MC application stack data folder external for Docker."""
+        return PurePath(self.path_extern_supervisor, MC_STACK_DATA)
+
+    @property
+    def path_mc_backend(self) -> Path:
+        """Return mc_bd persistent data folder inside Supervisor."""
+        return self.path_supervisor / MC_STACK_BACKEND_DATA
+
+    @property
+    def path_extern_mc_backend(self) -> PurePath:
+        """Return mc_bd persistent data folder external for Docker."""
+        return PurePath(self.path_extern_supervisor, MC_STACK_BACKEND_DATA)
+
+    @property
+    def path_mc_postgres(self) -> Path:
+        """Return PostgreSQL persistent data folder inside Supervisor."""
+        return self.path_supervisor / MC_STACK_POSTGRES_DATA
+
+    @property
+    def path_extern_mc_postgres(self) -> PurePath:
+        """Return PostgreSQL persistent data folder external for Docker."""
+        return PurePath(self.path_extern_supervisor, MC_STACK_POSTGRES_DATA)
+
+    @property
+    def path_mc_redis(self) -> Path:
+        """Return Redis persistent data folder inside Supervisor."""
+        return self.path_supervisor / MC_STACK_REDIS_DATA
+
+    @property
+    def path_extern_mc_redis(self) -> PurePath:
+        """Return Redis persistent data folder external for Docker."""
+        return PurePath(self.path_extern_supervisor, MC_STACK_REDIS_DATA)
 
     @property
     def addons_repositories(self) -> list[str]:

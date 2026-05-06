@@ -20,7 +20,7 @@ from supervisor.docker.addon import DockerAddon
 from supervisor.docker.const import ContainerState
 from supervisor.docker.manager import CommandReturn
 from supervisor.docker.monitor import DockerContainerStateEvent
-from supervisor.exceptions import HassioError
+from supervisor.exceptions import McioError
 from supervisor.store.repository import Repository
 
 from ..const import TEST_ADDON_SLUG
@@ -93,7 +93,7 @@ async def test_api_addon_logs_not_installed(api_client: TestClient):
 @pytest.mark.usefixtures("docker_logs", "install_addon_ssh")
 async def test_api_addon_logs_error(api_client: TestClient, journald_logs: MagicMock):
     """Test errors are properly handled for add-on logs."""
-    journald_logs.side_effect = HassioError("Something bad happened!")
+    journald_logs.side_effect = McioError("Something bad happened!")
     resp = await api_client.get("/addons/local_ssh/logs")
 
     assert resp.status == 400

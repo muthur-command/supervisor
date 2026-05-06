@@ -33,7 +33,7 @@ class CheckAddonPwned(CheckBase):
         if not self.sys_security.pwned:
             _LOGGER.warning("Skipping %s, pwned is globally disabled", self.slug)
             return
-        await self.sys_homeassistant.secrets.reload()
+        await self.sys_muthurcommand.secrets.reload()
 
         for addon in self.sys_addons.installed:
             secrets = addon.pwned

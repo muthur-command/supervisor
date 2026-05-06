@@ -1,4 +1,4 @@
-ARG BUILD_FROM=ghcr.io/home-assistant/base-python:3.14-alpine3.22-2026.03.1
+ARG BUILD_FROM=ghcr.io/muthur-command/base-python:3.14-alpine3.23-2026.04.1
 FROM ${BUILD_FROM}
 
 ENV \
@@ -39,7 +39,7 @@ RUN \
         -r requirements.txt \
         ${LOCAL_WHEELS:+--find-links $LOCAL_WHEELS}
 
-# Install Home Assistant Supervisor
+# Install Muthur Command Supervisor
 ARG BUILD_VERSION="9999.09.9.dev9999"
 COPY . supervisor
 RUN \
@@ -52,10 +52,10 @@ WORKDIR /
 COPY rootfs /
 
 LABEL \
-    io.hass.type="supervisor" \
-    org.opencontainers.image.title="Home Assistant Supervisor" \
-    org.opencontainers.image.description="Container-based system for managing Home Assistant Core installation" \
-    org.opencontainers.image.authors="The Home Assistant Authors" \
-    org.opencontainers.image.url="https://www.home-assistant.io/" \
-    org.opencontainers.image.documentation="https://www.home-assistant.io/docs/" \
+    io.mcio.type="supervisor" \
+    org.opencontainers.image.title="Muthur Command Supervisor" \
+    org.opencontainers.image.description="Container-based system for managing Muthur Command OS and Core installation" \
+    org.opencontainers.image.authors="The Muthur Command Authors" \
+    org.opencontainers.image.url="https://www.muthur-command.com/" \
+    org.opencontainers.image.documentation="https://www.muthur-command.com/docs/" \
     org.opencontainers.image.licenses="Apache License 2.0"

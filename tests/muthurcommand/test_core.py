@@ -13,19 +13,19 @@ from time_machine import travel
 
 from supervisor.const import CpuArch
 from supervisor.coresys import CoreSys
-from supervisor.docker.homeassistant import DockerHomeAssistant
+from supervisor.docker.muthurcommand import DockerMuthurCommand
 from supervisor.docker.interface import DockerInterface
 from supervisor.docker.manager import DockerAPI
 from supervisor.exceptions import (
     AudioUpdateError,
     DockerError,
-    HomeAssistantCrashError,
-    HomeAssistantError,
-    HomeAssistantJobError,
+    MuthurCommandCrashError,
+    MuthurCommandError,
+    MuthurCommandJobError,
 )
-from supervisor.homeassistant.api import APIState
-from supervisor.homeassistant.core import HomeAssistantCore
-from supervisor.homeassistant.module import HomeAssistant
+from supervisor.muthurcommand.api import APIState
+from supervisor.muthurcommand.core import MuthurCommandCore
+from supervisor.muthurcommand.module import MuthurCommand
 from supervisor.resolution.const import ContextType, IssueType
 from supervisor.resolution.data import Issue
 from supervisor.updater import Updater
@@ -41,9 +41,9 @@ async def test_update_fails_if_out_of_date(coresys: CoreSys):
         patch.object(
             type(coresys.supervisor), "need_update", new=PropertyMock(return_value=True)
         ),
-        pytest.raises(HomeAssistantJobError),
+        pytest.raises(MuthurCommandJobError),
     ):
-        await coresys.homeassistant.core.update()
+        await coresys.muthurcommand.core.update()
 
     with (
         patch.object(
@@ -54,9 +54,9 @@ async def test_update_fails_if_out_of_date(coresys: CoreSys):
         patch.object(
             type(coresys.plugins.audio), "update", side_effect=AudioUpdateError
         ),
-        pytest.raises(HomeAssistantJobError),
+        pytest.raises(MuthurCommandJobError),
     ):
-        await coresys.homeassistant.core.update()
+        await coresys.muthurcommand.core.update()
 
 
 async def test_install_landingpage_docker_ratelimit_error(
@@ -70,18 +70,18 @@ async def test_install_landingpage_docker_ratelimit_error(
     ]
 
     with (
-        patch.object(DockerHomeAssistant, "attach", side_effect=DockerError),
+        patch.object(DockerMuthurCommand, "attach", side_effect=DockerError),
         patch.object(
             Updater,
-            "image_homeassistant",
-            new=PropertyMock(return_value="homeassistant"),
+            "image_muthurcommand",
+            new=PropertyMock(return_value="muthurcommand"),
         ),
         patch.object(
             DockerInterface, "arch", new=PropertyMock(return_value=CpuArch.AMD64)
         ),
-        patch("supervisor.homeassistant.core.asyncio.sleep") as sleep,
+        patch("supervisor.muthurcommand.core.asyncio.sleep") as sleep,
     ):
-        await coresys.homeassistant.core.install_landingpage()
+        await coresys.muthurcommand.core.install_landingpage()
         sleep.assert_awaited_once_with(30)
 
     assert "Failed to install landingpage, retrying after 30sec" in caplog.text
@@ -110,18 +110,18 @@ async def test_install_landingpage_other_error(
     coresys.docker.images.inspect.side_effect = [err, MagicMock()]
 
     with (
-        patch.object(DockerHomeAssistant, "attach", side_effect=DockerError),
+        patch.object(DockerMuthurCommand, "attach", side_effect=DockerError),
         patch.object(
             Updater,
-            "image_homeassistant",
-            new=PropertyMock(return_value="homeassistant"),
+            "image_muthurcommand",
+            new=PropertyMock(return_value="muthurcommand"),
         ),
         patch.object(
             DockerInterface, "arch", new=PropertyMock(return_value=CpuArch.AMD64)
         ),
-        patch("supervisor.homeassistant.core.asyncio.sleep") as sleep,
+        patch("supervisor.muthurcommand.core.asyncio.sleep") as sleep,
     ):
-        await coresys.homeassistant.core.install_landingpage()
+        await coresys.muthurcommand.core.install_landingpage()
         sleep.assert_awaited_once_with(30)
 
     assert "Failed to install landingpage, retrying after 30sec" in caplog.text
@@ -140,22 +140,22 @@ async def test_install_docker_ratelimit_error(
     ]
 
     with (
-        patch.object(HomeAssistantCore, "start"),
-        patch.object(DockerHomeAssistant, "cleanup"),
+        patch.object(MuthurCommandCore, "start"),
+        patch.object(DockerMuthurCommand, "cleanup"),
         patch.object(
             Updater,
-            "image_homeassistant",
-            new=PropertyMock(return_value="homeassistant"),
+            "image_muthurcommand",
+            new=PropertyMock(return_value="muthurcommand"),
         ),
         patch.object(
-            Updater, "version_homeassistant", new=PropertyMock(return_value="2022.7.3")
+            Updater, "version_muthurcommand", new=PropertyMock(return_value="2022.7.3")
         ),
         patch.object(
             DockerInterface, "arch", new=PropertyMock(return_value=CpuArch.AMD64)
         ),
-        patch("supervisor.homeassistant.core.asyncio.sleep") as sleep,
+        patch("supervisor.muthurcommand.core.asyncio.sleep") as sleep,
     ):
-        await coresys.homeassistant.core.install()
+        await coresys.muthurcommand.core.install()
         sleep.assert_awaited_once_with(30)
 
     assert "Error on Home Assistant installation. Retrying in 30sec" in caplog.text
@@ -184,22 +184,22 @@ async def test_install_other_error(
     coresys.docker.images.inspect.side_effect = [err, MagicMock()]
 
     with (
-        patch.object(HomeAssistantCore, "start"),
-        patch.object(DockerHomeAssistant, "cleanup"),
+        patch.object(MuthurCommandCore, "start"),
+        patch.object(DockerMuthurCommand, "cleanup"),
         patch.object(
             Updater,
-            "image_homeassistant",
-            new=PropertyMock(return_value="homeassistant"),
+            "image_muthurcommand",
+            new=PropertyMock(return_value="muthurcommand"),
         ),
         patch.object(
-            Updater, "version_homeassistant", new=PropertyMock(return_value="2022.7.3")
+            Updater, "version_muthurcommand", new=PropertyMock(return_value="2022.7.3")
         ),
         patch.object(
             DockerInterface, "arch", new=PropertyMock(return_value=CpuArch.AMD64)
         ),
-        patch("supervisor.homeassistant.core.asyncio.sleep") as sleep,
+        patch("supervisor.muthurcommand.core.asyncio.sleep") as sleep,
     ):
-        await coresys.homeassistant.core.install()
+        await coresys.muthurcommand.core.install()
         sleep.assert_awaited_once_with(30)
 
     assert "Error on Home Assistant installation. Retrying in 30sec" in caplog.text
@@ -234,27 +234,27 @@ async def test_install_logs_progress_periodically(
         return await original_wait_for(coro, timeout=timeout)
 
     with (
-        patch.object(HomeAssistantCore, "start"),
-        patch.object(DockerHomeAssistant, "cleanup"),
+        patch.object(MuthurCommandCore, "start"),
+        patch.object(DockerMuthurCommand, "cleanup"),
         patch.object(
             Updater,
-            "image_homeassistant",
-            new=PropertyMock(return_value="homeassistant"),
+            "image_muthurcommand",
+            new=PropertyMock(return_value="muthurcommand"),
         ),
         patch.object(
-            Updater, "version_homeassistant", new=PropertyMock(return_value="2022.7.3")
+            Updater, "version_muthurcommand", new=PropertyMock(return_value="2022.7.3")
         ),
         patch.object(
             DockerInterface, "arch", new=PropertyMock(return_value=CpuArch.AMD64)
         ),
-        patch("supervisor.homeassistant.core.asyncio.wait_for", new=mock_wait_for),
+        patch("supervisor.muthurcommand.core.asyncio.wait_for", new=mock_wait_for),
         patch.object(
-            DockerHomeAssistant,
+            DockerMuthurCommand,
             "active_job",
             new=PropertyMock(return_value=active_job),
         ),
     ):
-        await coresys.homeassistant.core.install()
+        await coresys.muthurcommand.core.install()
 
     assert expected_log in caplog.text
 
@@ -287,23 +287,24 @@ async def test_start(
 
     with (
         patch.object(
-            HomeAssistant,
+            MuthurCommand,
             "version",
             new=PropertyMock(return_value=AwesomeVersion("2023.7.0")),
         ),
         patch.object(DockerAPI, "run", return_value=container.show.return_value) as run,
-        patch.object(HomeAssistantCore, "_block_till_run") as block_till_run,
+        patch.object(MuthurCommandCore, "_block_till_run") as block_till_run,
     ):
-        await coresys.homeassistant.core.start()
+        await coresys.muthurcommand.core.start()
 
         block_till_run.assert_called_once()
         run.assert_called_once()
         assert (
-            run.call_args.args[0] == "ghcr.io/home-assistant/qemux86-64-homeassistant"
+            run.call_args.args[0]
+            == "ghcr.io/muthur-command/amd64-muthurcommand-qemux86-64"
         )
         assert run.call_args.kwargs["tag"] == AwesomeVersion("2023.7.0")
-        assert run.call_args.kwargs["name"] == "homeassistant"
-        assert run.call_args.kwargs["hostname"] == "homeassistant"
+        assert run.call_args.kwargs["name"] == "muthurcommand"
+        assert run.call_args.kwargs["hostname"] == "muthurcommand"
 
     container.stop.assert_not_called()
     assert container.delete.call_args_list == delete_calls
@@ -319,13 +320,13 @@ async def test_start_existing_container(coresys: CoreSys, container: DockerConta
 
     with (
         patch.object(
-            HomeAssistant,
+            MuthurCommand,
             "version",
             new=PropertyMock(return_value=AwesomeVersion("2023.7.0")),
         ),
-        patch.object(HomeAssistantCore, "_block_till_run") as block_till_run,
+        patch.object(MuthurCommandCore, "_block_till_run") as block_till_run,
     ):
-        await coresys.homeassistant.core.start()
+        await coresys.muthurcommand.core.start()
         block_till_run.assert_called_once()
 
     container.start.assert_called_once()
@@ -345,7 +346,7 @@ async def test_stop(coresys: CoreSys, container: DockerContainer, exists: bool):
             404, {"message": "missing"}
         )
 
-    await coresys.homeassistant.core.stop()
+    await coresys.muthurcommand.core.stop()
 
     container.delete.assert_not_called()
     if exists:
@@ -356,8 +357,8 @@ async def test_stop(coresys: CoreSys, container: DockerContainer, exists: bool):
 
 async def test_restart(coresys: CoreSys, container: DockerContainer):
     """Test restarting Home Assistant."""
-    with patch.object(HomeAssistantCore, "_block_till_run") as block_till_run:
-        await coresys.homeassistant.core.restart()
+    with patch.object(MuthurCommandCore, "_block_till_run") as block_till_run:
+        await coresys.muthurcommand.core.restart()
         block_till_run.assert_called_once()
 
     container.restart.assert_called_once_with(t=260)
@@ -382,8 +383,8 @@ async def test_restart_failures(
     if get_error:
         coresys.docker.containers.get.side_effect = get_error
 
-    with pytest.raises(HomeAssistantError):
-        await coresys.homeassistant.core.restart()
+    with pytest.raises(MuthurCommandError):
+        await coresys.muthurcommand.core.restart()
 
 
 @pytest.mark.parametrize(
@@ -408,8 +409,8 @@ async def test_stats_failures(
     if get_error:
         coresys.docker.containers.get.side_effect = get_error
 
-    with pytest.raises(HomeAssistantError):
-        await coresys.homeassistant.core.stats()
+    with pytest.raises(MuthurCommandError):
+        await coresys.muthurcommand.core.stats()
 
 
 async def test_api_check_timeout(
@@ -418,15 +419,15 @@ async def test_api_check_timeout(
     """Test attempts to contact the API timeout."""
     container.show.return_value["State"]["Status"] = "stopped"
     container.show.return_value["State"]["Running"] = False
-    coresys.homeassistant.version = AwesomeVersion("2023.9.0")
-    coresys.homeassistant.api.get_api_state.return_value = None
+    coresys.muthurcommand.version = AwesomeVersion("2023.9.0")
+    coresys.muthurcommand.api.get_api_state.return_value = None
 
     async def mock_instance_start(*_):
         container.show.return_value["State"]["Status"] = "running"
         container.show.return_value["State"]["Running"] = True
 
     with (
-        patch.object(DockerHomeAssistant, "start", new=mock_instance_start),
+        patch.object(DockerMuthurCommand, "start", new=mock_instance_start),
         patch.object(DockerAPI, "container_is_initialized", return_value=True),
         travel(datetime(2023, 10, 2, 0, 0, 0), tick=False) as traveller,
     ):
@@ -435,12 +436,12 @@ async def test_api_check_timeout(
             traveller.shift(timedelta(minutes=1))
 
         with (
-            patch("supervisor.homeassistant.core.asyncio.sleep", new=mock_sleep),
-            pytest.raises(HomeAssistantCrashError),
+            patch("supervisor.muthurcommand.core.asyncio.sleep", new=mock_sleep),
+            pytest.raises(MuthurCommandCrashError),
         ):
-            await coresys.homeassistant.core.start()
+            await coresys.muthurcommand.core.start()
 
-    assert coresys.homeassistant.api.get_api_state.call_count == 10
+    assert coresys.muthurcommand.api.get_api_state.call_count == 10
     assert (
         "No Home Assistant Core response, assuming a fatal startup error" in caplog.text
     )
@@ -452,14 +453,14 @@ async def test_api_check_success(
     """Test attempts to contact the API timeout."""
     container.show.return_value["State"]["Status"] = "stopped"
     container.show.return_value["State"]["Running"] = False
-    coresys.homeassistant.version = AwesomeVersion("2023.9.0")
+    coresys.muthurcommand.version = AwesomeVersion("2023.9.0")
 
     async def mock_instance_start(*_):
         container.show.return_value["State"]["Status"] = "running"
         container.show.return_value["State"]["Running"] = True
 
     with (
-        patch.object(DockerHomeAssistant, "start", new=mock_instance_start),
+        patch.object(DockerMuthurCommand, "start", new=mock_instance_start),
         patch.object(DockerAPI, "container_is_initialized", return_value=True),
         travel(datetime(2023, 10, 2, 0, 0, 0), tick=False) as traveller,
     ):
@@ -467,10 +468,10 @@ async def test_api_check_success(
         async def mock_sleep(*args):
             traveller.shift(timedelta(minutes=1))
 
-        with patch("supervisor.homeassistant.core.asyncio.sleep", new=mock_sleep):
-            await coresys.homeassistant.core.start()
+        with patch("supervisor.muthurcommand.core.asyncio.sleep", new=mock_sleep):
+            await coresys.muthurcommand.core.start()
 
-    assert coresys.homeassistant.api.get_api_state.call_count == 1
+    assert coresys.muthurcommand.api.get_api_state.call_count == 1
     assert "Detect a running Home Assistant instance" in caplog.text
 
 
@@ -489,15 +490,15 @@ async def test_api_check_database_migration(
 
     container.show.return_value["State"]["Status"] = "stopped"
     container.show.return_value["State"]["Running"] = False
-    coresys.homeassistant.version = AwesomeVersion("2023.9.0")
-    coresys.homeassistant.api.get_api_state.side_effect = mock_api_state
+    coresys.muthurcommand.version = AwesomeVersion("2023.9.0")
+    coresys.muthurcommand.api.get_api_state.side_effect = mock_api_state
 
     async def mock_instance_start(*_):
         container.show.return_value["State"]["Status"] = "running"
         container.show.return_value["State"]["Running"] = True
 
     with (
-        patch.object(DockerHomeAssistant, "start", new=mock_instance_start),
+        patch.object(DockerMuthurCommand, "start", new=mock_instance_start),
         patch.object(DockerAPI, "container_is_initialized", return_value=True),
         travel(datetime(2023, 10, 2, 0, 0, 0), tick=False) as traveller,
     ):
@@ -505,10 +506,10 @@ async def test_api_check_database_migration(
         async def mock_sleep(*args):
             traveller.shift(timedelta(minutes=1))
 
-        with patch("supervisor.homeassistant.core.asyncio.sleep", new=mock_sleep):
-            await coresys.homeassistant.core.start()
+        with patch("supervisor.muthurcommand.core.asyncio.sleep", new=mock_sleep):
+            await coresys.muthurcommand.core.start()
 
-    assert coresys.homeassistant.api.get_api_state.call_count == 51
+    assert coresys.muthurcommand.api.get_api_state.call_count == 51
     assert "Detect a running Home Assistant instance" in caplog.text
 
 
@@ -516,22 +517,24 @@ async def test_core_loads_wrong_image_for_machine(
     coresys: CoreSys, container: DockerContainer
 ):
     """Test core is loaded with wrong image for machine."""
-    coresys.homeassistant.set_image("ghcr.io/home-assistant/odroid-n2-homeassistant")
-    coresys.homeassistant.version = AwesomeVersion("2024.4.0")
+    coresys.muthurcommand.set_image(
+        "ghcr.io/muthur-command/aarch64-muthurcommand-odroid-n2"
+    )
+    coresys.muthurcommand.version = AwesomeVersion("2024.4.0")
 
     with patch.object(
         DockerAPI,
         "pull_image",
         return_value={
             "Id": "abc123",
-            "Config": {"Labels": {"io.hass.version": "2024.4.0"}},
+            "Config": {"Labels": {"io.mcio.version": "2024.4.0"}},
         },
     ) as pull_image:
         container.show.return_value |= pull_image.return_value
-        await coresys.homeassistant.core.load()
+        await coresys.muthurcommand.core.load()
         pull_image.assert_called_once_with(
             ANY,
-            "ghcr.io/home-assistant/qemux86-64-homeassistant",
+            "ghcr.io/muthur-command/amd64-muthurcommand-qemux86-64",
             "2024.4.0",
             platform="linux/amd64",
             auth=None,
@@ -539,15 +542,16 @@ async def test_core_loads_wrong_image_for_machine(
 
     container.delete.assert_called_once_with(force=True, v=True)
     assert coresys.docker.images.delete.call_args_list[0] == call(
-        "ghcr.io/home-assistant/odroid-n2-homeassistant:latest",
+        "ghcr.io/muthur-command/aarch64-muthurcommand-odroid-n2:latest",
         force=True,
     )
     assert coresys.docker.images.delete.call_args_list[1] == call(
-        "ghcr.io/home-assistant/odroid-n2-homeassistant:2024.4.0",
+        "ghcr.io/muthur-command/aarch64-muthurcommand-odroid-n2:2024.4.0",
         force=True,
     )
     assert (
-        coresys.homeassistant.image == "ghcr.io/home-assistant/qemux86-64-homeassistant"
+        coresys.muthurcommand.image
+        == "ghcr.io/muthur-command/amd64-muthurcommand-qemux86-64"
     )
 
 
@@ -555,18 +559,21 @@ async def test_core_load_allows_image_override(
     coresys: CoreSys, container: DockerContainer
 ):
     """Test core does not change image if user overrode it."""
-    coresys.homeassistant.set_image("ghcr.io/home-assistant/odroid-n2-homeassistant")
-    coresys.homeassistant.version = AwesomeVersion("2024.4.0")
-    container.show.return_value["Config"] = {"Labels": {"io.hass.version": "2024.4.0"}}
+    coresys.muthurcommand.set_image(
+        "ghcr.io/muthur-command/aarch64-muthurcommand-odroid-n2"
+    )
+    coresys.muthurcommand.version = AwesomeVersion("2024.4.0")
+    container.show.return_value["Config"] = {"Labels": {"io.mcio.version": "2024.4.0"}}
 
-    coresys.homeassistant.override_image = True
-    await coresys.homeassistant.core.load()
+    coresys.muthurcommand.override_image = True
+    await coresys.muthurcommand.core.load()
 
     container.delete.assert_not_called()
     coresys.docker.images.delete.assert_not_called()
     coresys.docker.images.inspect.assert_not_called()
     assert (
-        coresys.homeassistant.image == "ghcr.io/home-assistant/odroid-n2-homeassistant"
+        coresys.muthurcommand.image
+        == "ghcr.io/muthur-command/aarch64-muthurcommand-odroid-n2"
     )
 
 
@@ -574,12 +581,12 @@ async def test_core_loads_wrong_image_for_architecture(
     coresys: CoreSys, container: DockerContainer
 ):
     """Test core is loaded with wrong image for architecture."""
-    coresys.homeassistant.version = AwesomeVersion("2024.4.0")
+    coresys.muthurcommand.version = AwesomeVersion("2024.4.0")
     coresys.docker.images.inspect.return_value = img_data = (
         coresys.docker.images.inspect.return_value
         | {
             "Architecture": "arm64",
-            "Config": {"Labels": {"io.hass.version": "2024.4.0"}},
+            "Config": {"Labels": {"io.mcio.version": "2024.4.0"}},
         }
     )
     container.show.return_value |= img_data
@@ -589,10 +596,10 @@ async def test_core_loads_wrong_image_for_architecture(
         "pull_image",
         return_value=img_data | {"Architecture": "amd64"},
     ) as pull_image:
-        await coresys.homeassistant.core.load()
+        await coresys.muthurcommand.core.load()
         pull_image.assert_called_once_with(
             ANY,
-            "ghcr.io/home-assistant/qemux86-64-homeassistant",
+            "ghcr.io/muthur-command/amd64-muthurcommand-qemux86-64",
             "2024.4.0",
             platform="linux/amd64",
             auth=None,
@@ -600,13 +607,14 @@ async def test_core_loads_wrong_image_for_architecture(
 
     container.delete.assert_called_once_with(force=True, v=True)
     assert coresys.docker.images.delete.call_args_list[0] == call(
-        "ghcr.io/home-assistant/qemux86-64-homeassistant:latest",
+        "ghcr.io/muthur-command/amd64-muthurcommand-qemux86-64:latest",
         force=True,
     )
     assert coresys.docker.images.delete.call_args_list[1] == call(
-        "ghcr.io/home-assistant/qemux86-64-homeassistant:2024.4.0",
+        "ghcr.io/muthur-command/amd64-muthurcommand-qemux86-64:2024.4.0",
         force=True,
     )
     assert (
-        coresys.homeassistant.image == "ghcr.io/home-assistant/qemux86-64-homeassistant"
+        coresys.muthurcommand.image
+        == "ghcr.io/muthur-command/amd64-muthurcommand-qemux86-64"
     )

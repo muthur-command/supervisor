@@ -1,6 +1,6 @@
 """Home Assistant multicast plugin.
 
-Code: https://github.com/home-assistant/plugin-multicast
+Code: https://github.com/muthur-command/plugin-multicast
 """
 
 import logging
@@ -23,7 +23,7 @@ from ..jobs.decorator import Job
 from ..utils.sentry import async_capture_exception
 from .base import PluginBase
 from .const import (
-    FILE_HASSIO_MULTICAST,
+    FILE_MCIO_MULTICAST,
     PLUGIN_UPDATE_CONDITIONS,
     WATCHDOG_THROTTLE_MAX_CALLS,
     WATCHDOG_THROTTLE_PERIOD,
@@ -38,7 +38,7 @@ class PluginMulticast(PluginBase):
 
     def __init__(self, coresys: CoreSys):
         """Initialize hass object."""
-        super().__init__(FILE_HASSIO_MULTICAST, SCHEMA_MULTICAST_CONFIG)
+        super().__init__(FILE_MCIO_MULTICAST, SCHEMA_MULTICAST_CONFIG)
         self.slug = "multicast"
         self.coresys: CoreSys = coresys
         self.instance: DockerMulticast = DockerMulticast(coresys)

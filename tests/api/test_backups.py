@@ -21,11 +21,11 @@ from supervisor.exceptions import (
     AddonPrePostBackupCommandReturnedError,
     AddonsError,
     BackupInvalidError,
-    HomeAssistantBackupError,
+    MuthurCommandBackupError,
 )
-from supervisor.homeassistant.core import HomeAssistantCore
-from supervisor.homeassistant.module import HomeAssistant
-from supervisor.homeassistant.websocket import HomeAssistantWebSocket
+from supervisor.muthurcommand.core import MuthurCommandCore
+from supervisor.muthurcommand.module import MuthurCommand
+from supervisor.muthurcommand.websocket import MuthurCommandWebSocket
 from supervisor.jobs import SupervisorJob
 from supervisor.mounts.mount import Mount
 from supervisor.supervisor import Supervisor
@@ -44,7 +44,7 @@ async def test_info(api_client: TestClient, coresys: CoreSys, tmp_path: Path):
     assert result["data"]["days_until_stale"] == 30
     assert len(result["data"]["backups"]) == 1
     assert result["data"]["backups"][0]["slug"] == "test"
-    assert result["data"]["backups"][0]["content"]["homeassistant"] is True
+    assert result["data"]["backups"][0]["content"]["muthurcommand"] is True
     assert len(result["data"]["backups"][0]["content"]["addons"]) == 1
     assert result["data"]["backups"][0]["content"]["addons"][0] == "local_ssh"
     assert result["data"]["backups"][0]["size"] == 0.01
@@ -61,7 +61,7 @@ async def test_backup_more_info(
     resp = await api_client.get("/backups/test/info")
     result = await resp.json()
     assert result["data"]["slug"] == "test"
-    assert result["data"]["homeassistant"] == "2022.8.0"
+    assert result["data"]["muthurcommand"] == "2022.8.0"
     assert len(result["data"]["addons"]) == 1
     assert result["data"]["addons"][0] == {
         "name": "SSH",
@@ -71,7 +71,7 @@ async def test_backup_more_info(
     }
     assert result["data"]["size"] == 0.01
     assert result["data"]["size_bytes"] == 10240
-    assert result["data"]["homeassistant_exclude_database"] is False
+    assert result["data"]["muthurcommand_exclude_database"] is False
 
 
 @pytest.mark.usefixtures("mock_full_backup")
@@ -83,7 +83,7 @@ async def test_list(api_client: TestClient, coresys: CoreSys, tmp_path: Path):
     result = await resp.json()
     assert len(result["data"]["backups"]) == 1
     assert result["data"]["backups"][0]["slug"] == "test"
-    assert result["data"]["backups"][0]["content"]["homeassistant"] is True
+    assert result["data"]["backups"][0]["content"]["muthurcommand"] is True
     assert len(result["data"]["backups"][0]["content"]["addons"]) == 1
     assert result["data"]["backups"][0]["content"]["addons"][0] == "local_ssh"
     assert result["data"]["backups"][0]["size"] == 0.01
@@ -235,14 +235,14 @@ async def test_api_backup_exclude_database(
     """Test backups exclude the database when specified."""
     await coresys.core.set_state(CoreState.RUNNING)
     coresys.hardware.disk.get_disk_free_space = lambda x: 5000
-    coresys.homeassistant.version = AwesomeVersion("2023.09.0")
-    coresys.homeassistant.backups_exclude_database = exclude_db_setting
+    coresys.muthurcommand.version = AwesomeVersion("2023.09.0")
+    coresys.muthurcommand.backups_exclude_database = exclude_db_setting
 
-    json = {} if exclude_db_setting else {"homeassistant_exclude_database": True}
-    with patch.object(HomeAssistant, "backup") as backup:
+    json = {} if exclude_db_setting else {"muthurcommand_exclude_database": True}
+    with patch.object(MuthurCommand, "backup") as backup:
         if partial_backup:
             resp = await api_client.post(
-                "/backups/new/partial", json={"homeassistant": True} | json
+                "/backups/new/partial", json={"muthurcommand": True} | json
             )
         else:
             resp = await api_client.post("/backups/new/full", json=json)
@@ -266,7 +266,7 @@ async def _get_job_info(api_client: TestClient, job_id: str) -> dict[str, Any]:
         (
             "partial",
             {
-                "homeassistant": True,
+                "muthurcommand": True,
                 "folders": ["addons/local", "media", "share", "ssl"],
             },
         ),
@@ -284,7 +284,7 @@ async def test_api_backup_restore_background(
     """Test background option on backup/restore APIs."""
     await coresys.core.set_state(CoreState.RUNNING)
     coresys.hardware.disk.get_disk_free_space = lambda x: 5000
-    coresys.homeassistant.version = AwesomeVersion("2023.09.0")
+    coresys.muthurcommand.version = AwesomeVersion("2023.09.0")
     (tmp_supervisor_data / "addons/local").mkdir(parents=True)
 
     assert coresys.jobs.jobs == []
@@ -303,7 +303,7 @@ async def test_api_backup_restore_background(
 
     assert job["name"] == f"backup_manager_{backup_type}_backup"
     assert (backup_slug := job["reference"])
-    assert job["child_jobs"][0]["name"] == "backup_store_homeassistant"
+    assert job["child_jobs"][0]["name"] == "backup_store_muthurcommand"
     assert job["child_jobs"][0]["reference"] == backup_slug
     assert job["child_jobs"][1]["name"] == "backup_store_folders"
     assert job["child_jobs"][1]["reference"] == backup_slug
@@ -314,7 +314,7 @@ async def test_api_backup_restore_background(
         "ssl",
     }
 
-    with patch.object(HomeAssistantCore, "start"):
+    with patch.object(MuthurCommandCore, "start"):
         resp = await api_client.post(
             f"/backups/{backup_slug}/restore/{backup_type}",
             json={"background": True} | options,
@@ -337,7 +337,7 @@ async def test_api_backup_restore_background(
         "share",
         "ssl",
     }
-    assert job["child_jobs"][1]["name"] == "backup_restore_homeassistant"
+    assert job["child_jobs"][1]["name"] == "backup_restore_muthurcommand"
     assert job["child_jobs"][1]["reference"] == backup_slug
 
     if backup_type == "full":
@@ -352,7 +352,7 @@ async def test_api_backup_restore_background(
         (
             "partial",
             {
-                "homeassistant": True,
+                "muthurcommand": True,
                 "folders": ["addons/local", "media", "share", "ssl"],
                 "addons": ["local_ssh"],
             },
@@ -370,7 +370,7 @@ async def test_api_backup_errors(
     """Test error reporting in backup job."""
     await coresys.core.set_state(CoreState.RUNNING)
     coresys.hardware.disk.get_disk_free_space = lambda x: 5000
-    coresys.homeassistant.version = AwesomeVersion("2023.09.0")
+    coresys.muthurcommand.version = AwesomeVersion("2023.09.0")
     (tmp_supervisor_data / "addons/local").mkdir(parents=True)
 
     assert coresys.jobs.jobs == []
@@ -393,7 +393,7 @@ async def test_api_backup_errors(
     assert job["done"] is True
     assert job["reference"] == slug
     assert job["errors"] == []
-    assert job["child_jobs"][0]["name"] == "backup_store_homeassistant"
+    assert job["child_jobs"][0]["name"] == "backup_store_muthurcommand"
     assert job["child_jobs"][0]["reference"] == slug
     assert job["child_jobs"][1]["name"] == "backup_store_addons"
     assert job["child_jobs"][1]["reference"] == slug
@@ -419,9 +419,9 @@ async def test_api_backup_errors(
 
     with (
         patch.object(
-            HomeAssistant,
+            MuthurCommand,
             "backup",
-            side_effect=HomeAssistantBackupError("Backup error"),
+            side_effect=MuthurCommandBackupError("Backup error"),
         ),
         patch.object(Addon, "backup"),
     ):
@@ -439,17 +439,17 @@ async def test_api_backup_errors(
     assert job["done"] is True
     assert job["errors"] == [
         {
-            "type": "HomeAssistantBackupError",
+            "type": "MuthurCommandBackupError",
             "message": "Backup error",
-            "stage": "home_assistant",
+            "stage": "muthurcommand",
             "error_key": None,
             "extra_fields": None,
         }
     ]
-    assert job["child_jobs"][0]["name"] == "backup_store_homeassistant"
+    assert job["child_jobs"][0]["name"] == "backup_store_muthurcommand"
     assert job["child_jobs"][0]["errors"] == [
         {
-            "type": "HomeAssistantBackupError",
+            "type": "MuthurCommandBackupError",
             "message": "Backup error",
             "stage": None,
             "error_key": None,
@@ -473,7 +473,7 @@ async def test_backup_immediate_errors(api_client: TestClient, coresys: CoreSys)
     coresys.hardware.disk.get_disk_free_space = lambda x: 0.5
     resp = await api_client.post(
         "/backups/new/partial",
-        json={"name": "Test", "homeassistant": True, "background": True},
+        json={"name": "Test", "muthurcommand": True, "background": True},
     )
     assert resp.status == 400
     assert "not enough free space" in (await resp.json())["message"]
@@ -511,7 +511,7 @@ async def test_restore_immediate_errors(
     ):
         resp = await api_client.post(
             f"/backups/{mock_partial_backup.slug}/restore/partial",
-            json={"background": True, "homeassistant": True},
+            json={"background": True, "muthurcommand": True},
         )
     assert resp.status == 400
     assert "Must update supervisor" in (await resp.json())["message"]
@@ -530,18 +530,18 @@ async def test_restore_immediate_errors(
     ):
         resp = await api_client.post(
             f"/backups/{mock_partial_backup.slug}/restore/partial",
-            json={"background": True, "homeassistant": True},
+            json={"background": True, "muthurcommand": True},
         )
     assert resp.status == 400
     assert "Invalid password" in (await resp.json())["message"]
 
     with (
         patch.object(Backup, "validate_backup"),
-        patch.object(Backup, "homeassistant", new=PropertyMock(return_value=None)),
+        patch.object(Backup, "muthurcommand", new=PropertyMock(return_value=None)),
     ):
         resp = await api_client.post(
             f"/backups/{mock_partial_backup.slug}/restore/partial",
-            json={"background": True, "homeassistant": True},
+            json={"background": True, "muthurcommand": True},
         )
     assert resp.status == 400
     assert "No Home Assistant" in (await resp.json())["message"]
@@ -595,7 +595,7 @@ async def test_cloud_backup_core_only(api_client: TestClient, mock_full_backup: 
 
     resp = await api_client.post(
         "/backups/new/partial",
-        json={"name": "Test", "homeassistant": True, "location": ".cloud_backup"},
+        json={"name": "Test", "muthurcommand": True, "location": ".cloud_backup"},
     )
     assert resp.status == 403
 
@@ -612,7 +612,7 @@ async def test_cloud_backup_core_only(api_client: TestClient, mock_full_backup: 
 
     resp = await api_client.post(
         f"/backups/{mock_full_backup.slug}/restore/partial",
-        json={"homeassistant": True},
+        json={"muthurcommand": True},
     )
     assert resp.status == 403
 
@@ -1154,10 +1154,10 @@ async def test_restore_backup_unencrypted_after_encrypted(
 
 
 @pytest.mark.parametrize(
-    ("backup_type", "postbody"), [("partial", {"homeassistant": True}), ("full", {})]
+    ("backup_type", "postbody"), [("partial", {"muthurcommand": True}), ("full", {})]
 )
 @pytest.mark.usefixtures("tmp_supervisor_data", "path_extern")
-async def test_restore_homeassistant_adds_env(
+async def test_restore_muthurcommand_adds_env(
     api_client: TestClient,
     coresys: CoreSys,
     docker: DockerAPI,
@@ -1169,7 +1169,7 @@ async def test_restore_homeassistant_adds_env(
     event = asyncio.Event()
     await coresys.core.set_state(CoreState.RUNNING)
     coresys.hardware.disk.get_disk_free_space = lambda x: 5000
-    coresys.homeassistant.version = AwesomeVersion("2025.1.0")
+    coresys.muthurcommand.version = AwesomeVersion("2025.1.0")
     backup = await coresys.backups.do_backup_full()
 
     async def mock_async_send_message(_, message: dict[str, Any]):
@@ -1184,9 +1184,9 @@ async def test_restore_homeassistant_adds_env(
             event.set()
 
     with (
-        patch.object(HomeAssistantCore, "_block_till_run"),
+        patch.object(MuthurCommandCore, "_block_till_run"),
         patch.object(
-            HomeAssistantWebSocket,
+            MuthurCommandWebSocket,
             "_async_send_command",
             new=mock_async_send_message,
         ),
@@ -1202,7 +1202,7 @@ async def test_restore_homeassistant_adds_env(
         if not job.done:
             await asyncio.wait_for(event.wait(), 5)
 
-    assert docker.containers.create.call_args.kwargs["name"] == "homeassistant"
+    assert docker.containers.create.call_args.kwargs["name"] == "muthurcommand"
     assert (
         f"SUPERVISOR_RESTORE_JOB_ID={job.uuid}"
         in docker.containers.create.call_args.args[0]["Env"]

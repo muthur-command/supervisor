@@ -23,7 +23,7 @@ class MappingType(StrEnum):
     BACKUP = "backup"
     SHARE = "share"
     MEDIA = "media"
-    HOMEASSISTANT_CONFIG = "homeassistant_config"
+    MUTHURCOMMAND_CONFIG = "muthurcommand_config"
     ALL_ADDON_CONFIGS = "all_addon_configs"
     ADDON_CONFIG = "addon_config"
 

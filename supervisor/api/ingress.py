@@ -28,14 +28,14 @@ from ..const import (
     HEADER_REMOTE_USER_ID,
     HEADER_REMOTE_USER_NAME,
     HEADER_TOKEN,
-    HEADER_TOKEN_OLD,
-    HomeAssistantUser,
+    HEADER_MCIO_KEY,
+    MuthurCommandUser,
     IngressSessionData,
 )
 from ..coresys import CoreSysAttributes
-from ..exceptions import HomeAssistantAPIError
+from ..exceptions import MuthurCommandAPIError
 from .const import COOKIE_INGRESS
-from .utils import api_process, api_validate, require_home_assistant
+from .utils import api_process, api_validate, require_muthurcommand
 
 _LOGGER: logging.Logger = logging.getLogger(__name__)
 
@@ -108,7 +108,7 @@ class APIIngress(CoreSysAttributes):
         return {ATTR_PANELS: addons}
 
     @api_process
-    @require_home_assistant
+    @require_muthurcommand
     async def create_session(self, request: web.Request) -> dict[str, Any]:
         """Create a new session."""
         schema_ingress_config_session_data = await api_validate(
@@ -127,7 +127,7 @@ class APIIngress(CoreSysAttributes):
         return {ATTR_SESSION: session}
 
     @api_process
-    @require_home_assistant
+    @require_muthurcommand
     async def validate_session(self, request: web.Request) -> None:
         """Validate session and extending how long it's valid for."""
         data = await api_validate(VALIDATE_SESSION_DATA, request)
@@ -306,11 +306,11 @@ class APIIngress(CoreSysAttributes):
 
             return response
 
-    async def _find_user_by_id(self, user_id: str) -> HomeAssistantUser | None:
+    async def _find_user_by_id(self, user_id: str) -> MuthurCommandUser | None:
         """Find user object by the user's ID."""
         try:
-            users = await self.sys_homeassistant.list_users()
-        except HomeAssistantAPIError as err:
+            users = await self.sys_muthurcommand.list_users()
+        except MuthurCommandAPIError as err:
             _LOGGER.warning("Could not fetch list of users: %s", err)
             return None
 
@@ -341,7 +341,7 @@ def _init_header(
             hdrs.SEC_WEBSOCKET_VERSION,
             hdrs.SEC_WEBSOCKET_KEY,
             istr(HEADER_TOKEN),
-            istr(HEADER_TOKEN_OLD),
+            istr(HEADER_MCIO_KEY),
             istr(HEADER_REMOTE_USER_ID),
             istr(HEADER_REMOTE_USER_NAME),
             istr(HEADER_REMOTE_USER_DISPLAY_NAME),

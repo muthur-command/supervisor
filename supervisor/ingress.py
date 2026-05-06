@@ -10,12 +10,12 @@ from .const import (
     ATTR_PORTS,
     ATTR_SESSION,
     ATTR_SESSION_DATA,
-    FILE_HASSIO_INGRESS,
+    FILE_MCIO_INGRESS,
     IngressSessionData,
     IngressSessionDataDict,
 )
 from .coresys import CoreSys, CoreSysAttributes
-from .exceptions import HomeAssistantAPIError
+from .exceptions import MuthurCommandAPIError
 from .utils import check_port
 from .utils.common import FileConfiguration
 from .utils.dt import utc_from_timestamp, utcnow
@@ -29,7 +29,7 @@ class Ingress(FileConfiguration, CoreSysAttributes):
 
     def __init__(self, coresys: CoreSys):
         """Initialize updater."""
-        super().__init__(FILE_HASSIO_INGRESS, SCHEMA_INGRESS_CONFIG)
+        super().__init__(FILE_MCIO_INGRESS, SCHEMA_INGRESS_CONFIG)
         self.coresys: CoreSys = coresys
         self.tokens: dict[str, str] = {}
 
@@ -186,14 +186,22 @@ class Ingress(FileConfiguration, CoreSysAttributes):
 
     async def update_hass_panel(self, addon: Addon):
         """Return True if Home Assistant up and running."""
-        if not await self.sys_homeassistant.core.is_running():
+        if self.sys_muthurcommand.unused:
+            # MCOS variants without HA Core don't expose the legacy panel
+            # API; ingress addons surface through ``mc_fd`` itself.
+            _LOGGER.debug(
+                "Ignoring panel update for %s — Home Assistant Core is unused",
+                addon.slug,
+            )
+            return
+        if not await self.sys_muthurcommand.core.is_running():
             _LOGGER.debug("Ignoring panel update on Core")
             return
 
         # Update UI
         method = "post" if addon.ingress_panel else "delete"
         try:
-            async with self.sys_homeassistant.api.make_request(
+            async with self.sys_muthurcommand.api.make_request(
                 method, f"api/hassio_push/panel/{addon.slug}"
             ) as resp:
                 if resp.status in (200, 201):
@@ -204,5 +212,5 @@ class Ingress(FileConfiguration, CoreSysAttributes):
                         addon.slug,
                         resp.status,
                     )
-        except HomeAssistantAPIError as err:
+        except MuthurCommandAPIError as err:
             _LOGGER.error("Panel update request failed for %s: %s", addon.slug, err)

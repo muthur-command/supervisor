@@ -1,6 +1,6 @@
 [
   {
-    "status": "Pulling from home-assistant/home-assistant",
+    "status": "Pulling from muthur-command/amd64-muthurcommand",
     "id": "2025.12.0.dev202511080235"
   },
   { "status": "Pulling fs layer", "progressDetail": {}, "id": "eafecc6b43cc" },
@@ -191,6 +191,6 @@
     "status": "Digest: sha256:bfc9efc13552c0c228f3d9d35987331cce68b43c9bc79c80a57eeadadd44cccf"
   },
   {
-    "status": "Status: Downloaded newer image for ghcr.io/home-assistant/home-assistant:2025.12.0.dev202511080235"
+    "status": "Status: Downloaded newer image for ghcr.io/muthur-command/amd64-muthurcommand:2025.12.0.dev202511080235"
   }
 ]

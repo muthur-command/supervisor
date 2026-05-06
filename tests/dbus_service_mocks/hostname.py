@@ -76,17 +76,17 @@ class Hostname(DBusServiceMock):
     @dbus_property(access=PropertyAccess.READ)
     def OperatingSystemPrettyName(self) -> "s":
         """Get OperatingSystemPrettyName."""
-        return "Home Assistant OS 6.0.dev20210504"
+        return "Muthur Command OS 6.0.dev20210504"
 
     @dbus_property(access=PropertyAccess.READ)
     def OperatingSystemCPEName(self) -> "s":
         """Get OperatingSystemCPEName."""
-        return "cpe:2.3:o:home-assistant:haos:6.0.dev20210504:*:development:*:*:*:odroid-n2:*"
+        return "cpe:2.3:o:muthur-command:mcos:6.0.dev20210504:*:development:*:*:*:odroid-n2:*"
 
     @dbus_property(access=PropertyAccess.READ)
     def HomeURL(self) -> "s":
         """Get HomeURL."""
-        return "https://hass.io/"
+        return "https://www.muthur-command.com/"
 
     @dbus_method()
     def SetHostname(self, hostname: "s", interactive: "b") -> None:
@@ -145,9 +145,9 @@ class Hostname(DBusServiceMock):
                 "KernelName": "Linux",
                 "KernelRelease": "5.15.88",
                 "KernelVersion": "#1 SMP PREEMPT Mon Jan 16 23:45:23 UTC 2023",
-                "OperatingSystemPrettyName": "Home Assistant OS 10.0.dev20230116",
-                "OperatingSystemCPEName": "cpe:2.3:o:home-assistant:haos:10.0.dev20230116:*:development:*:*:*:odroid-n2:*",
-                "OperatingSystemHomeURL": "https://hass.io/",
+                "OperatingSystemPrettyName": "Muthur Command OS 10.0.dev20230116",
+                "OperatingSystemCPEName": "cpe:2.3:o:muthur-command:mcos:10.0.dev20230116:*:development:*:*:*:odroid-n2:*",
+                "OperatingSystemHomeURL": "https://www.muthur-command.com/",
                 "HardwareVendor": None,
                 "HardwareModel": None,
                 "ProductUUID": None,

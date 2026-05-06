@@ -9,7 +9,7 @@ from awesomeversion import AwesomeVersion
 from ..const import LABEL_MACHINE
 from ..exceptions import DockerJobError
 from ..hardware.const import PolicyGroup
-from ..homeassistant.const import LANDINGPAGE
+from ..muthurcommand.const import LANDINGPAGE
 from ..jobs.const import JobConcurrency
 from ..jobs.decorator import Job
 from .const import (
@@ -34,12 +34,12 @@ from .interface import CommandReturn, DockerInterface
 
 _LOGGER: logging.Logger = logging.getLogger(__name__)
 _VERIFY_TRUST: AwesomeVersion = AwesomeVersion("2021.5.0")
-_HASS_DOCKER_NAME: str = "homeassistant"
+_MUTHURCOMMAND_DOCKER_NAME: str = "muthurcommand"
 ENV_S6_GRACETIME = re.compile(r"^S6_SERVICES_GRACETIME=([0-9]+)$")
 ENV_RESTORE_JOB_ID = "SUPERVISOR_RESTORE_JOB_ID"
 
 
-class DockerHomeAssistant(DockerInterface):
+class DockerMuthurCommand(DockerInterface):
     """Docker Supervisor wrapper for Home Assistant."""
 
     @property
@@ -52,18 +52,18 @@ class DockerHomeAssistant(DockerInterface):
     @property
     def image(self) -> str:
         """Return name of Docker image."""
-        return self.sys_homeassistant.image
+        return self.sys_muthurcommand.image
 
     @property
     def name(self) -> str:
         """Return name of Docker container."""
-        return _HASS_DOCKER_NAME
+        return _MUTHURCOMMAND_DOCKER_NAME
 
     @property
     def timeout(self) -> int:
         """Return timeout for Docker actions."""
         # Use S6_SERVICES_GRACETIME to avoid killing Home Assistant Core, see
-        # https://github.com/home-assistant/core/tree/dev/Dockerfile
+        # https://github.com/muthur-command/mc_bd/tree/dev/Dockerfile
         if self.meta_config and "Env" in self.meta_config:
             for env in self.meta_config["Env"]:
                 if match := ENV_S6_GRACETIME.match(env):
@@ -82,7 +82,7 @@ class DockerHomeAssistant(DockerInterface):
         """Return a list of needed cgroups permission."""
         return (
             []
-            if self.sys_homeassistant.version == LANDINGPAGE
+            if self.sys_muthurcommand.version == LANDINGPAGE
             else (
                 self.sys_hardware.policy.get_cgroups_rules(PolicyGroup.UART)
                 + self.sys_hardware.policy.get_cgroups_rules(PolicyGroup.VIDEO)
@@ -101,14 +101,14 @@ class DockerHomeAssistant(DockerInterface):
             # HA config folder
             DockerMount(
                 type=MountType.BIND,
-                source=self.sys_config.path_extern_homeassistant.as_posix(),
+                source=self.sys_config.path_extern_muthurcommand.as_posix(),
                 target=PATH_PUBLIC_CONFIG.as_posix(),
                 read_only=False,
             ),
         ]
 
         # Landingpage does not need all this access
-        if self.sys_homeassistant.version != LANDINGPAGE:
+        if self.sys_muthurcommand.version != LANDINGPAGE:
             mounts.extend(
                 [
                     # All other folders
@@ -139,7 +139,7 @@ class DockerHomeAssistant(DockerInterface):
                     # Configuration audio
                     DockerMount(
                         type=MountType.BIND,
-                        source=self.sys_homeassistant.path_extern_pulse.as_posix(),
+                        source=self.sys_muthurcommand.path_extern_pulse.as_posix(),
                         target="/etc/pulse/client.conf",
                         read_only=True,
                     ),
@@ -175,19 +175,19 @@ class DockerHomeAssistant(DockerInterface):
             "SUPERVISOR": str(self.sys_docker.network.supervisor),
             "HASSIO": str(self.sys_docker.network.supervisor),
             ENV_TIME: self.sys_timezone,
-            ENV_TOKEN: self.sys_homeassistant.supervisor_token,
-            ENV_TOKEN_OLD: self.sys_homeassistant.supervisor_token,
+            ENV_TOKEN: self.sys_muthurcommand.supervisor_token,
+            ENV_TOKEN_OLD: self.sys_muthurcommand.supervisor_token,
         }
         if restore_job_id:
             environment[ENV_RESTORE_JOB_ID] = restore_job_id
-        if self.sys_homeassistant.duplicate_log_file:
+        if self.sys_muthurcommand.duplicate_log_file:
             environment[ENV_DUPLICATE_LOG_FILE] = "1"
         await self._run(
-            tag=(self.sys_homeassistant.version),
+            tag=(self.sys_muthurcommand.version),
             name=self.name,
             hostname=self.name,
             detach=True,
-            privileged=self.sys_homeassistant.version != LANDINGPAGE,
+            privileged=self.sys_muthurcommand.version != LANDINGPAGE,
             init=False,
             security_opt=self.security_opt,
             network_mode="host",
@@ -214,7 +214,7 @@ class DockerHomeAssistant(DockerInterface):
         """Create a temporary container and run command."""
         return await self.sys_docker.run_command(
             self.image,
-            tag=str(self.sys_homeassistant.version),
+            tag=str(self.sys_muthurcommand.version),
             command=command,
             privileged=True,
             init=True,
@@ -222,7 +222,7 @@ class DockerHomeAssistant(DockerInterface):
             mounts=[
                 DockerMount(
                     type=MountType.BIND,
-                    source=self.sys_config.path_extern_homeassistant.as_posix(),
+                    source=self.sys_config.path_extern_muthurcommand.as_posix(),
                     target="/config",
                     read_only=False,
                 ),
@@ -244,8 +244,8 @@ class DockerHomeAssistant(DockerInterface):
 
     async def is_initialize(self) -> bool:
         """Return True if Docker container exists."""
-        if not self.sys_homeassistant.version:
+        if not self.sys_muthurcommand.version:
             return False
         return await self.sys_docker.container_is_initialized(
-            self.name, self.image, self.sys_homeassistant.version
+            self.name, self.image, self.sys_muthurcommand.version
         )

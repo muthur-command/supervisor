@@ -1,6 +1,6 @@
 """Home Assistant dns plugin.
 
-Code: https://github.com/home-assistant/plugin-dns
+Code: https://github.com/muthur-command/plugin-dns
 """
 
 import asyncio
@@ -39,7 +39,7 @@ from ..validate import dns_url
 from .base import PluginBase
 from .const import (
     ATTR_FALLBACK,
-    FILE_HASSIO_DNS,
+    FILE_MCIO_DNS,
     PLUGIN_UPDATE_CONDITIONS,
     WATCHDOG_THROTTLE_MAX_CALLS,
     WATCHDOG_THROTTLE_PERIOD,
@@ -68,7 +68,7 @@ class PluginDns(PluginBase):
 
     def __init__(self, coresys: CoreSys):
         """Initialize hass object."""
-        super().__init__(FILE_HASSIO_DNS, SCHEMA_DNS_CONFIG)
+        super().__init__(FILE_MCIO_DNS, SCHEMA_DNS_CONFIG)
         self.slug = "dns"
         self.coresys: CoreSys = coresys
         self.instance: DockerDNS = DockerDNS(coresys)
@@ -419,12 +419,12 @@ class PluginDns(PluginBase):
             self.add_host(IPv4Address("127.0.0.1"), ["localhost"], write=False),
             self.add_host(
                 self.sys_docker.network.supervisor,
-                ["hassio", "supervisor"],
+                ["mcio", "supervisor"],
                 write=False,
             ),
             self.add_host(
                 self.sys_docker.network.gateway,
-                ["homeassistant", "home-assistant"],
+                ["muthurcommand", "muthur-command"],
                 write=False,
             ),
             self.add_host(self.sys_docker.network.dns, ["dns"], write=False),

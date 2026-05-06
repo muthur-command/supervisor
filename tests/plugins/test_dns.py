@@ -115,33 +115,37 @@ async def test_reset(coresys: CoreSys):
         assert coresys.plugins.dns._hosts == [
             HostEntry(
                 ip_address=IPv4Address("127.0.0.1"),
-                names=["localhost", "localhost.local.hass.io"],
+                names=["localhost", "localhost.local.mcio"],
             ),
             HostEntry(
                 ip_address=IPv4Address("172.30.32.2"),
                 names=[
-                    "hassio",
-                    "hassio.local.hass.io",
+                    "mcio",
+                    "mcio.local.mcio",
                     "supervisor",
-                    "supervisor.local.hass.io",
+                    "supervisor.local.mcio",
                 ],
             ),
             HostEntry(
                 ip_address=IPv4Address("172.30.32.1"),
                 names=[
                     "homeassistant",
-                    "homeassistant.local.hass.io",
+                    "homeassistant.local.mcio",
                     "home-assistant",
-                    "home-assistant.local.hass.io",
+                    "home-assistant.local.mcio",
+                    "muthurcommand",
+                    "muthurcommand.local.mcio",
+                    "muthur-command",
+                    "muthur-command.local.mcio",
                 ],
             ),
             HostEntry(
                 ip_address=IPv4Address("172.30.32.3"),
-                names=["dns", "dns.local.hass.io"],
+                names=["dns", "dns.local.mcio"],
             ),
             HostEntry(
                 ip_address=IPv4Address("172.30.32.6"),
-                names=["observer", "observer.local.hass.io"],
+                names=["observer", "observer.local.mcio"],
             ),
         ]
 
@@ -171,7 +175,7 @@ async def test_loop_detection_on_failure(coresys: CoreSys, container: DockerCont
         coresys.bus.fire_event(
             BusEvent.DOCKER_CONTAINER_STATE_CHANGE,
             DockerContainerStateEvent(
-                name="hassio_dns",
+                name="mcio_dns",
                 state=ContainerState.FAILED,
                 id="abc123",
                 time=1,
@@ -187,7 +191,7 @@ async def test_loop_detection_on_failure(coresys: CoreSys, container: DockerCont
         coresys.bus.fire_event(
             BusEvent.DOCKER_CONTAINER_STATE_CHANGE,
             DockerContainerStateEvent(
-                name="hassio_dns",
+                name="mcio_dns",
                 state=ContainerState.FAILED,
                 id="abc123",
                 time=1,
@@ -436,7 +440,7 @@ async def test_dns_restart_triggers_connectivity_check(coresys: CoreSys):
         coresys.bus.fire_event(
             BusEvent.DOCKER_CONTAINER_STATE_CHANGE,
             DockerContainerStateEvent(
-                name="hassio_dns",
+                name="mcio_dns",
                 state=ContainerState.RUNNING,
                 id="test_id",
                 time=1234567890,
@@ -457,7 +461,7 @@ async def test_dns_restart_triggers_connectivity_check(coresys: CoreSys):
         coresys.bus.fire_event(
             BusEvent.DOCKER_CONTAINER_STATE_CHANGE,
             DockerContainerStateEvent(
-                name="hassio_homeassistant",
+                name="muthurcommand",
                 state=ContainerState.RUNNING,
                 id="test_id",
                 time=1234567890,

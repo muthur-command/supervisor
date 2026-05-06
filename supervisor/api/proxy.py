@@ -14,7 +14,7 @@ from aiohttp.http_websocket import WSMsgType
 from aiohttp.web_exceptions import HTTPBadGateway, HTTPUnauthorized
 
 from ..coresys import CoreSysAttributes
-from ..exceptions import APIError, HomeAssistantAPIError, HomeAssistantAuthError
+from ..exceptions import APIError, MuthurCommandAPIError, MuthurCommandAuthError
 from ..utils.json import json_dumps
 from ..utils.logging import AddonLoggerAdapter
 
@@ -34,7 +34,7 @@ HEADER_HA_ACCESS = "X-Ha-Access"
 # Since these are coming from core we want the largest possible size
 # that is not likely to cause a memory problem as most modern browsers
 # support large messages.
-# https://github.com/home-assistant/supervisor/issues/4392
+# https://github.com/muthur-command/supervisor/issues/4392
 MAX_MESSAGE_SIZE_FROM_CORE = 64 * 1024 * 1024
 
 
@@ -84,7 +84,7 @@ class APIProxy(CoreSysAttributes):
         addon = self.sys_addons.from_token(supervisor_token)
         if not addon:
             _LOGGER.warning("Unknown Home Assistant API access!")
-        elif not addon.access_homeassistant_api:
+        elif not addon.access_muthurcommand_api:
             _LOGGER.warning("Not permitted API access: %s", addon.slug)
         else:
             _LOGGER.debug("%s access from %s", request.path, addon.slug)
@@ -98,7 +98,7 @@ class APIProxy(CoreSysAttributes):
     ) -> AsyncIterator[aiohttp.ClientResponse]:
         """Return a client request with proxy origin for Home Assistant."""
         try:
-            async with self.sys_homeassistant.api.make_request(
+            async with self.sys_muthurcommand.api.make_request(
                 request.method.lower(),
                 f"api/{path}",
                 headers={
@@ -114,9 +114,9 @@ class APIProxy(CoreSysAttributes):
                 yield resp
                 return
 
-        except HomeAssistantAuthError as err:
+        except MuthurCommandAuthError as err:
             _LOGGER.error("Authenticate error on API for request %s: %s", path, err)
-        except HomeAssistantAPIError as err:
+        except MuthurCommandAPIError as err:
             _LOGGER.error("Error on API for request %s: %s", path, err)
         except aiohttp.ClientError as err:
             _LOGGER.error("Client error on API %s request %s", path, err)
@@ -126,9 +126,9 @@ class APIProxy(CoreSysAttributes):
         raise HTTPBadGateway()
 
     async def stream(self, request: web.Request):
-        """Proxy HomeAssistant EventStream Requests."""
+        """Proxy MuthurCommand EventStream Requests."""
         self._check_access(request)
-        if not await self.sys_homeassistant.api.check_api_state():
+        if not await self.sys_muthurcommand.api.check_api_state():
             raise HTTPBadGateway()
 
         _LOGGER.info("Home Assistant EventStream start")
@@ -145,7 +145,7 @@ class APIProxy(CoreSysAttributes):
     async def api(self, request: web.Request):
         """Proxy Home Assistant API Requests."""
         self._check_access(request)
-        if not await self.sys_homeassistant.api.check_api_state():
+        if not await self.sys_muthurcommand.api.check_api_state():
             raise HTTPBadGateway()
 
         # Normal request
@@ -179,7 +179,7 @@ class APIProxy(CoreSysAttributes):
 
     async def _websocket_client(self) -> ClientWebSocketResponse:
         """Initialize a WebSocket API connection."""
-        url = f"{self.sys_homeassistant.api_url}/api/websocket"
+        url = f"{self.sys_muthurcommand.api_url}/api/websocket"
 
         try:
             client = await self.sys_websession.ws_connect(
@@ -200,11 +200,11 @@ class APIProxy(CoreSysAttributes):
                 )
 
             # Auth session
-            await self.sys_homeassistant.api.ensure_access_token()
+            await self.sys_muthurcommand.api.ensure_access_token()
             await client.send_json(
                 {
                     "type": "auth",
-                    "access_token": self.sys_homeassistant.api.access_token,
+                    "access_token": self.sys_muthurcommand.api.access_token,
                 },
                 dumps=json_dumps,
             )
@@ -217,16 +217,16 @@ class APIProxy(CoreSysAttributes):
             # Renew the Token is invalid
             if (
                 data.get("type") == "invalid_auth"
-                and self.sys_homeassistant.refresh_token
+                and self.sys_muthurcommand.refresh_token
             ):
-                self.sys_homeassistant.api.access_token = None
+                self.sys_muthurcommand.api.access_token = None
                 return await self._websocket_client()
 
-            raise HomeAssistantAuthError()
+            raise MuthurCommandAuthError()
 
         except (RuntimeError, ValueError, TypeError, ClientConnectorError) as err:
             _LOGGER.error("Client error on WebSocket API %s.", err)
-        except HomeAssistantAuthError:
+        except MuthurCommandAuthError:
             _LOGGER.error("Failed authentication to Home Assistant WebSocket")
 
         raise APIError()
@@ -271,7 +271,7 @@ class APIProxy(CoreSysAttributes):
 
     async def websocket(self, request: web.Request):
         """Initialize a WebSocket API connection."""
-        if not await self.sys_homeassistant.api.check_api_state():
+        if not await self.sys_muthurcommand.api.check_api_state():
             raise HTTPBadGateway()
         _LOGGER.info("Home Assistant WebSocket API request initialize")
 
@@ -283,7 +283,7 @@ class APIProxy(CoreSysAttributes):
         # handle authentication
         try:
             await server.send_json(
-                {"type": "auth_required", "ha_version": self.sys_homeassistant.version},
+                {"type": "auth_required", "ha_version": self.sys_muthurcommand.version},
                 dumps=json_dumps,
             )
 
@@ -294,7 +294,7 @@ class APIProxy(CoreSysAttributes):
             )
             addon = self.sys_addons.from_token(supervisor_token)
 
-            if not addon or not addon.access_homeassistant_api:
+            if not addon or not addon.access_muthurcommand_api:
                 _LOGGER.warning("Unauthorized WebSocket access!")
                 await server.send_json(
                     {"type": "auth_invalid", "message": "Invalid access"},
@@ -306,7 +306,7 @@ class APIProxy(CoreSysAttributes):
             _LOGGER.info("WebSocket access from %s", addon_name)
 
             await server.send_json(
-                {"type": "auth_ok", "ha_version": self.sys_homeassistant.version},
+                {"type": "auth_ok", "ha_version": self.sys_muthurcommand.version},
                 dumps=json_dumps,
             )
         except TimeoutError:

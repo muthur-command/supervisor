@@ -2,7 +2,7 @@ name: Terminal & SSH
 version: 9.2.1
 slug: ssh
 description: Allow logging in remotely to Home Assistant using SSH
-url: "https://github.com/home-assistant/hassio-addons/tree/master/ssh"
+url: "https://github.com/muthur-command/addons/tree/master/ssh"
 arch:
   - aarch64
   - amd64
@@ -12,9 +12,9 @@ host_dbus: true
 ingress: true
 panel_icon: "mdi:console"
 panel_title: Terminal
-hassio_api: true
-hassio_role: manager
-homeassistant_api: true
+mcio_api: true
+mcio_role: manager
+muthurcommand_api: true
 auth_api: true
 audio: true
 uart: true

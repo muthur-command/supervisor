@@ -17,7 +17,7 @@ import pytest
 from supervisor.addons.addon import Addon
 from supervisor.api.proxy import APIProxy
 from supervisor.const import ATTR_ACCESS_TOKEN
-from supervisor.homeassistant.api import HomeAssistantAPI
+from supervisor.muthurcommand.api import MuthurCommandAPI
 
 
 def id_generator() -> Generator[int]:
@@ -102,7 +102,7 @@ def fixture_proxy_ws_client(
 
     async def create_client(auth_token: str) -> MockHAClientWebSocket:
         """Create a websocket client."""
-        websocket = await api_client.ws_connect("/core/websocket")
+        websocket = await api_client.ws_connect("/mc_bd/websocket")
         auth_resp = await websocket.receive_json()
         assert auth_resp["type"] == "auth_required"
         await websocket.send_json({"type": "auth", "access_token": auth_token})
@@ -195,7 +195,7 @@ async def test_proxy_invalid_auth(
 ):
     """Test invalid access token or addon with no access."""
     install_addon_example.persist[ATTR_ACCESS_TOKEN] = "abc123"
-    websocket = await api_client.ws_connect("/core/websocket")
+    websocket = await api_client.ws_connect("/mc_bd/websocket")
     auth_resp = await websocket.receive_json()
     assert auth_resp["type"] == "auth_required"
     await websocket.send_json({"type": "auth", "access_token": auth_token})
@@ -212,7 +212,7 @@ async def test_proxy_auth_abort_log(
 ):
     """Test WebSocket closed during authentication gets logged."""
     install_addon_example.persist[ATTR_ACCESS_TOKEN] = "abc123"
-    websocket = await api_client.ws_connect("/core/websocket")
+    websocket = await api_client.ws_connect("/mc_bd/websocket")
     auth_resp = await websocket.receive_json()
     assert auth_resp["type"] == "auth_required"
     caplog.clear()
@@ -232,11 +232,11 @@ async def test_api_proxy_get_request(
 ):
     """Test the API proxy request using patch for make_request."""
     install_addon_example.persist[ATTR_ACCESS_TOKEN] = "abc123"
-    install_addon_example.data["homeassistant_api"] = True
+    install_addon_example.data["muthurcommand_api"] = True
 
     request.param = "local_example"
 
-    with patch.object(HomeAssistantAPI, "make_request") as make_request:
+    with patch.object(MuthurCommandAPI, "make_request") as make_request:
         # Mock the response from make_request
         mock_response = AsyncMock()
         mock_response.status = 200
@@ -245,7 +245,7 @@ async def test_api_proxy_get_request(
         make_request.return_value.__aenter__.return_value = mock_response
 
         response = await api_client.get(
-            f"/core/api/{path}", headers={"Authorization": "Bearer abc123"}
+            f"/mc_bd/api/{path}", headers={"Authorization": "Bearer abc123"}
         )
 
         assert make_request.call_args[0][0] == "get"
@@ -267,11 +267,11 @@ async def test_api_proxy_post_request(
 ):
     """Test the API proxy POST request."""
     install_addon_example.persist[ATTR_ACCESS_TOKEN] = "abc123"
-    install_addon_example.data["homeassistant_api"] = True
+    install_addon_example.data["muthurcommand_api"] = True
 
     request.param = "local_example"
 
-    with patch.object(HomeAssistantAPI, "make_request") as make_request:
+    with patch.object(MuthurCommandAPI, "make_request") as make_request:
         # Mock the response from make_request
         mock_response = AsyncMock()
         mock_response.status = 200
@@ -280,7 +280,7 @@ async def test_api_proxy_post_request(
         make_request.return_value.__aenter__.return_value = mock_response
 
         response = await api_client.post(
-            f"/core/api/{path}",
+            f"/mc_bd/api/{path}",
             headers={"Authorization": "Bearer abc123"},
             json={"test": "data"},
         )
@@ -304,11 +304,11 @@ async def test_api_proxy_delete_request(
 ):
     """Test the API proxy DELETE request."""
     install_addon_example.persist[ATTR_ACCESS_TOKEN] = "abc123"
-    install_addon_example.data["homeassistant_api"] = True
+    install_addon_example.data["muthurcommand_api"] = True
 
     request.param = "local_example"
 
-    with patch.object(HomeAssistantAPI, "make_request") as make_request:
+    with patch.object(MuthurCommandAPI, "make_request") as make_request:
         # Mock the response from make_request
         mock_response = AsyncMock()
         mock_response.status = 200
@@ -317,7 +317,7 @@ async def test_api_proxy_delete_request(
         make_request.return_value.__aenter__.return_value = mock_response
 
         response = await api_client.delete(
-            f"/core/api/{path}", headers={"Authorization": "Bearer abc123"}
+            f"/mc_bd/api/{path}", headers={"Authorization": "Bearer abc123"}
         )
 
         assert make_request.call_args[0][0] == "delete"
@@ -334,9 +334,9 @@ async def test_api_proxy_mcp_headers_forwarded(
 ):
     """Test that MCP headers are forwarded to Home Assistant."""
     install_addon_example.persist[ATTR_ACCESS_TOKEN] = "abc123"
-    install_addon_example.data["homeassistant_api"] = True
+    install_addon_example.data["muthurcommand_api"] = True
 
-    with patch.object(HomeAssistantAPI, "make_request") as make_request:
+    with patch.object(MuthurCommandAPI, "make_request") as make_request:
         # Mock the response from make_request
         mock_response = AsyncMock()
         mock_response.status = 200
@@ -346,7 +346,7 @@ async def test_api_proxy_mcp_headers_forwarded(
         make_request.return_value.__aenter__.return_value = mock_response
 
         response = await api_client.get(
-            "/core/api/mcp",
+            "/mc_bd/api/mcp",
             headers={
                 "Authorization": "Bearer abc123",
                 "Accept": "text/event-stream",
@@ -373,7 +373,7 @@ async def test_api_proxy_streaming_response(
 ):
     """Test that streaming responses (text/event-stream) are handled properly."""
     install_addon_example.persist[ATTR_ACCESS_TOKEN] = "abc123"
-    install_addon_example.data["homeassistant_api"] = True
+    install_addon_example.data["muthurcommand_api"] = True
 
     async def mock_content_iter():
         """Mock async iterator for streaming content."""
@@ -381,7 +381,7 @@ async def test_api_proxy_streaming_response(
         yield b"data: event2\n\n"
         yield b"data: event3\n\n"
 
-    with patch.object(HomeAssistantAPI, "make_request") as make_request:
+    with patch.object(MuthurCommandAPI, "make_request") as make_request:
         # Mock the response from make_request
         mock_response = AsyncMock()
         mock_response.status = 200
@@ -394,7 +394,7 @@ async def test_api_proxy_streaming_response(
         make_request.return_value.__aenter__.return_value = mock_response
 
         response = await api_client.get(
-            "/core/api/mcp",
+            "/mc_bd/api/mcp",
             headers={
                 "Authorization": "Bearer abc123",
                 "Accept": "text/event-stream",
@@ -420,13 +420,13 @@ async def test_api_proxy_streaming_response_client_payload_error(
 ):
     """Test that client payload errors during streaming are handled gracefully."""
     install_addon_example.persist[ATTR_ACCESS_TOKEN] = "abc123"
-    install_addon_example.data["homeassistant_api"] = True
+    install_addon_example.data["muthurcommand_api"] = True
 
     async def mock_content_iter_error():
         yield b"data: event1\n\n"
         raise ClientPayloadError("boom")
 
-    with patch.object(HomeAssistantAPI, "make_request") as make_request:
+    with patch.object(MuthurCommandAPI, "make_request") as make_request:
         mock_response = AsyncMock()
         mock_response.status = 200
         mock_response.content_type = "text/event-stream"
@@ -438,7 +438,7 @@ async def test_api_proxy_streaming_response_client_payload_error(
         make_request.return_value.__aenter__.return_value = mock_response
 
         response = await api_client.get(
-            "/core/api/mcp",
+            "/mc_bd/api/mcp",
             headers={
                 "Authorization": "Bearer abc123",
                 "Accept": "text/event-stream",

@@ -11,7 +11,7 @@ import pytest
 from supervisor.const import CoreState
 from supervisor.core import Core
 from supervisor.coresys import CoreSys
-from supervisor.exceptions import HassOSDataDiskError, HassOSError
+from supervisor.exceptions import McosDataDiskError, McosError
 from supervisor.os.data_disk import Disk
 from supervisor.resolution.const import ContextType, IssueType
 from supervisor.resolution.data import Issue
@@ -78,7 +78,7 @@ async def tests_datadisk_current(coresys: CoreSys):
 async def test_datadisk_move_fail(coresys: CoreSys, new_disk: str, os_available):
     """Test datadisk move to non-existent or invalid devices."""
     with pytest.raises(
-        HassOSDataDiskError, match=f"'{new_disk}' not a valid data disk target!"
+        McosDataDiskError, match=f"'{new_disk}' not a valid data disk target!"
     ):
         await coresys.os.datadisk.migrate_disk(new_disk)
 
@@ -204,7 +204,7 @@ async def test_datadisk_migrate_too_small(
     await all_dbus_services["os_agent"].ping()
 
     with pytest.raises(
-        HassOSDataDiskError,
+        McosDataDiskError,
         match=r"Cannot use SSK-SSK-Storage-DF56419883D56 as data disk as it is smaller then the current one",
     ):
         await coresys.os.datadisk.migrate_disk("SSK-SSK-Storage-DF56419883D56")
@@ -232,7 +232,7 @@ async def test_datadisk_migrate_multiple_external_data_disks(
     )
 
     with pytest.raises(
-        HassOSDataDiskError,
+        McosDataDiskError,
         match=r"Partition\(s\) /dev/sda1 have name 'hassos-data-external' which prevents migration",
     ):
         await coresys.os.datadisk.migrate_disk("Generic-Flash-Disk-61BCDDB6")
@@ -292,7 +292,7 @@ async def test_datadisk_wipe_errors(
 
     system_service.response_schedule_wipe_device = False
     with pytest.raises(
-        HassOSDataDiskError, match="Can't schedule wipe of data disk, check host logs"
+        McosDataDiskError, match="Can't schedule wipe of data disk, check host logs"
     ):
         await coresys.os.datadisk.wipe_disk()
 
@@ -302,7 +302,7 @@ async def test_datadisk_wipe_errors(
     system_service.ScheduleWipeDevice.calls.clear()
     system_service.response_schedule_wipe_device = DBusError(ErrorType.FAILED, "fail")
     with pytest.raises(
-        HassOSDataDiskError, match="Can't schedule wipe of data disk: fail"
+        McosDataDiskError, match="Can't schedule wipe of data disk: fail"
     ):
         await coresys.os.datadisk.wipe_disk()
 
@@ -314,7 +314,7 @@ async def test_datadisk_wipe_errors(
     logind_service.side_effect_reboot = DBusError(ErrorType.FAILED, "fail")
     with (
         patch.object(Core, "shutdown"),
-        pytest.raises(HassOSError, match="Can't restart device"),
+        pytest.raises(McosError, match="Can't restart device"),
     ):
         await coresys.os.datadisk.wipe_disk()
 

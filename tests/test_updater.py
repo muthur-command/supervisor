@@ -7,7 +7,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from awesomeversion import AwesomeVersion
 import pytest
 
-from supervisor.const import ATTR_HASSOS_UNRESTRICTED, BusEvent
+from supervisor.const import ATTR_MCOS_UNRESTRICTED, BusEvent
+from supervisor.utils.version_image_template import format_version_image_template
 from supervisor.coresys import CoreSys
 from supervisor.dbus.const import ConnectivityState
 from supervisor.exceptions import UpdaterJobError
@@ -19,7 +20,7 @@ from tests.dbus_service_mocks.network_manager import (
     NetworkManager as NetworkManagerService,
 )
 
-URL_TEST = "https://version.home-assistant.io/stable.json"
+URL_TEST = "https://version.muthur-command.com/stable.json"
 
 
 @pytest.mark.usefixtures("no_job_throttle")
@@ -33,7 +34,7 @@ async def test_fetch_versions(
 
     data = json.loads(await mock_update_data.text())
     assert coresys.updater.version_supervisor == data["supervisor"]
-    assert coresys.updater.version_homeassistant == data["homeassistant"]["default"]
+    assert coresys.updater.version_muthurcommand == data["muthurcommand"]["default"]
 
     assert coresys.updater.version_audio == data["audio"]
     assert coresys.updater.version_cli == data["cli"]
@@ -41,8 +42,10 @@ async def test_fetch_versions(
     assert coresys.updater.version_multicast == data["multicast"]
     assert coresys.updater.version_observer == data["observer"]
 
-    assert coresys.updater.image_homeassistant == data["images"]["core"].format(
-        machine=coresys.machine
+    assert coresys.updater.image_muthurcommand == format_version_image_template(
+        data["images"]["muthurcommand"],
+        arch=coresys.arch.supervisor,
+        machine=coresys.machine,
     )
 
     assert coresys.updater.image_supervisor == data["images"]["supervisor"].format(
@@ -62,6 +65,31 @@ async def test_fetch_versions(
     )
     assert coresys.updater.image_multicast == data["images"]["multicast"].format(
         arch=coresys.arch.supervisor
+    )
+
+    assert coresys.updater.version_mc_bd == AwesomeVersion(data["mc_bd"])
+    assert coresys.updater.version_mc_fd == AwesomeVersion(data["mc_fd"])
+    assert coresys.updater.version_postgresql == AwesomeVersion(data["postgresql"])
+    assert coresys.updater.version_redis == AwesomeVersion(data["redis"])
+    assert coresys.updater.image_mc_bd == format_version_image_template(
+        data["images"]["mc_bd"],
+        arch=coresys.arch.supervisor,
+        machine=coresys.machine,
+    )
+    assert coresys.updater.image_mc_fd == format_version_image_template(
+        data["images"]["mc_fd"],
+        arch=coresys.arch.supervisor,
+        machine=coresys.machine,
+    )
+    assert coresys.updater.image_postgresql == format_version_image_template(
+        data["images"]["postgresql"],
+        arch=coresys.arch.supervisor,
+        machine=coresys.machine,
+    )
+    assert coresys.updater.image_redis == format_version_image_template(
+        data["images"]["redis"],
+        arch=coresys.arch.supervisor,
+        machine=coresys.machine,
     )
 
 
@@ -88,7 +116,7 @@ async def test_os_update_path(
     coresys.os._version = AwesomeVersion(version)  # pylint: disable=protected-access
     await coresys.updater.fetch_data()
 
-    assert coresys.updater.version_hassos == AwesomeVersion(expected)
+    assert coresys.updater.version_mcos == AwesomeVersion(expected)
 
 
 @pytest.mark.usefixtures("no_job_throttle")
@@ -137,7 +165,7 @@ async def test_delayed_fetch_for_connectivity(
     coresys.websession.get.assert_called_once()
     assert (
         coresys.websession.get.call_args[0][0]
-        == "https://version.home-assistant.io/stable.json"
+        == "https://version.muthur-command.com/stable.json"
     )
 
 
@@ -145,7 +173,7 @@ async def test_delayed_fetch_for_connectivity(
 async def test_load_calls_reload_when_os_board_without_version(
     coresys: CoreSys, mock_update_data: MockResponse, supervisor_internet: AsyncMock
 ) -> None:
-    """Test load calls reload when OS board exists but no version_hassos_unrestricted."""
+    """Test load calls reload when OS board exists but no version_mcos_unrestricted."""
     # Set up OS board but no version data
     coresys.os._board = "rpi4-64"  # pylint: disable=protected-access
     coresys.security.force = True
@@ -160,14 +188,14 @@ async def test_load_calls_reload_when_os_board_without_version(
 async def test_load_skips_reload_when_os_board_with_version(
     coresys: CoreSys, mock_update_data: MockResponse, supervisor_internet: AsyncMock
 ) -> None:
-    """Test load skips reload when OS board exists and version_hassos_unrestricted is set."""
+    """Test load skips reload when OS board exists and version_mcos_unrestricted is set."""
     # Set up OS board and version data
     coresys.os._board = "rpi4-64"  # pylint: disable=protected-access
     coresys.security.force = True
 
-    # Pre-populate version_hassos_unrestricted by setting it directly on the data dict
+    # Pre-populate version_mcos_unrestricted by setting it directly on the data dict
     # Use the same approach as other tests that modify internal state
-    coresys.updater._data[ATTR_HASSOS_UNRESTRICTED] = AwesomeVersion("13.1")  # pylint: disable=protected-access
+    coresys.updater._data[ATTR_MCOS_UNRESTRICTED] = AwesomeVersion("13.1")  # pylint: disable=protected-access
 
     # Mock reload to verify it doesn't get called
     with patch.object(coresys.updater, "reload", new_callable=AsyncMock) as mock_reload:
@@ -195,8 +223,8 @@ async def test_fetch_data_no_update_when_os_unsupported(
     """Test that fetch_data doesn't update data when OS is unsupported."""
     # Store initial versions to compare later
     initial_supervisor_version = coresys.updater.version_supervisor
-    initial_homeassistant_version = coresys.updater.version_homeassistant
-    initial_hassos_version = coresys.updater.version_hassos
+    initial_muthurcommand_version = coresys.updater.version_muthurcommand
+    initial_hassos_version = coresys.updater.version_mcos
 
     coresys.websession.head = AsyncMock()
 
@@ -211,5 +239,5 @@ async def test_fetch_data_no_update_when_os_unsupported(
 
     # Verify that versions were not updated
     assert coresys.updater.version_supervisor == initial_supervisor_version
-    assert coresys.updater.version_homeassistant == initial_homeassistant_version
-    assert coresys.updater.version_hassos == initial_hassos_version
+    assert coresys.updater.version_muthurcommand == initial_muthurcommand_version
+    assert coresys.updater.version_mcos == initial_hassos_version

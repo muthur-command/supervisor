@@ -39,7 +39,7 @@ from supervisor.const import (
     ATTR_DATE,
     ATTR_EXCLUDE_DATABASE,
     ATTR_FOLDERS,
-    ATTR_HOMEASSISTANT,
+    ATTR_MUTHURCOMMAND,
     ATTR_NAME,
     ATTR_REPOSITORIES,
     ATTR_SIZE,
@@ -54,8 +54,8 @@ from supervisor.coresys import CoreSys
 from supervisor.dbus.network import NetworkManager
 from supervisor.docker.manager import DockerAPI
 from supervisor.exceptions import HostLogError
-from supervisor.homeassistant.api import APIState
 from supervisor.host.logs import LogsControl
+from supervisor.muthurcommand.api import APIState
 from supervisor.os.manager import OSManager
 from supervisor.store.addon import AddonStore
 from supervisor.store.repository import Repository
@@ -119,7 +119,7 @@ async def path_extern(monkeypatch: pytest.MonkeyPatch) -> None:
 @pytest.fixture
 async def supervisor_name(monkeypatch: pytest.MonkeyPatch) -> None:
     """Set env for supervisor name."""
-    monkeypatch.setenv("SUPERVISOR_NAME", "hassio_supervisor")
+    monkeypatch.setenv("SUPERVISOR_NAME", "mcio_supervisor")
     yield
 
 
@@ -130,15 +130,15 @@ async def docker() -> DockerAPI:
         "Os": "linux",
         "Architecture": "amd64",
         "Id": "test123",
-        "RepoTags": ["ghcr.io/home-assistant/amd64-hassio-supervisor:latest"],
+        "RepoTags": ["ghcr.io/muthur-command/amd64-mcio-supervisor:latest"],
     }
     container_inspect = image_inspect | {
         "State": {"ExitCode": 0, "Status": "stopped", "Running": False},
         "Image": "abc123",
     }
     network_inspect = {
-        "Name": "hassio",
-        "Id": "hassio123",
+        "Name": "mcio",
+        "Id": "mcio123",
         "EnableIPv4": True,
         "EnableIPv6": False,
         "IPAM": {
@@ -516,7 +516,7 @@ async def coresys(
 
     # Mock test client
     coresys_obj._supervisor.instance._meta = {
-        "Config": {"Labels": {"io.hass.arch": "amd64"}},
+        "Config": {"Labels": {"io.mcio.arch": "amd64"}},
         "HostConfig": {"Privileged": True},
     }
     coresys_obj.arch._default_arch = CpuArch.AMD64
@@ -557,10 +557,10 @@ async def coresys(
     )
 
     # WebSocket
-    coresys_obj.homeassistant.api.get_api_state = AsyncMock(
+    coresys_obj.muthurcommand.api.get_api_state = AsyncMock(
         return_value=APIState("RUNNING", False)
     )
-    coresys_obj.homeassistant._websocket._client = AsyncMock(
+    coresys_obj.muthurcommand._websocket._client = AsyncMock(
         ha_version=AwesomeVersion("2021.2.4")
     )
 
@@ -580,7 +580,7 @@ async def ha_ws_client(coresys: CoreSys) -> AsyncMock:
     # Set Supervisor Core state to RUNNING, otherwise WS events won't be delivered
     await coresys.core.set_state(CoreState.RUNNING)
     await asyncio.sleep(0)
-    client = coresys.homeassistant.websocket._client
+    client = coresys.muthurcommand.websocket._client
     client.async_send_command.reset_mock()
     return client
 
@@ -597,7 +597,7 @@ async def tmp_supervisor_data(coresys: CoreSys, tmp_path: Path) -> Path:
         coresys.config.path_mounts_credentials.mkdir()
         coresys.config.path_backup.mkdir()
         coresys.config.path_tmp.mkdir()
-        coresys.config.path_homeassistant.mkdir()
+        coresys.config.path_muthurcommand.mkdir()
         coresys.config.path_audio.mkdir()
         coresys.config.path_dns.mkdir()
         coresys.config.path_share.mkdir()
@@ -606,6 +606,9 @@ async def tmp_supervisor_data(coresys: CoreSys, tmp_path: Path) -> Path:
         coresys.config.path_ssl.mkdir()
         coresys.config.path_core_backup.mkdir(parents=True)
         coresys.config.path_cid_files.mkdir()
+        coresys.config.path_mc_backend.mkdir(parents=True)
+        coresys.config.path_mc_postgres.mkdir(parents=True)
+        coresys.config.path_mc_redis.mkdir(parents=True)
         yield tmp_path
 
 
@@ -684,9 +687,11 @@ async def api_client(
     async def _security_middleware(request: web.Request, handler: web.RequestHandler):
         """Make request are from Core or specified add-on."""
         if request_from:
-            request[REQUEST_FROM] = coresys.addons.get(request_from, local_only=True)
+            request[REQUEST_FROM] = coresys.addons.get(
+                request_from, local_only=True
+            )
         else:
-            request[REQUEST_FROM] = coresys.homeassistant
+            request[REQUEST_FROM] = coresys.muthurcommand
 
         return await handler(request)
 
@@ -818,7 +823,7 @@ async def mock_full_backup(coresys: CoreSys, tmp_path) -> Backup:
         }
     ]
     mock_backup._data[ATTR_FOLDERS] = ALL_FOLDERS
-    mock_backup._data[ATTR_HOMEASSISTANT] = {
+    mock_backup._data[ATTR_MUTHURCOMMAND] = {
         ATTR_VERSION: AwesomeVersion("2022.8.0"),
         ATTR_SIZE: 0,
         ATTR_EXCLUDE_DATABASE: False,
@@ -845,7 +850,7 @@ async def mock_partial_backup(coresys: CoreSys, tmp_path) -> Backup:
         }
     ]
     mock_backup._data[ATTR_FOLDERS] = ALL_FOLDERS
-    mock_backup._data[ATTR_HOMEASSISTANT] = {
+    mock_backup._data[ATTR_MUTHURCOMMAND] = {
         ATTR_VERSION: AwesomeVersion("2022.8.0"),
         ATTR_SIZE: 0,
         ATTR_EXCLUDE_DATABASE: False,
@@ -886,7 +891,7 @@ async def journald_logs(coresys: CoreSys) -> MagicMock:
         patch.object(
             LogsControl,
             "get_identifiers",
-            return_value=["hassio_supervisor", "hassos-config", "kernel"],
+            return_value=["mcio_supervisor", "mcos-config", "kernel"],
         ),
         patch.object(LogsControl, "journald_logs", new=MagicMock()) as logs,
     ):

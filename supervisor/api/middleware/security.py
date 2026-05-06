@@ -16,12 +16,12 @@ from ...const import (
     ROLE_ADMIN,
     ROLE_BACKUP,
     ROLE_DEFAULT,
-    ROLE_HOMEASSISTANT,
     ROLE_MANAGER,
+    ROLE_MUTHURCOMMAND,
     VALID_API_STATES,
 )
 from ...coresys import CoreSys, CoreSysAttributes
-from ...homeassistant.const import LANDINGPAGE
+from ...muthurcommand.const import LANDINGPAGE
 from ...utils import version_is_new_enough
 from ..utils import api_return_error, extract_supervisor_token
 
@@ -43,18 +43,22 @@ CORE_FRONTEND: Final = re.compile(
 # Block Anytime
 BLACKLIST: Final = re.compile(
     r"^(?:"
-    r"|/homeassistant/api/hassio/.*"
-    r"|/core/api/hassio/.*"
+    r"|/muthurcommand/api/mcio/.*"
+    r"|/mc_bd/api/mcio/.*"
     r")$"
 )
 
 # Free to call or have own security concepts
 NO_SECURITY_CHECK: Final = re.compile(
     r"^(?:"
-    r"|/homeassistant/api/.*"
-    r"|/homeassistant/websocket"
-    r"|/core/api/.*"
-    r"|/core/websocket"
+    r"|/muthurcommand/api/.*"
+    r"|/muthurcommand/websocket"
+    r"|/mc_bd/api/.*"
+    r"|/mc_bd/websocket"
+    # mc_fd Stage 6 web proxy. The frontend itself enforces auth; the
+    # Supervisor only relays bytes here — same approach as ``/ingress/*``.
+    r"|/mc_fd/web"
+    r"|/mc_fd/web/.*"
     r"|/supervisor/ping"
     r"|/ingress/[-_A-Za-z0-9]+/.*"
     + _CORE_FRONTEND_PATHS
@@ -94,11 +98,11 @@ ADDONS_ROLE_ACCESS: dict[str, re.Pattern[str]] = {
         r"|/.+/info"
         r")$"
     ),
-    ROLE_HOMEASSISTANT: re.compile(
+    ROLE_MUTHURCOMMAND: re.compile(
         r"^(?:"
         r"|/.+/info"
-        r"|/core/.+"
-        r"|/homeassistant/.+"
+        r"|/mc_bd/.+"
+        r"|/muthurcommand/.+"
         r")$"
     ),
     ROLE_BACKUP: re.compile(
@@ -116,13 +120,13 @@ ADDONS_ROLE_ACCESS: dict[str, re.Pattern[str]] = {
         r"|/available_updates"
         r"|/backups.*"
         r"|/cli/.+"
-        r"|/core/.+"
+        r"|/mc_bd/.+"
         r"|/dns/.+"
         r"|/docker/.+"
         r"|/jobs/.+"
         r"|/hardware/.+"
-        r"|/hassos/.+"
-        r"|/homeassistant/.+"
+        r"|/muthurcommand/.+"
+        r"|/mc_stack/.+"
         r"|/host/.+"
         r"|/mounts.*"
         r"|/multicast/.+"
@@ -235,9 +239,9 @@ class SecurityMiddleware(CoreSysAttributes):
             raise HTTPUnauthorized()
 
         # Home-Assistant
-        if supervisor_token == self.sys_homeassistant.supervisor_token:
+        if supervisor_token == self.sys_muthurcommand.supervisor_token:
             _LOGGER.debug("%s access from Home Assistant", request.path)
-            request_from = self.sys_homeassistant
+            request_from = self.sys_muthurcommand
         elif CORE_ONLY_PATHS.match(request.path):
             _LOGGER.warning("Attempted access to %s from client besides Home Assistant")
             raise HTTPForbidden()
@@ -264,9 +268,9 @@ class SecurityMiddleware(CoreSysAttributes):
         if addon and ADDONS_API_BYPASS.match(request.path):
             _LOGGER.debug("Passthrough %s from %s", request.path, addon.slug)
             request_from = addon
-        elif addon and addon.access_hassio_api:
+        elif addon and addon.access_mcio_api:
             # Check Role
-            if ADDONS_ROLE_ACCESS[addon.hassio_role].match(request.path):
+            if ADDONS_ROLE_ACCESS[addon.mcio_role].match(request.path):
                 _LOGGER.info("%s access from %s", request.path, addon.slug)
                 request_from = addon
             else:
@@ -289,9 +293,9 @@ class SecurityMiddleware(CoreSysAttributes):
     ) -> StreamResponse:
         """Validate user from Core API proxy."""
         if (
-            request[REQUEST_FROM] != self.sys_homeassistant
-            or self.sys_homeassistant.version == LANDINGPAGE
-            or version_is_new_enough(self.sys_homeassistant.version, _CORE_VERSION)
+            request[REQUEST_FROM] != self.sys_muthurcommand
+            or self.sys_muthurcommand.version == LANDINGPAGE
+            or version_is_new_enough(self.sys_muthurcommand.version, _CORE_VERSION)
         ):
             return await handler(request)
 
@@ -302,7 +306,7 @@ class SecurityMiddleware(CoreSysAttributes):
         ingress_request: bool = False
 
         for idx, (key, value) in enumerate(request.raw_headers):
-            if key in (b"Authorization", b"X-Hassio-Key"):
+            if key in (b"Authorization", b"X-Mcio-Key"):
                 authorization_index = idx
             elif key == b"Content-Type":
                 content_type_index = idx

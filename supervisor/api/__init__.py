@@ -22,13 +22,14 @@ from .discovery import APIDiscovery
 from .dns import APICoreDNS
 from .docker import APIDocker
 from .hardware import APIHardware
-from .homeassistant import APIHomeAssistant
 from .host import APIHost
 from .ingress import APIIngress
 from .jobs import APIJobs
+from .mc_stack import APIMCStack
 from .middleware.security import SecurityMiddleware
 from .mounts import APIMounts
 from .multicast import APIMulticast
+from .muthurcommand import APIMuthurCommand
 from .network import APINetwork
 from .observer import APIObserver
 from .os import APIOS
@@ -98,7 +99,8 @@ class RestAPI(CoreSysAttributes):
         self._register_dns()
         self._register_docker()
         self._register_hardware()
-        self._register_homeassistant()
+        self._register_muthurcommand()
+        self._register_mc_stack()
         self._register_host()
         self._register_jobs()
         self._register_ingress()
@@ -358,7 +360,7 @@ class RestAPI(CoreSysAttributes):
             ]
         )
         self._register_advanced_logs(
-            "/multicast", "hassio_multicast", default_verbose=True
+            "/multicast", "mcio_multicast", default_verbose=True
         )
 
     def _register_hardware(self) -> None:
@@ -496,43 +498,73 @@ class RestAPI(CoreSysAttributes):
             ]
         )
 
-    def _register_homeassistant(self) -> None:
+    def _register_muthurcommand(self) -> None:
         """Register Home Assistant functions."""
-        api_hass = APIHomeAssistant()
+        api_hass = APIMuthurCommand()
         api_hass.coresys = self.coresys
 
         self.webapp.add_routes(
             [
-                web.get("/core/info", api_hass.info),
-                web.get("/core/stats", api_hass.stats),
-                web.post("/core/options", api_hass.options),
-                web.post("/core/update", api_hass.update),
-                web.post("/core/restart", api_hass.restart),
-                web.post("/core/stop", api_hass.stop),
-                web.post("/core/start", api_hass.start),
-                web.post("/core/check", api_hass.check),
-                web.post("/core/rebuild", api_hass.rebuild),
+                web.get("/mc_bd/info", api_hass.info),
+                web.get("/mc_bd/stats", api_hass.stats),
+                web.post("/mc_bd/options", api_hass.options),
+                web.post("/mc_bd/update", api_hass.update),
+                web.post("/mc_bd/restart", api_hass.restart),
+                web.post("/mc_bd/stop", api_hass.stop),
+                web.post("/mc_bd/start", api_hass.start),
+                web.post("/mc_bd/check", api_hass.check),
+                web.post("/mc_bd/rebuild", api_hass.rebuild),
             ]
         )
 
-        self._register_advanced_logs("/core", "homeassistant")
+        self._register_advanced_logs("/mc_bd", "muthurcommand")
 
         # Reroute from legacy
         self.webapp.add_routes(
             [
-                web.get("/homeassistant/info", api_hass.info),
-                web.get("/homeassistant/stats", api_hass.stats),
-                web.post("/homeassistant/options", api_hass.options),
-                web.post("/homeassistant/restart", api_hass.restart),
-                web.post("/homeassistant/stop", api_hass.stop),
-                web.post("/homeassistant/start", api_hass.start),
-                web.post("/homeassistant/update", api_hass.update),
-                web.post("/homeassistant/rebuild", api_hass.rebuild),
-                web.post("/homeassistant/check", api_hass.check),
+                web.get("/muthurcommand/info", api_hass.info),
+                web.get("/muthurcommand/stats", api_hass.stats),
+                web.post("/muthurcommand/options", api_hass.options),
+                web.post("/muthurcommand/restart", api_hass.restart),
+                web.post("/muthurcommand/stop", api_hass.stop),
+                web.post("/muthurcommand/start", api_hass.start),
+                web.post("/muthurcommand/update", api_hass.update),
+                web.post("/muthurcommand/rebuild", api_hass.rebuild),
+                web.post("/muthurcommand/check", api_hass.check),
             ]
         )
 
-        self._register_advanced_logs("/homeassistant", "homeassistant")
+        self._register_advanced_logs("/muthurcommand", "muthurcommand")
+
+    def _register_mc_stack(self) -> None:
+        """Register MC application stack functions."""
+        api_mc_stack = APIMCStack()
+        api_mc_stack.coresys = self.coresys
+
+        self.webapp.add_routes(
+            [
+                web.get("/mc_stack/info", api_mc_stack.info),
+                web.get("/mc_stack/health", api_mc_stack.health),
+                web.post("/mc_stack/options", api_mc_stack.options),
+                web.post("/mc_stack/start", api_mc_stack.start),
+                web.post("/mc_stack/stop", api_mc_stack.stop),
+                web.post("/mc_stack/restart", api_mc_stack.restart),
+                web.post("/mc_stack/update", api_mc_stack.update),
+                # Stage 6 acceptance: a Supervisor-fronted entry to mc_fd's
+                # login page so the operator can hit it through the same
+                # internal port the rest of the API listens on.
+                web.route(
+                    hdrs.METH_ANY,
+                    "/mc_fd/web/{path:.*}",
+                    api_mc_stack.proxy_frontend,
+                ),
+                web.route(
+                    hdrs.METH_ANY,
+                    "/mc_fd/web",
+                    api_mc_stack.proxy_frontend,
+                ),
+            ]
+        )
 
     def _register_proxy(self) -> None:
         """Register Home Assistant API Proxy."""
@@ -541,25 +573,25 @@ class RestAPI(CoreSysAttributes):
 
         self.webapp.add_routes(
             [
-                web.get("/core/api/websocket", api_proxy.websocket),
-                web.get("/core/websocket", api_proxy.websocket),
-                web.get("/core/api/stream", api_proxy.stream),
-                web.post("/core/api/{path:.+}", api_proxy.api),
-                web.get("/core/api/{path:.+}", api_proxy.api),
-                web.delete("/core/api/{path:.+}", api_proxy.api),
-                web.get("/core/api/", api_proxy.api),
+                web.get("/mc_bd/api/websocket", api_proxy.websocket),
+                web.get("/mc_bd/websocket", api_proxy.websocket),
+                web.get("/mc_bd/api/stream", api_proxy.stream),
+                web.post("/mc_bd/api/{path:.+}", api_proxy.api),
+                web.get("/mc_bd/api/{path:.+}", api_proxy.api),
+                web.delete("/mc_bd/api/{path:.+}", api_proxy.api),
+                web.get("/mc_bd/api/", api_proxy.api),
             ]
         )
 
         # Reroute from legacy
         self.webapp.add_routes(
             [
-                web.get("/homeassistant/api/websocket", api_proxy.websocket),
-                web.get("/homeassistant/websocket", api_proxy.websocket),
-                web.get("/homeassistant/api/stream", api_proxy.stream),
-                web.post("/homeassistant/api/{path:.+}", api_proxy.api),
-                web.get("/homeassistant/api/{path:.+}", api_proxy.api),
-                web.get("/homeassistant/api/", api_proxy.api),
+                web.get("/muthurcommand/api/websocket", api_proxy.websocket),
+                web.get("/muthurcommand/websocket", api_proxy.websocket),
+                web.get("/muthurcommand/api/stream", api_proxy.stream),
+                web.post("/muthurcommand/api/{path:.+}", api_proxy.api),
+                web.get("/muthurcommand/api/{path:.+}", api_proxy.api),
+                web.get("/muthurcommand/api/", api_proxy.api),
             ]
         )
 
@@ -719,7 +751,7 @@ class RestAPI(CoreSysAttributes):
             ]
         )
 
-        self._register_advanced_logs("/dns", "hassio_dns", default_verbose=True)
+        self._register_advanced_logs("/dns", "mcio_dns", default_verbose=True)
 
     def _register_audio(self) -> None:
         """Register Audio functions."""
@@ -742,7 +774,7 @@ class RestAPI(CoreSysAttributes):
             ]
         )
 
-        self._register_advanced_logs("/audio", "hassio_audio", default_verbose=True)
+        self._register_advanced_logs("/audio", "mcio_audio", default_verbose=True)
 
     def _register_mounts(self) -> None:
         """Register mounts endpoints."""

@@ -20,7 +20,7 @@ from ..const import (
 from ..coresys import CoreSysAttributes
 from ..discovery import Message
 from ..exceptions import APIForbidden, APINotFound
-from .utils import api_process, api_validate, require_home_assistant
+from .utils import api_process, api_validate, require_muthurcommand
 
 _LOGGER: logging.Logger = logging.getLogger(__name__)
 
@@ -43,7 +43,7 @@ class APIDiscovery(CoreSysAttributes):
         return message
 
     @api_process
-    @require_home_assistant
+    @require_muthurcommand
     async def list_discovery(self, request: web.Request) -> dict[str, Any]:
         """Show registered and available services."""
         # Get available discovery
@@ -95,7 +95,7 @@ class APIDiscovery(CoreSysAttributes):
         return {ATTR_UUID: message.uuid}
 
     @api_process
-    @require_home_assistant
+    @require_muthurcommand
     async def get_discovery(self, request: web.Request) -> dict[str, Any]:
         """Read data into a discovery message."""
         message = self._extract_message(request)

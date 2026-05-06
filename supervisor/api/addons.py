@@ -39,10 +39,6 @@ from ..const import (
     ATTR_FORCE,
     ATTR_FULL_ACCESS,
     ATTR_GPIO,
-    ATTR_HASSIO_API,
-    ATTR_HASSIO_ROLE,
-    ATTR_HOMEASSISTANT,
-    ATTR_HOMEASSISTANT_API,
     ATTR_HOST_DBUS,
     ATTR_HOST_IPC,
     ATTR_HOST_NETWORK,
@@ -60,9 +56,13 @@ from ..const import (
     ATTR_LOGO,
     ATTR_LONG_DESCRIPTION,
     ATTR_MACHINE,
+    ATTR_MCIO_API,
+    ATTR_MCIO_ROLE,
     ATTR_MEMORY_LIMIT,
     ATTR_MEMORY_PERCENT,
     ATTR_MEMORY_USAGE,
+    ATTR_MUTHURCOMMAND,
+    ATTR_MUTHURCOMMAND_API,
     ATTR_NAME,
     ATTR_NETWORK,
     ATTR_NETWORK_DESCRIPTION,
@@ -194,7 +194,7 @@ class APIAddons(CoreSysAttributes):
                 ATTR_UPDATE_AVAILABLE: addon.need_update,
                 ATTR_AVAILABLE: addon.available,
                 ATTR_DETACHED: addon.is_detached,
-                ATTR_HOMEASSISTANT: addon.homeassistant_version,
+                ATTR_MUTHURCOMMAND: addon.muthurcommand_version,
                 ATTR_STATE: addon.state,
                 ATTR_REPOSITORY: addon.repository,
                 ATTR_BUILD: addon.need_build,
@@ -236,7 +236,7 @@ class APIAddons(CoreSysAttributes):
             ATTR_SCHEMA: addon.schema_ui,
             ATTR_ARCH: addon.supported_arch,
             ATTR_MACHINE: addon.supported_machine,
-            ATTR_HOMEASSISTANT: addon.homeassistant_version,
+            ATTR_MUTHURCOMMAND: addon.muthurcommand_version,
             ATTR_URL: addon.url,
             ATTR_DETACHED: addon.is_detached,
             ATTR_AVAILABLE: addon.available,
@@ -256,10 +256,10 @@ class APIAddons(CoreSysAttributes):
             ATTR_CHANGELOG: addon.with_changelog,
             ATTR_DOCUMENTATION: addon.with_documentation,
             ATTR_STDIN: addon.with_stdin,
-            ATTR_HASSIO_API: addon.access_hassio_api,
-            ATTR_HASSIO_ROLE: addon.hassio_role,
+            ATTR_MCIO_API: addon.access_mcio_api,
+            ATTR_MCIO_ROLE: addon.mcio_role,
             ATTR_AUTH_API: addon.access_auth_api,
-            ATTR_HOMEASSISTANT_API: addon.access_homeassistant_api,
+            ATTR_MUTHURCOMMAND_API: addon.access_muthurcommand_api,
             ATTR_GPIO: addon.with_gpio,
             ATTR_USB: addon.with_usb,
             ATTR_UART: addon.with_uart,
@@ -302,7 +302,7 @@ class APIAddons(CoreSysAttributes):
         addon = self.get_addon_for_request(request)
 
         # Update secrets for validation
-        await self.sys_homeassistant.secrets.reload()
+        await self.sys_muthurcommand.secrets.reload()
 
         # Validate/Process Body
         body = await api_validate(SCHEMA_OPTIONS, request)
@@ -402,7 +402,7 @@ class APIAddons(CoreSysAttributes):
         addon = self.get_addon_for_request(request)
 
         # Lookup/reload secrets
-        await self.sys_homeassistant.secrets.reload()
+        await self.sys_muthurcommand.secrets.reload()
         try:
             return addon.schema.validate(addon.options)
         except vol.Invalid:

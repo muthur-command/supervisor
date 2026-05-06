@@ -18,14 +18,15 @@ from .const import (
 from .coresys import CoreSys, CoreSysAttributes
 from .dbus.const import StopUnitMode, UnitActiveState
 from .exceptions import (
-    HassioError,
-    HomeAssistantCrashError,
-    HomeAssistantError,
+    MCStackError,
+    McioError,
+    MuthurCommandCrashError,
+    MuthurCommandError,
     SupervisorUpdateError,
     WhoamiError,
     WhoamiSSLError,
 )
-from .homeassistant.core import LANDINGPAGE
+from .muthurcommand.core import LANDINGPAGE
 from .resolution.const import ContextType, IssueType, SuggestionType, UnhealthyReason
 from .utils.dt import utcnow
 from .utils.sentry import async_capture_exception
@@ -88,7 +89,7 @@ class Core(CoreSysAttributes):
 
             # These will be received by HA after startup has completed which won't make sense
             if self._state not in STARTING_STATES:
-                self.sys_homeassistant.websocket.supervisor_update_event(
+                self.sys_muthurcommand.websocket.supervisor_update_event(
                     "info", {"state": self._state}
                 )
 
@@ -164,7 +165,9 @@ class Core(CoreSysAttributes):
             # Load Plugins container
             self.sys_plugins.load(),
             # Load Home Assistant
-            self.sys_homeassistant.load(),
+            self.sys_muthurcommand.load(),
+            # Load MC application stack (PostgreSQL → Redis → mc_bd → mc_fd)
+            self.sys_mc_stack.load(),
             # Load CPU/Arch
             self.sys_arch.load(),
             # Load Stores
@@ -238,7 +241,7 @@ class Core(CoreSysAttributes):
             # Start addon mark as initialize
             await self.sys_addons.boot(AddonStartup.INITIALIZE)
 
-            # HomeAssistant is already running, only Supervisor restarted
+            # MuthurCommand is already running, only Supervisor restarted
             if await self.sys_hardware.helper.last_boot() == self.sys_config.last_boot:
                 _LOGGER.info("Detected Supervisor restart")
                 return
@@ -252,30 +255,47 @@ class Core(CoreSysAttributes):
             # start addon mark as services
             await self.sys_addons.boot(AddonStartup.SERVICES)
 
-            # run HomeAssistant
+            # Start MC application stack first (when the four images are
+            # configured AND the operator hasn't disabled auto-start). The
+            # HA Core path below stays in place for the transition period
+            # documented in the A1 plan, but the MC stack is now the
+            # user-visible deliverable.
+            if self.sys_mc_stack.enabled and self.sys_mc_stack.boot:
+                _LOGGER.info("Start MC application stack")
+                try:
+                    await self.sys_mc_stack.start()
+                except MCStackError as err:
+                    _LOGGER.error("MC stack failed to start: %s", err)
+                    await async_capture_exception(err)
+            elif self.sys_mc_stack.enabled:
+                _LOGGER.info(
+                    "Skipping MC application stack start (boot=False)"
+                )
+
+            # run MuthurCommand
             if (
-                self.sys_homeassistant.boot
-                and not await self.sys_homeassistant.core.is_running()
+                self.sys_muthurcommand.boot
+                and not await self.sys_muthurcommand.core.is_running()
             ):
                 _LOGGER.info("Start Home Assistant Core")
                 try:
-                    await self.sys_homeassistant.core.start()
-                except HomeAssistantCrashError as err:
+                    await self.sys_muthurcommand.core.start()
+                except MuthurCommandCrashError as err:
                     _LOGGER.error("Can't start Home Assistant Core - rebuiling")
                     await async_capture_exception(err)
 
-                    with suppress(HomeAssistantError):
-                        await self.sys_homeassistant.core.rebuild()
-                except HomeAssistantError as err:
+                    with suppress(MuthurCommandError):
+                        await self.sys_muthurcommand.core.rebuild()
+                except MuthurCommandError as err:
                     await async_capture_exception(err)
             else:
                 _LOGGER.info("Skipping start of Home Assistant")
 
             # Core is not running
-            if self.sys_homeassistant.core.error_state:
+            if self.sys_muthurcommand.core.error_state:
                 self.sys_resolution.create_issue(
                     IssueType.FATAL_ERROR,
-                    ContextType.CORE,
+                    ContextType.MC_BD,
                     suggestions=[SuggestionType.EXECUTE_REPAIR],
                 )
 
@@ -290,15 +310,15 @@ class Core(CoreSysAttributes):
             await self.sys_tasks.load()
 
             # If landingpage / run upgrade in background
-            if self.sys_homeassistant.version == LANDINGPAGE:
-                self.sys_create_task(self.sys_homeassistant.core.install())
+            if self.sys_muthurcommand.version == LANDINGPAGE:
+                self.sys_create_task(self.sys_muthurcommand.core.install())
 
             # Upate Host/Deivce information
             self.sys_create_task(self.sys_host.reload())
             self.sys_create_task(self.sys_resolution.healthcheck())
 
             await self.set_state(CoreState.RUNNING)
-            self.sys_homeassistant.websocket.supervisor_update_event(
+            self.sys_muthurcommand.websocket.supervisor_update_event(
                 "supervisor", {ATTR_STARTUP: "complete"}
             )
             _LOGGER.info("Supervisor is up and running")
@@ -351,7 +371,7 @@ class Core(CoreSysAttributes):
         _LOGGER.info("Supervisor is down - %d", self.exit_code)
         self.sys_loop.stop()
 
-    async def shutdown(self, *, remove_homeassistant_container: bool = False) -> None:
+    async def shutdown(self, *, remove_muthurcommand_container: bool = False) -> None:
         """Shutdown all running containers in correct order."""
         # don't process scheduler anymore
         if self.state == CoreState.RUNNING:
@@ -361,10 +381,17 @@ class Core(CoreSysAttributes):
         await self.sys_addons.shutdown(AddonStartup.APPLICATION)
 
         # Close Home Assistant
-        with suppress(HassioError):
-            await self.sys_homeassistant.core.stop(
-                remove_container=remove_homeassistant_container
+        with suppress(McioError):
+            await self.sys_muthurcommand.core.stop(
+                remove_container=remove_muthurcommand_container
             )
+
+        # Stop MC application stack in reverse dependency order. We do this
+        # after stopping the legacy Core path so any add-ons that talked to
+        # mc_bd had a chance to drain through HA's shutdown signalling.
+        if self.sys_mc_stack.enabled:
+            with suppress(McioError):
+                await self.sys_mc_stack.stop()
 
         # Shutdown System Add-ons
         await self.sys_addons.shutdown(AddonStartup.SERVICES)
@@ -471,7 +498,7 @@ class Core(CoreSysAttributes):
 
         # Restore core functionality
         await self.sys_addons.repair()
-        await self.sys_homeassistant.core.repair()
+        await self.sys_muthurcommand.core.repair()
 
         # Tag version for latest
         await self.sys_supervisor.repair()

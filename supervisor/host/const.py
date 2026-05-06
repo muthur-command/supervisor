@@ -62,7 +62,7 @@ class HostFeature(StrEnum):
     """Host feature."""
 
     DISK = "disk"
-    HAOS = "haos"
+    MCOS = "mcos"
     HOSTNAME = "hostname"
     JOURNAL = "journal"
     MOUNT = "mount"

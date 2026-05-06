@@ -15,16 +15,20 @@ from .const import (
     ATTR_CHANNEL,
     ATTR_CLI,
     ATTR_DNS,
-    ATTR_HASSOS_UNRESTRICTED,
-    ATTR_HASSOS_UPGRADE,
-    ATTR_HOMEASSISTANT,
+    ATTR_MCOS_UNRESTRICTED,
+    ATTR_MCOS_UPGRADE,
+    ATTR_MUTHURCOMMAND,
     ATTR_IMAGE,
+    ATTR_MC_BD,
+    ATTR_MC_FD,
     ATTR_MULTICAST,
     ATTR_OBSERVER,
     ATTR_OTA,
+    ATTR_POSTGRESQL,
+    ATTR_REDIS,
     ATTR_SUPERVISOR,
-    FILE_HASSIO_UPDATER,
-    URL_HASSIO_VERSION,
+    FILE_MCIO_UPDATER,
+    URL_MCIO_VERSION,
     BusEvent,
     UpdateChannel,
 )
@@ -33,6 +37,7 @@ from .exceptions import UpdaterError, UpdaterJobError
 from .jobs.const import JobConcurrency, JobThrottle
 from .jobs.decorator import Job, JobCondition
 from .utils.common import FileConfiguration
+from .utils.version_image_template import format_version_image_template
 from .validate import SCHEMA_UPDATER_CONFIG
 
 _LOGGER: logging.Logger = logging.getLogger(__name__)
@@ -43,7 +48,7 @@ class Updater(FileConfiguration, CoreSysAttributes):
 
     def __init__(self, coresys: CoreSys) -> None:
         """Initialize updater."""
-        super().__init__(FILE_HASSIO_UPDATER, SCHEMA_UPDATER_CONFIG)
+        super().__init__(FILE_MCIO_UPDATER, SCHEMA_UPDATER_CONFIG)
         self.coresys = coresys
         self._connectivity_listener: EventListener | None = None
 
@@ -52,7 +57,7 @@ class Updater(FileConfiguration, CoreSysAttributes):
         # Delay loading data by default so JobCondition.OS_SUPPORTED works.
         # Use HAOS unrestricted as indicator as this is what we need to evaluate
         # if the operating system version is supported.
-        if self.sys_os.board and self.version_hassos_unrestricted is None:
+        if self.sys_os.board and self.version_mcos_unrestricted is None:
             _LOGGER.info(
                 "No OS update information found, force refreshing updater information"
             )
@@ -74,9 +79,9 @@ class Updater(FileConfiguration, CoreSysAttributes):
             await self.fetch_data()
 
     @property
-    def version_homeassistant(self) -> AwesomeVersion | None:
+    def version_muthurcommand(self) -> AwesomeVersion | None:
         """Return latest version of Home Assistant."""
-        return self._data.get(ATTR_HOMEASSISTANT)
+        return self._data.get(ATTR_MUTHURCOMMAND)
 
     @property
     def version_supervisor(self) -> AwesomeVersion | None:
@@ -84,10 +89,10 @@ class Updater(FileConfiguration, CoreSysAttributes):
         return self._data.get(ATTR_SUPERVISOR)
 
     @property
-    def version_hassos(self) -> AwesomeVersion | None:
+    def version_mcos(self) -> AwesomeVersion | None:
         """Return latest version of HassOS."""
-        upgrade_map = self.upgrade_map_hassos
-        unrestricted = self.version_hassos_unrestricted
+        upgrade_map = self.upgrade_map_mcos
+        unrestricted = self.version_mcos_unrestricted
 
         # If no upgrade map exists, fall back to unrestricted version
         if not upgrade_map:
@@ -117,14 +122,14 @@ class Updater(FileConfiguration, CoreSysAttributes):
         return unrestricted
 
     @property
-    def version_hassos_unrestricted(self) -> AwesomeVersion | None:
+    def version_mcos_unrestricted(self) -> AwesomeVersion | None:
         """Return latest version of HassOS ignoring upgrade restrictions."""
-        return self._data.get(ATTR_HASSOS_UNRESTRICTED)
+        return self._data.get(ATTR_MCOS_UNRESTRICTED)
 
     @property
-    def upgrade_map_hassos(self) -> dict[str, str] | None:
+    def upgrade_map_mcos(self) -> dict[str, str] | None:
         """Return HassOS upgrade map."""
-        return self._data.get(ATTR_HASSOS_UPGRADE)
+        return self._data.get(ATTR_MCOS_UPGRADE)
 
     @property
     def version_cli(self) -> AwesomeVersion | None:
@@ -152,12 +157,34 @@ class Updater(FileConfiguration, CoreSysAttributes):
         return self._data.get(ATTR_MULTICAST)
 
     @property
-    def image_homeassistant(self) -> str | None:
+    def version_mc_bd(self) -> AwesomeVersion | None:
+        """Return latest version of mc_bd (MC backend API)."""
+        return self._data.get(ATTR_MC_BD)
+
+    @property
+    def version_mc_fd(self) -> AwesomeVersion | None:
+        """Return latest version of mc_fd (MC frontend)."""
+        return self._data.get(ATTR_MC_FD)
+
+    @property
+    def version_postgresql(self) -> AwesomeVersion | None:
+        """Return latest version tag for PostgreSQL stack image."""
+        return self._data.get(ATTR_POSTGRESQL)
+
+    @property
+    def version_redis(self) -> AwesomeVersion | None:
+        """Return latest version tag for Redis stack image."""
+        return self._data.get(ATTR_REDIS)
+
+    @property
+    def image_muthurcommand(self) -> str | None:
         """Return image of Home Assistant docker."""
-        if ATTR_HOMEASSISTANT not in self._data[ATTR_IMAGE]:
+        if ATTR_MUTHURCOMMAND not in self._data[ATTR_IMAGE]:
             return None
-        return self._data[ATTR_IMAGE][ATTR_HOMEASSISTANT].format(
-            machine=self.sys_machine
+        return format_version_image_template(
+            self._data[ATTR_IMAGE][ATTR_MUTHURCOMMAND],
+            arch=self.sys_arch.supervisor,
+            machine=self.sys_machine,
         )
 
     @property
@@ -209,6 +236,50 @@ class Updater(FileConfiguration, CoreSysAttributes):
         )
 
     @property
+    def image_mc_bd(self) -> str | None:
+        """Return resolved image name (no tag) for mc_bd."""
+        if ATTR_MC_BD not in self._data[ATTR_IMAGE]:
+            return None
+        return format_version_image_template(
+            self._data[ATTR_IMAGE][ATTR_MC_BD],
+            arch=self.sys_arch.supervisor,
+            machine=self.sys_machine,
+        )
+
+    @property
+    def image_mc_fd(self) -> str | None:
+        """Return resolved image name (no tag) for mc_fd."""
+        if ATTR_MC_FD not in self._data[ATTR_IMAGE]:
+            return None
+        return format_version_image_template(
+            self._data[ATTR_IMAGE][ATTR_MC_FD],
+            arch=self.sys_arch.supervisor,
+            machine=self.sys_machine,
+        )
+
+    @property
+    def image_postgresql(self) -> str | None:
+        """Return resolved image name (no tag) for PostgreSQL."""
+        if ATTR_POSTGRESQL not in self._data[ATTR_IMAGE]:
+            return None
+        return format_version_image_template(
+            self._data[ATTR_IMAGE][ATTR_POSTGRESQL],
+            arch=self.sys_arch.supervisor,
+            machine=self.sys_machine,
+        )
+
+    @property
+    def image_redis(self) -> str | None:
+        """Return resolved image name (no tag) for Redis."""
+        if ATTR_REDIS not in self._data[ATTR_IMAGE]:
+            return None
+        return format_version_image_template(
+            self._data[ATTR_IMAGE][ATTR_REDIS],
+            arch=self.sys_arch.supervisor,
+            machine=self.sys_machine,
+        )
+
+    @property
     def ota_url(self) -> str | None:
         """Return OTA url for OS."""
         return self._data.get(ATTR_OTA)
@@ -243,7 +314,6 @@ class Updater(FileConfiguration, CoreSysAttributes):
         conditions=[
             JobCondition.ARCHITECTURE_SUPPORTED,
             JobCondition.INTERNET_SYSTEM,
-            JobCondition.HOME_ASSISTANT_CORE_SUPPORTED,
             JobCondition.OS_SUPPORTED,
         ],
         on_condition=UpdaterJobError,
@@ -256,7 +326,7 @@ class Updater(FileConfiguration, CoreSysAttributes):
 
         Is a coroutine.
         """
-        url = URL_HASSIO_VERSION.format(channel=self.channel)
+        url = URL_MCIO_VERSION.format(channel=self.channel)
         machine = self.sys_machine or "default"
 
         # Get data
@@ -295,23 +365,28 @@ class Updater(FileConfiguration, CoreSysAttributes):
         if not data or data.get(ATTR_CHANNEL) != self.channel:
             raise UpdaterError(f"Invalid data from {url}", _LOGGER.warning)
 
-        events = ["supervisor", "core"]
+        events = ["supervisor"]
         try:
             # Update supervisor version
             self._data[ATTR_SUPERVISOR] = AwesomeVersion(data["supervisor"])
 
-            # Update Home Assistant core version
-            self._data[ATTR_HOMEASSISTANT] = AwesomeVersion(
-                data["homeassistant"][machine]
-            )
+            # Update muthurcommand (Core slot) version; "unused" or absent skips Core
+            mc_map = data.get("muthurcommand") or {}
+            mc_slot = mc_map.get(machine, mc_map.get("default"))
+            if mc_slot is None or str(mc_slot).lower() == "unused":
+                self._data[ATTR_MUTHURCOMMAND] = None
+                self._data[ATTR_IMAGE].pop(ATTR_MUTHURCOMMAND, None)
+            else:
+                self._data[ATTR_MUTHURCOMMAND] = AwesomeVersion(mc_slot)
+                events.append("muthurcommand")
 
-            # Update HassOS version
+            # Update Muthur Command OS version
             if self.sys_os.board:
                 self._data[ATTR_OTA] = data["ota"]
-                if version := data["hassos"].get(self.sys_os.board):
-                    self._data[ATTR_HASSOS_UNRESTRICTED] = AwesomeVersion(version)
+                if version := data["mcos"].get(self.sys_os.board):
+                    self._data[ATTR_MCOS_UNRESTRICTED] = AwesomeVersion(version)
                     # Store the upgrade map for persistent access
-                    self._data[ATTR_HASSOS_UPGRADE] = data.get("hassos-upgrade", {})
+                    self._data[ATTR_MCOS_UPGRADE] = data.get("mcos_upgrade", {})
                     events.append("os")
                 else:
                     _LOGGER.warning(
@@ -327,13 +402,32 @@ class Updater(FileConfiguration, CoreSysAttributes):
             self._data[ATTR_MULTICAST] = AwesomeVersion(data["multicast"])
 
             # Update images for that versions
-            self._data[ATTR_IMAGE][ATTR_HOMEASSISTANT] = data["images"]["core"]
-            self._data[ATTR_IMAGE][ATTR_SUPERVISOR] = data["images"]["supervisor"]
-            self._data[ATTR_IMAGE][ATTR_AUDIO] = data["images"]["audio"]
-            self._data[ATTR_IMAGE][ATTR_CLI] = data["images"]["cli"]
-            self._data[ATTR_IMAGE][ATTR_DNS] = data["images"]["dns"]
-            self._data[ATTR_IMAGE][ATTR_OBSERVER] = data["images"]["observer"]
-            self._data[ATTR_IMAGE][ATTR_MULTICAST] = data["images"]["multicast"]
+            images = data["images"]
+            if self._data.get(ATTR_MUTHURCOMMAND) is not None:
+                if not (mc_img := images.get("muthurcommand") or images.get("mc_bd")):
+                    raise UpdaterError(
+                        "Version data missing muthurcommand image template",
+                        _LOGGER.warning,
+                    )
+                self._data[ATTR_IMAGE][ATTR_MUTHURCOMMAND] = mc_img
+            self._data[ATTR_IMAGE][ATTR_SUPERVISOR] = images["supervisor"]
+            self._data[ATTR_IMAGE][ATTR_AUDIO] = images["audio"]
+            self._data[ATTR_IMAGE][ATTR_CLI] = images["cli"]
+            self._data[ATTR_IMAGE][ATTR_DNS] = images["dns"]
+            self._data[ATTR_IMAGE][ATTR_OBSERVER] = images["observer"]
+            self._data[ATTR_IMAGE][ATTR_MULTICAST] = images["multicast"]
+
+            for key in (ATTR_MC_BD, ATTR_MC_FD, ATTR_POSTGRESQL, ATTR_REDIS):
+                if key in images:
+                    self._data[ATTR_IMAGE][key] = images[key]
+                else:
+                    self._data[ATTR_IMAGE].pop(key, None)
+
+            for key in (ATTR_MC_BD, ATTR_MC_FD, ATTR_POSTGRESQL, ATTR_REDIS):
+                if key in data:
+                    self._data[key] = AwesomeVersion(data[key])
+                else:
+                    self._data.pop(key, None)
 
         except KeyError as err:
             raise UpdaterError(
@@ -344,4 +438,4 @@ class Updater(FileConfiguration, CoreSysAttributes):
 
         # Send status update to core
         for event in events:
-            self.sys_homeassistant.websocket.supervisor_update_event(event)
+            self.sys_muthurcommand.websocket.supervisor_update_event(event)

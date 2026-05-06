@@ -4,7 +4,7 @@ from dbus_fast.service import dbus_property
 
 from .base import DBusServiceMock
 
-BUS_NAME = "io.hass.os"
+BUS_NAME = "io.muthurcommand.os"
 
 
 def setup(object_path: str | None = None) -> DBusServiceMock:
@@ -15,11 +15,11 @@ def setup(object_path: str | None = None) -> DBusServiceMock:
 class Green(DBusServiceMock):
     """Green mock.
 
-    gdbus introspect --system --dest io.hass.os --object-path /io/hass/os/Boards/Green
+    gdbus introspect --system --dest io.muthurcommand.os --object-path /io/muthurcommand/os/Boards/Green
     """
 
-    object_path = "/io/hass/os/Boards/Green"
-    interface = "io.hass.os.Boards.Green"
+    object_path = "/io/muthurcommand/os/Boards/Green"
+    interface = "io.muthurcommand.os.Boards.Green"
 
     @dbus_property()
     def ActivityLED(self) -> "b":

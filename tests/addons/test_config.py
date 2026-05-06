@@ -25,8 +25,8 @@ def test_basic_config():
     assert not valid_config["host_pid"]
     assert not valid_config["host_uts"]
 
-    assert not valid_config["hassio_api"]
-    assert not valid_config["homeassistant_api"]
+    assert not valid_config["mcio_api"]
+    assert not valid_config["muthurcommand_api"]
     assert not valid_config["docker_api"]
 
 
@@ -111,7 +111,7 @@ def test_invalid_repository():
     with pytest.raises(vol.Invalid):
         vd.SCHEMA_ADDON_CONFIG(config)
 
-    config["image"] = "ghcr.io/home-assistant/no-valid-repo:no-tag-allow"
+    config["image"] = "ghcr.io/muthur-command/no-valid-repo:no-tag-allow"
     with pytest.raises(vol.Invalid):
         vd.SCHEMA_ADDON_CONFIG(config)
 
@@ -353,7 +353,7 @@ def test_valid_slug():
     """Test valid and invalid addon slugs."""
     config = load_json_fixture("basic-addon-config.json")
 
-    # All examples pulled from https://analytics.home-assistant.io/addons.json
+    # Examples mirror upstream add-on index shape (Muthur Command analytics TBD).
     config["slug"] = "uptime-kuma"
     assert vd.SCHEMA_ADDON_CONFIG(config)
 

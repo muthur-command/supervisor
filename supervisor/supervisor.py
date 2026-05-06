@@ -15,7 +15,7 @@ from awesomeversion import AwesomeVersion, AwesomeVersionException
 from .const import (
     ATTR_SUPERVISOR_INTERNET,
     SUPERVISOR_VERSION,
-    URL_HASSIO_APPARMOR,
+    URL_MCIO_APPARMOR,
     BusEvent,
 )
 from .coresys import CoreSys, CoreSysAttributes
@@ -77,7 +77,7 @@ class Supervisor(CoreSysAttributes):
             return
         self._connectivity = state
         self.sys_bus.fire_event(BusEvent.SUPERVISOR_CONNECTIVITY_CHANGE, state)
-        self.sys_homeassistant.websocket.supervisor_update_event(
+        self.sys_muthurcommand.websocket.supervisor_update_event(
             "network", {ATTR_SUPERVISOR_INTERNET: state}
         )
 
@@ -110,7 +110,7 @@ class Supervisor(CoreSysAttributes):
     @property
     def default_image(self) -> str:
         """Return the default image for this system."""
-        return f"ghcr.io/home-assistant/{self.sys_arch.supervisor}-hassio-supervisor"
+        return f"ghcr.io/muthur-command/{self.sys_arch.supervisor}-mcio-supervisor"
 
     @property
     def image(self) -> str | None:
@@ -124,7 +124,7 @@ class Supervisor(CoreSysAttributes):
 
     async def update_apparmor(self) -> None:
         """Fetch last version and update profile."""
-        url = URL_HASSIO_APPARMOR.format(channel=self.sys_updater.channel)
+        url = URL_MCIO_APPARMOR.format(channel=self.sys_updater.channel)
 
         # Fetch
         try:
@@ -158,7 +158,7 @@ class Supervisor(CoreSysAttributes):
         try:
             profile_file = await self.sys_run_in_executor(write_profile)
 
-            await self.sys_host.apparmor.load_profile("hassio-supervisor", profile_file)
+            await self.sys_host.apparmor.load_profile("mcio-supervisor", profile_file)
 
         except OSError as err:
             self.sys_resolution.check_oserror(err)
@@ -279,7 +279,7 @@ class Supervisor(CoreSysAttributes):
         timeout = aiohttp.ClientTimeout(total=10)
         try:
             await self.sys_websession.head(
-                "https://checkonline.home-assistant.io/online.txt", timeout=timeout
+                "https://checkonline.muthur-command.com/online.txt", timeout=timeout
             )
         except (ClientError, TimeoutError) as err:
             _LOGGER.debug("Supervisor Connectivity check failed: %s", err)

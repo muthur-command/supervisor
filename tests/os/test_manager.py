@@ -1,4 +1,4 @@
-"""Test Home Assistant OS functionality."""
+"""Test Muthur Command OS host integration."""
 
 from unittest.mock import AsyncMock, PropertyMock, patch
 
@@ -8,7 +8,7 @@ import pytest
 
 from supervisor.const import CoreState
 from supervisor.coresys import CoreSys
-from supervisor.exceptions import HassOSJobError
+from supervisor.exceptions import McosJobError
 from supervisor.resolution.const import UnhealthyReason
 
 from tests.common import MockResponse
@@ -29,7 +29,7 @@ async def test_ota_url_generic_x86_64_rename(
 
     version6 = AwesomeVersion("6.0")
     url = coresys.updater.ota_url.format(
-        version=str(version6), board="generic-x86-64", os_name="haos"
+        version=str(version6), board="generic-x86-64", os_name="mcos"
     )
 
     assert coresys.os._get_download_url(version6) == url
@@ -38,10 +38,10 @@ async def test_ota_url_generic_x86_64_rename(
 def test_ota_url_os_name(coresys: CoreSys) -> None:
     """Test download URL generated with os_name."""
     board = "generic-x86-64"
-    os_name = "haos"
+    os_name = "mcos"
     versionstr = "6.0"
 
-    url = "https://github.com/home-assistant/operating-system/releases/download/{version}/{os_name}_{board}-{version}.raucb"
+    url = "https://github.com/muthur-command/operating-system/releases/download/{version}/{os_name}_{board}-{version}.raucb"
     url_formatted = url.format(version=versionstr, board=board, os_name=os_name)
 
     coresys.os._board = board
@@ -57,12 +57,11 @@ def test_ota_url_os_name_rel_5_downgrade(coresys: CoreSys) -> None:
     board = "generic-x86-64"
     versionstr = "5.9"
 
-    # On downgrade below 6.0 we need to use hassos as os_name.
-    url = "https://github.com/home-assistant/operating-system/releases/download/{version}/{os_name}_{board}-{version}.raucb"
-    url_formatted = url.format(version=versionstr, board=board, os_name="hassos")
+    url = "https://github.com/muthur-command/operating-system/releases/download/{version}/{os_name}_{board}-{version}.raucb"
+    url_formatted = url.format(version=versionstr, board=board, os_name="mcos")
 
     coresys.os._board = board
-    coresys.os._os_name = "haos"
+    coresys.os._os_name = "mcos"
     coresys.updater._data = {"ota": url}
 
     url = coresys.os._get_download_url(AwesomeVersion(versionstr))
@@ -81,7 +80,7 @@ async def test_update_fails_if_out_of_date(
         patch.object(
             type(coresys.os), "available", new=PropertyMock(return_value=True)
         ),
-        pytest.raises(HassOSJobError),
+        pytest.raises(McosJobError),
     ):
         await coresys.os.update()
 
@@ -96,14 +95,14 @@ async def test_update_fails_if_unhealthy(
         patch.object(
             type(coresys.os), "available", new=PropertyMock(return_value=True)
         ),
-        pytest.raises(HassOSJobError),
+        pytest.raises(McosJobError),
     ):
         await coresys.os.update()
 
 
 async def test_board_name_supervised(coresys: CoreSys) -> None:
     """Test board name is supervised when not on haos."""
-    with patch("supervisor.os.manager.CPE.get_product", return_value=["not-hassos"]):
+    with patch("supervisor.os.manager.CPE.get_product", return_value=["not-mcos"]):
         await coresys.dbus.hostname.connect(coresys.dbus.bus)
         await coresys.os.load()
         assert coresys.os.board == "supervised"

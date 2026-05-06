@@ -13,7 +13,7 @@ JOB_GROUP_ADDON = "addon_{slug}"
 JOB_GROUP_BACKUP = "backup_{slug}"
 JOB_GROUP_BACKUP_MANAGER = "backup_manager"
 JOB_GROUP_DOCKER_INTERFACE = "container_{name}"
-JOB_GROUP_HOME_ASSISTANT_CORE = "home_assistant_core"
+JOB_GROUP_MUTHURCOMMAND_CORE = "muthurcommand_core"
 
 
 class JobCondition(StrEnum):
@@ -22,9 +22,9 @@ class JobCondition(StrEnum):
     AUTO_UPDATE = "auto_update"
     FREE_SPACE = "free_space"
     FROZEN = "frozen"
-    HAOS = "haos"
+    MCOS = "mcos"
     HEALTHY = "healthy"
-    HOME_ASSISTANT_CORE_SUPPORTED = "home_assistant_core_supported"
+    MUTHURCOMMAND_CORE_SUPPORTED = "muthurcommand_core_supported"
     HOST_NETWORK = "host_network"
     INTERNET_HOST = "internet_host"
     INTERNET_SYSTEM = "internet_system"

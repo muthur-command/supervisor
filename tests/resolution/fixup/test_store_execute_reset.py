@@ -21,6 +21,10 @@ from supervisor.resolution.data import Issue, Suggestion
 from supervisor.resolution.fixups.store_execute_reset import FixupStoreExecuteReset
 from supervisor.store.git import GitRepo
 from supervisor.store.repository import Repository
+from supervisor.store.utils import get_hash_from_repository
+
+_STORE_RESET_TEST_URL = "https://github.com/muthur-command/addons-example"
+_STORE_RESET_TEST_SLUG = get_hash_from_repository(_STORE_RESET_TEST_URL)
 
 
 @pytest.fixture(name="mock_addons_git", autouse=True)
@@ -38,11 +42,17 @@ def add_store_reset_suggestion(coresys: CoreSys) -> None:
     """Add suggestion for tests."""
     coresys.resolution.add_suggestion(
         Suggestion(
-            SuggestionType.EXECUTE_RESET, ContextType.STORE, reference="94cfad5a"
+            SuggestionType.EXECUTE_RESET,
+            ContextType.STORE,
+            reference=_STORE_RESET_TEST_SLUG,
         )
     )
     coresys.resolution.add_issue(
-        Issue(IssueType.CORRUPT_REPOSITORY, ContextType.STORE, reference="94cfad5a")
+        Issue(
+            IssueType.CORRUPT_REPOSITORY,
+            ContextType.STORE,
+            reference=_STORE_RESET_TEST_SLUG,
+        )
     )
 
 
@@ -50,7 +60,7 @@ def add_store_reset_suggestion(coresys: CoreSys) -> None:
 async def test_fixup(coresys: CoreSys):
     """Test fixup."""
     store_execute_reset = FixupStoreExecuteReset(coresys)
-    test_repo = coresys.config.path_addons_git / "94cfad5a"
+    test_repo = coresys.config.path_addons_git / _STORE_RESET_TEST_SLUG
 
     assert store_execute_reset.auto
 
@@ -67,8 +77,8 @@ async def test_fixup(coresys: CoreSys):
         path = path or obj.path
         await coresys.run_in_executor((path / ".git").mkdir)
 
-    coresys.store.repositories["94cfad5a"] = Repository.create(
-        coresys, "https://github.com/home-assistant/addons-example"
+    coresys.store.repositories[_STORE_RESET_TEST_SLUG] = Repository.create(
+        coresys, _STORE_RESET_TEST_URL
     )
     with (
         patch.object(GitRepo, "load"),
@@ -89,7 +99,7 @@ async def test_fixup(coresys: CoreSys):
 async def test_fixup_clone_fail(coresys: CoreSys):
     """Test fixup does not delete cache when clone fails."""
     store_execute_reset = FixupStoreExecuteReset(coresys)
-    test_repo = coresys.config.path_addons_git / "94cfad5a"
+    test_repo = coresys.config.path_addons_git / _STORE_RESET_TEST_SLUG
 
     add_store_reset_suggestion(coresys)
     test_repo.mkdir(parents=True)
@@ -97,8 +107,8 @@ async def test_fixup_clone_fail(coresys: CoreSys):
     assert test_repo.exists()
     assert corrupt_marker.exists()
 
-    coresys.store.repositories["94cfad5a"] = Repository.create(
-        coresys, "https://github.com/home-assistant/addons-example"
+    coresys.store.repositories[_STORE_RESET_TEST_SLUG] = Repository.create(
+        coresys, _STORE_RESET_TEST_URL
     )
     with (
         patch.object(GitRepo, "load"),
@@ -125,12 +135,12 @@ async def test_fixup_move_fail(coresys: CoreSys, error_num: int, unhealthy: bool
     It will leave the user in a bind without the git cache but at least we try to clean up tmp.
     """
     store_execute_reset = FixupStoreExecuteReset(coresys)
-    test_repo = coresys.config.path_addons_git / "94cfad5a"
+    test_repo = coresys.config.path_addons_git / _STORE_RESET_TEST_SLUG
 
     add_store_reset_suggestion(coresys)
     test_repo.mkdir(parents=True)
-    coresys.store.repositories["94cfad5a"] = Repository.create(
-        coresys, "https://github.com/home-assistant/addons-example"
+    coresys.store.repositories[_STORE_RESET_TEST_SLUG] = Repository.create(
+        coresys, _STORE_RESET_TEST_URL
     )
     with (
         patch.object(GitRepo, "load"),

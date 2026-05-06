@@ -9,8 +9,8 @@ import pytest
 
 from supervisor.addons.addon import Addon
 from supervisor.coresys import CoreSys
-from supervisor.exceptions import HomeAssistantAPIError, HomeAssistantWSError
-from supervisor.homeassistant.api import HomeAssistantAPI
+from supervisor.exceptions import MuthurCommandAPIError, MuthurCommandWSError
+from supervisor.muthurcommand.api import MuthurCommandAPI
 
 from tests.common import MockResponse
 from tests.const import TEST_ADDON_SLUG
@@ -88,9 +88,9 @@ async def test_password_reset(
     websession: MagicMock,
 ):
     """Test password reset api."""
-    coresys.homeassistant.api.access_token = "abc123"
+    coresys.muthurcommand.api.access_token = "abc123"
     # pylint: disable-next=protected-access
-    coresys.homeassistant.api._access_token_expires = datetime.now(tz=UTC) + timedelta(
+    coresys.muthurcommand.api._access_token_expires = datetime.now(tz=UTC) + timedelta(
         days=1
     )
 
@@ -110,7 +110,7 @@ async def test_password_reset(
             "The user 'john' is not registered",
         ),
         (
-            MagicMock(side_effect=HomeAssistantAPIError("fail")),
+            MagicMock(side_effect=MuthurCommandAPIError("fail")),
             "Can't request password reset on Home Assistant: fail",
         ),
     ],
@@ -124,9 +124,9 @@ async def test_failed_password_reset(
     expected_log: str,
 ):
     """Test failed password reset."""
-    coresys.homeassistant.api.access_token = "abc123"
+    coresys.muthurcommand.api.access_token = "abc123"
     # pylint: disable-next=protected-access
-    coresys.homeassistant.api._access_token_expires = datetime.now(tz=UTC) + timedelta(
+    coresys.muthurcommand.api._access_token_expires = datetime.now(tz=UTC) + timedelta(
         days=1
     )
 
@@ -175,7 +175,7 @@ async def test_list_users_ws_error(
 ):
     """Test WS error when listing users via API."""
     ha_ws_client.async_send_command = AsyncMock(
-        side_effect=HomeAssistantWSError("fail")
+        side_effect=MuthurCommandWSError("fail")
     )
     resp = await api_client.get("/auth/list")
     assert resp.status == 500
@@ -361,9 +361,9 @@ async def test_non_addon_token_no_auth_access(api_client: TestClient):
 async def test_auth_backend_login_failure(api_client: TestClient):
     """Test backend login failure on auth."""
     with (
-        patch.object(HomeAssistantAPI, "check_api_state", return_value=True),
+        patch.object(MuthurCommandAPI, "check_api_state", return_value=True),
         patch.object(
-            HomeAssistantAPI, "make_request", side_effect=HomeAssistantAPIError("fail")
+            MuthurCommandAPI, "make_request", side_effect=MuthurCommandAPIError("fail")
         ),
     ):
         resp = await api_client.post(

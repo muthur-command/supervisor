@@ -28,7 +28,7 @@ async def test_fixup(coresys: CoreSys):
     )
     coresys.resolution.create_issue(
         IssueType.DOCKER_CONFIG,
-        ContextType.CORE,
+        ContextType.MC_BD,
         suggestions=[SuggestionType.EXECUTE_REBUILD],
     )
     coresys.resolution.create_issue(

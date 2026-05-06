@@ -27,8 +27,8 @@ async def test_start(
 
         run.assert_called_once()
         assert run.call_args.kwargs["ipv4"] == IPv4Address("172.30.32.3")
-        assert run.call_args.kwargs["name"] == "hassio_dns"
-        assert run.call_args.kwargs["hostname"] == "hassio-dns"
+        assert run.call_args.kwargs["name"] == "mcio_dns"
+        assert run.call_args.kwargs["hostname"] == "mcio-dns"
         assert run.call_args.kwargs["dns"] is False
         assert run.call_args.kwargs["oom_score_adj"] == -300
         assert run.call_args.kwargs["mounts"] == [

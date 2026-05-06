@@ -12,7 +12,7 @@ SCHEDULED_HEALTHCHECK = 3600
 MINIMUM_FREE_SPACE_THRESHOLD = 2
 MINIMUM_FULL_BACKUPS = 2
 
-DNS_CHECK_HOST = "_checkdns.home-assistant.io"
+DNS_CHECK_HOST = "_checkdns.muthur-command.com"
 DNS_ERROR_NO_DATA = 1
 
 CGROUP_V1_VERSION = "1"
@@ -23,7 +23,8 @@ class ContextType(StrEnum):
     """Place where somethings was happening."""
 
     ADDON = "addon"
-    CORE = "core"
+    MC_BD = "mc_bd"
+    MC_STACK = "mc_stack"
     DNS_SERVER = "dns_server"
     MOUNT = "mount"
     OS = "os"
@@ -43,7 +44,8 @@ class UnsupportedReason(StrEnum):
     DNS_SERVER = "dns_server"
     DOCKER_CONFIGURATION = "docker_configuration"
     DOCKER_VERSION = "docker_version"
-    HOME_ASSISTANT_CORE_VERSION = "home_assistant_core_version"
+    MUTHURCOMMAND_CORE_VERSION = "muthurcommand_core_version"
+    MC_STACK_VERSION = "mc_stack_version"
     JOB_CONDITIONS = "job_conditions"
     LXC = "lxc"
     NETWORK_MANAGER = "network_manager"
@@ -96,6 +98,7 @@ class IssueType(StrEnum):
     DOCKER_RATELIMIT = "docker_ratelimit"
     FATAL_ERROR = "fatal_error"
     FREE_SPACE = "free_space"
+    MC_STACK_DOWN = "mc_stack_down"
     IPV4_CONNECTION_PROBLEM = "ipv4_connection_problem"
     MISSING_IMAGE = "missing_image"
     MOUNT_FAILED = "mount_failed"

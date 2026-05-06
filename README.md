@@ -1,34 +1,47 @@
-# Home Assistant Supervisor
+# Muthur Command Supervisor
 
-## First private cloud solution for home automation
+## Private-cloud style stack for home automation
 
-Home Assistant (former Hass.io) is a container-based system for managing your
-Home Assistant Core installation and related applications. The system is
-controlled via Home Assistant which communicates with the Supervisor. The
-Supervisor provides an API to manage the installation. This includes changing
-network settings or installing and updating software.
+Muthur Command Supervisor is a container-based system for managing the **Core** application
+stack (Home Assistant–compatible) and related add-ons. The UI or automation layer
+talks to Supervisor; Supervisor exposes an API for the installation (network, add-ons,
+backups, OS integration, and more).
 
 ## Installation
 
-Installation instructions can be found at https://home-assistant.io/getting-started.
+Installation instructions: https://www.muthur-command.com/getting-started
 
 ## Development
 
-For small changes and bugfixes you can just follow this, but for significant changes open a RFC first.
-Development instructions can be found [here][development].
+For small changes and bugfixes you can follow the repository guidelines; for
+significant changes, open an RFC first. Development instructions: [development][development].
 
 ## Release
 
-Releases are done in 3 stages (channels) with this structure:
+Releases use three channels:
 
-1. Pull requests are merged to the `main` branch.
-2. A new build is pushed to the `dev` stage.
+1. Pull requests merge to the default branch (`main` or `mc`, per fork policy).
+2. A new build is pushed to the `dev` channel.
 3. Releases are published.
-4. A new build is pushed to the `beta` stage.
-5. The [`stable.json`][stable] file is updated.
-6. The build that was pushed to `beta` will now be pushed to `stable`.
+4. A new build is pushed to the `beta` channel.
+5. The [`stable.json`][stable] file is updated (Muthur Command OS `version` feed).
+6. The build from `beta` is promoted to `stable`.
 
-[development]: https://developers.home-assistant.io/docs/supervisor/development
-[stable]: https://github.com/home-assistant/version/blob/master/stable.json
+[development]: https://www.muthur-command.com/docs/supervisor/development
+[stable]: https://github.com/muthur-command/version/blob/master/stable.json
 
-[![Home Assistant - A project from the Open Home Foundation](https://www.openhomefoundation.org/badges/home-assistant.png)](https://www.openhomefoundation.org/)
+## Breaking changes (recent rename train)
+
+The following must move in lockstep with **cli**, **version**, **plugin-dns**, **docker**/mc_bd images, and optional **operating-system** releases:
+
+- HTTP routes under **`/mc_bd/*`** and **`/muthurcommand/*`** for the application slot (legacy **`/homeassistant/*`** and **`/core/*`** are not part of this tree’s contract).
+- Headers **`X-Mcio-Key`** and request context **`MCIO_FROM`** (no **`X-Hassio-Key`** / **`HASSIO_FROM`**).
+- On-disk paths **`muthurcommand.json`**, data directory **`/data/muthurcommand`**.
+- Environment **`MUTHURCOMMAND_REPOSITORY`**; **`version`** JSON keys **`muthurcommand`**, **`mcos`** / **`mcos_upgrade`**; add-on manifest keys **`mcio_api`**, **`mcio_role`**, **`muthurcommand_api`**, **`muthurcommand`** version pin.
+- DNS search suffix **`local.mcio`**.
+
+## Origin
+
+- **Upstream:** [home-assistant/supervisor](https://github.com/home-assistant/supervisor) — Home Assistant Supervisor, from which this tree was ported.
+- **In this repo:** **Muthur Command** keeps this fork for **Muthur Command OS**; behavior may diverge from upstream over time.
+- **License:** Code inherited from upstream remains **Apache-2.0**; see **LICENSE** (retain upstream copyright / NOTICE where required).

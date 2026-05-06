@@ -13,7 +13,7 @@ from ..exceptions import (
     ResolutionIssueNotFound,
     ResolutionSuggestionNotFound,
 )
-from ..homeassistant.const import WSEvent
+from ..muthurcommand.const import WSEvent
 from ..utils.common import FileConfiguration
 from .check import ResolutionCheck
 from .const import (
@@ -122,7 +122,7 @@ class ResolutionManager(FileConfiguration, CoreSysAttributes):
 
         # Event on suggestion added to issue
         for issue in self.issues_for_suggestion(suggestion):
-            self.sys_homeassistant.websocket.supervisor_event(
+            self.sys_muthurcommand.websocket.supervisor_event(
                 WSEvent.ISSUE_CHANGED, self._make_issue_message(issue)
             )
 
@@ -136,7 +136,7 @@ class ResolutionManager(FileConfiguration, CoreSysAttributes):
         if reason in self._unsupported:
             return
         self._unsupported.add(reason)
-        self.sys_homeassistant.websocket.supervisor_event(
+        self.sys_muthurcommand.websocket.supervisor_event(
             WSEvent.SUPPORTED_CHANGED,
             attr.asdict(SupportedChanged(False, sorted(self.unsupported))),
         )
@@ -151,7 +151,7 @@ class ResolutionManager(FileConfiguration, CoreSysAttributes):
         if reason in self._unhealthy:
             return
         self._unhealthy.add(reason)
-        self.sys_homeassistant.websocket.supervisor_event(
+        self.sys_muthurcommand.websocket.supervisor_event(
             WSEvent.HEALTH_CHANGED,
             attr.asdict(HealthChanged(False, sorted(self.unhealthy))),
         )
@@ -238,7 +238,7 @@ class ResolutionManager(FileConfiguration, CoreSysAttributes):
         self._issues.append(issue)
 
         # Event on issue creation
-        self.sys_homeassistant.websocket.supervisor_event(
+        self.sys_muthurcommand.websocket.supervisor_event(
             WSEvent.ISSUE_CHANGED, self._make_issue_message(issue)
         )
 
@@ -276,7 +276,7 @@ class ResolutionManager(FileConfiguration, CoreSysAttributes):
 
         # Event on suggestion removed from issues
         for issue in self.issues_for_suggestion(suggestion):
-            self.sys_homeassistant.websocket.supervisor_event(
+            self.sys_muthurcommand.websocket.supervisor_event(
                 WSEvent.ISSUE_CHANGED, self._make_issue_message(issue)
             )
 
@@ -286,7 +286,7 @@ class ResolutionManager(FileConfiguration, CoreSysAttributes):
         self._issues.remove(issue)
 
         # Event on issue removal
-        self.sys_homeassistant.websocket.supervisor_event(
+        self.sys_muthurcommand.websocket.supervisor_event(
             WSEvent.ISSUE_REMOVED, attr.asdict(issue)
         )
 
@@ -300,7 +300,7 @@ class ResolutionManager(FileConfiguration, CoreSysAttributes):
         if reason not in self._unsupported:
             raise ResolutionError(f"The reason {reason} is not active", _LOGGER.warning)
         self._unsupported.remove(reason)
-        self.sys_homeassistant.websocket.supervisor_event(
+        self.sys_muthurcommand.websocket.supervisor_event(
             WSEvent.SUPPORTED_CHANGED,
             attr.asdict(
                 SupportedChanged(

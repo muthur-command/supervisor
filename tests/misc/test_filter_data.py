@@ -27,7 +27,7 @@ SAMPLE_EVENT_AIOHTTP_INTERNAL = {
         "env": {"REMOTE_ADDR": "172.30.32.1"},
         "headers": {
             "Host": "172.30.32.2",
-            "User-Agent": "HomeAssistant/2025.3.0.dev202501310226 aiohttp/3.11.11 Python/3.13",
+            "User-Agent": "MuthurCommand/2025.3.0.dev202501310226 aiohttp/3.11.11 Python/3.13",
             "Authorization": "[Filtered]",
             "X-Hass-Source": "core.handler",
             "Accept": "*/*",
@@ -76,7 +76,7 @@ SAMPLE_EVENT_AIOHTTP_EXTERNAL = {
 
 @pytest.fixture
 def sys_env(autouse=True):
-    """Fixture to inject hassio env."""
+    """Fixture to inject legacy HASSIO_* env (Core compatibility)."""
     with patch.dict(os.environ, {"Test": "123"}):
         yield
 

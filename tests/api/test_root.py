@@ -48,7 +48,7 @@ async def test_api_available_updates(
         "version_latest": "9.2.1",
     }
 
-    coresys.updater._data["hassos_unrestricted"] = "321"
+    coresys.updater._data["mcos_unrestricted"] = "321"
     coresys.os._version = "123"
     updates = await available_updates()
     assert len(updates) == 2
@@ -58,13 +58,13 @@ async def test_api_available_updates(
         "version_latest": "321",
     }
 
-    coresys.updater._data["homeassistant"] = "321"
-    coresys.homeassistant.version = "123"
+    coresys.updater._data["muthurcommand"] = "321"
+    coresys.muthurcommand.version = "123"
     updates = await available_updates()
     assert len(updates) == 3
     assert updates[0] == {
-        "panel_path": "/update-available/core",
-        "update_type": "core",
+        "panel_path": "/update-available/mc_bd",
+        "update_type": "mc_bd",
         "version_latest": "321",
     }
 

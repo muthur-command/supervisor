@@ -1,6 +1,6 @@
 [
     {
-        "status": "Pulling from home-assistant/odroid-n2-homeassistant",
+        "status": "Pulling from muthur-command/aarch64-muthurcommand",
         "id": "2025.7.1"
     },
     {
@@ -346,6 +346,6 @@
         "status": "Digest: sha256:7d97da645f232f82a768d0a537e452536719d56d484d419836e53dbe3e4ec736"
     },
     {
-        "status": "Status: Downloaded newer image for ghcr.io/home-assistant/odroid-n2-homeassistant:2025.7.1"
+        "status": "Status: Downloaded newer image for ghcr.io/muthur-command/aarch64-muthurcommand-2025.7.1"
     }
 ]

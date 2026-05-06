@@ -158,18 +158,18 @@ async def test_backup_open_rejects_path_traversal(coresys: CoreSys, tmp_path: Pa
             pass
 
 
-async def test_homeassistant_restore_rejects_path_traversal(
+async def test_muthurcommand_restore_rejects_path_traversal(
     coresys: CoreSys, tmp_supervisor_data: Path
 ):
     """Test that Home Assistant restore raises BackupInvalidError for path traversal."""
-    tar_path = tmp_supervisor_data / "homeassistant.tar.gz"
+    tar_path = tmp_supervisor_data / "muthurcommand.tar.gz"
     traversal_info = tarfile.TarInfo(name="../../etc/passwd")
     traversal_info.size = 9
     _create_tar_gz(tar_path, [traversal_info], {"../../etc/passwd": b"malicious"})
 
     tar_file = SecureTarFile(tar_path, gzip=True)
     with pytest.raises(BackupInvalidError):
-        await coresys.homeassistant.restore(tar_file)
+        await coresys.muthurcommand.restore(tar_file)
 
 
 async def test_addon_restore_rejects_path_traversal(

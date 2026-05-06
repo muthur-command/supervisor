@@ -234,7 +234,7 @@ class APIOS(CoreSysAttributes):
             or self.coresys.os.version < "15.0"
         ):
             raise APINotFound(
-                "Home Assistant OS 15.0 or newer required for swap settings"
+                "Muthur Command OS 15.0 or newer required for swap settings"
             )
 
         return {
@@ -251,7 +251,7 @@ class APIOS(CoreSysAttributes):
             or self.coresys.os.version < "15.0"
         ):
             raise APINotFound(
-                "Home Assistant OS 15.0 or newer required for swap settings"
+                "Muthur Command OS 15.0 or newer required for swap settings"
             )
 
         body = await api_validate(SCHEMA_SWAP_OPTIONS, request)

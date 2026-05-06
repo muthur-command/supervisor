@@ -13,7 +13,7 @@ from supervisor.const import BusEvent, CoreState
 from supervisor.coresys import CoreSys
 from supervisor.exceptions import (
     AudioUpdateError,
-    HassioError,
+    McioError,
     JobException,
     PluginJobError,
 )
@@ -159,7 +159,7 @@ async def test_haos(coresys: CoreSys):
             """Initialize the test class."""
             self.coresys = coresys
 
-        @Job(name="test_haos_execute", conditions=[JobCondition.HAOS])
+        @Job(name="test_haos_execute", conditions=[JobCondition.MCOS])
         async def execute(self):
             """Execute the class method."""
             return True
@@ -171,7 +171,7 @@ async def test_haos(coresys: CoreSys):
     with patch.object(OSManager, "available", new=PropertyMock(return_value=False)):
         assert not await test.execute()
 
-    coresys.jobs.ignore_conditions = [JobCondition.HAOS]
+    coresys.jobs.ignore_conditions = [JobCondition.MCOS]
     assert await test.execute()
 
 
@@ -188,11 +188,11 @@ async def test_exception(coresys: CoreSys, capture_exception: Mock):
         @Job(name="test_exception_execute", conditions=[JobCondition.HEALTHY])
         async def execute(self):
             """Execute the class method."""
-            raise HassioError()
+            raise McioError()
 
     test = TestClass(coresys)
 
-    with pytest.raises(HassioError):
+    with pytest.raises(McioError):
         assert await test.execute()
 
     capture_exception.assert_not_called()
@@ -264,7 +264,7 @@ async def test_exception_conditions(coresys: CoreSys):
         @Job(
             name="test_exception_conditions_execute",
             conditions=[JobCondition.RUNNING],
-            on_condition=HassioError,
+            on_condition=McioError,
         )
         async def execute(self):
             """Execute the class method."""
@@ -276,7 +276,7 @@ async def test_exception_conditions(coresys: CoreSys):
     assert await test.execute()
 
     await coresys.core.set_state(CoreState.FREEZE)
-    with pytest.raises(HassioError):
+    with pytest.raises(McioError):
         await test.execute()
 
 
@@ -1114,7 +1114,7 @@ async def test_job_always_removed_on_check_failure(coresys: CoreSys):
 
         @Job(
             name="test_job_always_removed_on_check_failure_condition",
-            conditions=[JobCondition.HAOS],
+            conditions=[JobCondition.MCOS],
             on_condition=JobException,
             cleanup=False,
         )
@@ -1427,7 +1427,7 @@ async def test_core_supported(coresys: CoreSys, caplog: pytest.LogCaptureFixture
 
         @Job(
             name="test_core_supported_execute",
-            conditions=[JobCondition.HOME_ASSISTANT_CORE_SUPPORTED],
+            conditions=[JobCondition.MUTHURCOMMAND_CORE_SUPPORTED],
         )
         async def execute(self):
             """Execute the class method."""
@@ -1436,13 +1436,13 @@ async def test_core_supported(coresys: CoreSys, caplog: pytest.LogCaptureFixture
     test = TestClass(coresys)
     assert await test.execute()
 
-    coresys.resolution.unsupported.add(UnsupportedReason.HOME_ASSISTANT_CORE_VERSION)
+    coresys.resolution.unsupported.add(UnsupportedReason.MUTHURCOMMAND_CORE_VERSION)
     assert not await test.execute()
     assert (
         "blocked from execution, unsupported Home Assistant Core version" in caplog.text
     )
 
-    coresys.jobs.ignore_conditions = [JobCondition.HOME_ASSISTANT_CORE_SUPPORTED]
+    coresys.jobs.ignore_conditions = [JobCondition.MUTHURCOMMAND_CORE_SUPPORTED]
     assert await test.execute()
 
 

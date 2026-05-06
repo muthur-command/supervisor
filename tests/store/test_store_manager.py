@@ -13,7 +13,7 @@ from supervisor.arch import CpuArchManager
 from supervisor.backups.manager import BackupManager
 from supervisor.coresys import CoreSys
 from supervisor.exceptions import AddonNotSupportedError, StoreJobError
-from supervisor.homeassistant.module import HomeAssistant
+from supervisor.muthurcommand.module import MuthurCommand
 from supervisor.store import StoreManager
 from supervisor.store.addon import AddonStore
 from supervisor.store.git import GitRepo
@@ -46,7 +46,8 @@ async def test_default_load(coresys: CoreSys):
 
     assert len(store_manager.repository_urls) == 3
     assert (
-        "https://github.com/hassio-addons/repository" in store_manager.repository_urls
+        "https://github.com/mcio-addons/addons-repository"
+        in store_manager.repository_urls
     )
     assert (
         "https://github.com/esphome/home-assistant-addon"
@@ -99,7 +100,8 @@ async def test_load_with_custom_repository(coresys: CoreSys):
 
     assert len(store_manager.repository_urls) == 4
     assert (
-        "https://github.com/hassio-addons/repository" in store_manager.repository_urls
+        "https://github.com/mcio-addons/addons-repository"
+        in store_manager.repository_urls
     )
     assert (
         "https://github.com/esphome/home-assistant-addon"
@@ -139,7 +141,7 @@ async def test_reload_fails_if_out_of_date(coresys: CoreSys):
             "App local_ssh not supported on this machine, supported machine types: !qemux86-64",
         ),
         (
-            {"homeassistant": AwesomeVersion("2023.1.1")},
+            {"muthurcommand": AwesomeVersion("2023.1.1")},
             "App local_ssh not supported on this system, requires Home Assistant version 2023.1.1 or greater",
         ),
     ],
@@ -168,7 +170,7 @@ async def test_update_unavailable_addon(
         ),
         patch.object(CoreSys, "machine", new=PropertyMock(return_value="qemux86-64")),
         patch.object(
-            HomeAssistant,
+            MuthurCommand,
             "version",
             new=PropertyMock(return_value=AwesomeVersion("2022.1.1")),
         ),
@@ -198,7 +200,7 @@ async def test_update_unavailable_addon(
             "App local_ssh not supported on this machine, supported machine types: !qemux86-64",
         ),
         (
-            {"homeassistant": AwesomeVersion("2023.1.1")},
+            {"muthurcommand": AwesomeVersion("2023.1.1")},
             "App local_ssh not supported on this system, requires Home Assistant version 2023.1.1 or greater",
         ),
     ],
@@ -226,7 +228,7 @@ async def test_install_unavailable_addon(
         ),
         patch.object(CoreSys, "machine", new=PropertyMock(return_value="qemux86-64")),
         patch.object(
-            HomeAssistant,
+            MuthurCommand,
             "version",
             new=PropertyMock(return_value=AwesomeVersion("2022.1.1")),
         ),

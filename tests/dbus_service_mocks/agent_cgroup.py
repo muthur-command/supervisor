@@ -2,7 +2,7 @@
 
 from .base import DBusServiceMock, dbus_method
 
-BUS_NAME = "io.hass.os"
+BUS_NAME = "io.muthurcommand.os"
 
 
 def setup(object_path: str | None = None) -> DBusServiceMock:
@@ -13,11 +13,11 @@ def setup(object_path: str | None = None) -> DBusServiceMock:
 class CGroup(DBusServiceMock):
     """CGroup mock.
 
-    gdbus introspect --system --dest io.hass.os --object-path /io/hass/os/CGroup
+    gdbus introspect --system --dest io.muthurcommand.os --object-path /io/muthurcommand/os/CGroup
     """
 
-    object_path = "/io/hass/os/CGroup"
-    interface = "io.hass.os.CGroup"
+    object_path = "/io/muthurcommand/os/CGroup"
+    interface = "io.muthurcommand.os.CGroup"
 
     @dbus_method()
     def AddDevicesAllowed(self, arg_0: "s", arg_1: "s") -> "b":

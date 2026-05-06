@@ -272,7 +272,7 @@ async def test_no_build_file_no_deprecation_warning(
 ):
     """Test no deprecation warning when no build file exists."""
     dockerfile = tmp_path / "Dockerfile"
-    dockerfile.write_text("ARG BUILD_FROM=ghcr.io/home-assistant/base:latest\n")
+    dockerfile.write_text("ARG BUILD_FROM=ghcr.io/muthur-command/base:latest\n")
 
     with (
         patch.object(
@@ -291,7 +291,7 @@ async def test_no_build_yaml_base_image_none(
 ):
     """Test base_image is None when no build file exists."""
     dockerfile = tmp_path / "Dockerfile"
-    dockerfile.write_text("ARG BUILD_FROM=ghcr.io/home-assistant/base:latest\n")
+    dockerfile.write_text("ARG BUILD_FROM=ghcr.io/muthur-command/base:latest\n")
 
     with patch.object(
         type(install_addon_ssh),
@@ -307,7 +307,7 @@ async def test_no_build_yaml_no_build_from_arg(
 ):
     """Test BUILD_FROM is not in docker args when no build file exists."""
     dockerfile = tmp_path / "Dockerfile"
-    dockerfile.write_text("ARG BUILD_FROM=ghcr.io/home-assistant/base:latest\n")
+    dockerfile.write_text("ARG BUILD_FROM=ghcr.io/muthur-command/base:latest\n")
 
     with (
         patch.object(
@@ -368,7 +368,7 @@ async def test_no_build_yaml_docker_config_includes_registries(
 ):
     """Test registries are included in docker config even without build file."""
     dockerfile = tmp_path / "Dockerfile"
-    dockerfile.write_text("ARG BUILD_FROM=ghcr.io/home-assistant/base:latest\n")
+    dockerfile.write_text("ARG BUILD_FROM=ghcr.io/muthur-command/base:latest\n")
 
     # pylint: disable-next=protected-access
     coresys.docker.config._data["registries"] = {
@@ -411,10 +411,10 @@ async def test_labels_include_name_and_description(
             build.get_docker_args, AwesomeVersion("1.0.0"), "test-image:1.0.0", None
         )
 
-    assert _is_label_in_command(args["command"], "io.hass.name", "Terminal & SSH")
+    assert _is_label_in_command(args["command"], "io.mcio.name", "Terminal & SSH")
     assert _is_label_in_command(
         args["command"],
-        "io.hass.description",
+        "io.mcio.description",
         "Allow logging in remotely to Home Assistant using SSH",
     )
 
@@ -450,9 +450,9 @@ async def test_labels_omit_name_and_description_when_empty(
             build.get_docker_args, AwesomeVersion("1.0.0"), "test-image:1.0.0", None
         )
 
-    assert not _is_label_in_command(args["command"], "io.hass.name")
-    assert not _is_label_in_command(args["command"], "io.hass.description")
+    assert not _is_label_in_command(args["command"], "io.mcio.name")
+    assert not _is_label_in_command(args["command"], "io.mcio.description")
     # Core labels should still be present
-    assert _is_label_in_command(args["command"], "io.hass.version", "1.0.0")
-    assert _is_label_in_command(args["command"], "io.hass.arch", "amd64")
-    assert _is_label_in_command(args["command"], "io.hass.type", "app")
+    assert _is_label_in_command(args["command"], "io.mcio.version", "1.0.0")
+    assert _is_label_in_command(args["command"], "io.mcio.arch", "amd64")
+    assert _is_label_in_command(args["command"], "io.mcio.type", "app")

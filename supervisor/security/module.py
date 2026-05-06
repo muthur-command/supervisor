@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 
-from ..const import ATTR_FORCE_SECURITY, ATTR_PWNED, FILE_HASSIO_SECURITY
+from ..const import ATTR_FORCE_SECURITY, ATTR_PWNED, FILE_MCIO_SECURITY
 from ..coresys import CoreSys, CoreSysAttributes
 from ..exceptions import PwnedError
 from ..utils.common import FileConfiguration
@@ -19,7 +19,7 @@ class Security(FileConfiguration, CoreSysAttributes):
 
     def __init__(self, coresys: CoreSys):
         """Initialize updater."""
-        super().__init__(FILE_HASSIO_SECURITY, SCHEMA_SECURITY_CONFIG)
+        super().__init__(FILE_MCIO_SECURITY, SCHEMA_SECURITY_CONFIG)
         self.coresys = coresys
 
     @property

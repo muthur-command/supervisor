@@ -49,11 +49,11 @@ async def test_dbus_osagent(
         ("os_agent", "No OS-Agent support on the host"),
         (
             "agent_apparmor",
-            "Can't load OS Agent dbus interface io.hass.os /io/hass/os/AppArmor",
+            "Can't load OS Agent dbus interface io.muthurcommand.os /io/muthurcommand/os/AppArmor",
         ),
         (
             "agent_datadisk",
-            "Can't load OS Agent dbus interface io.hass.os /io/hass/os/DataDisk",
+            "Can't load OS Agent dbus interface io.muthurcommand.os /io/muthurcommand/os/DataDisk",
         ),
     ],
 )

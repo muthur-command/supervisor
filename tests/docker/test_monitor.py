@@ -116,7 +116,7 @@ async def test_unlabeled_container(coresys: CoreSys, container: DockerContainer)
         "State": {"Status": "running"},
         "Config": {},
     }
-    await coresys.homeassistant.core.instance.attach(AwesomeVersion("2022.7.3"))
+    await coresys.muthurcommand.core.instance.attach(AwesomeVersion("2022.7.3"))
 
     with patch.object(
         Bus, "fire_event", return_value=[coresys.create_task(asyncio.sleep(0))]

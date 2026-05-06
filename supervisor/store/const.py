@@ -7,10 +7,10 @@ from ..const import (
     REPOSITORY_CORE,
     REPOSITORY_LOCAL,
     SUPERVISOR_DATA,
-    URL_HASSIO_ADDONS,
+    URL_MCIO_ADDONS,
 )
 
-FILE_HASSIO_STORE = Path(SUPERVISOR_DATA, "store.json")
+FILE_MCIO_STORE = Path(SUPERVISOR_DATA, "store.json")
 """Repository type definitions for the store."""
 
 
@@ -22,7 +22,7 @@ class BuiltinRepository(StrEnum):
 
     # Git-based built-in repositories
     CORE = REPOSITORY_CORE
-    COMMUNITY_ADDONS = "https://github.com/hassio-addons/repository"
+    COMMUNITY_ADDONS = "https://github.com/mcio-addons/addons-repository"
     ESPHOME = "https://github.com/esphome/home-assistant-addon"
     MUSIC_ASSISTANT = "https://github.com/music-assistant/home-assistant-addon"
 
@@ -32,6 +32,6 @@ class BuiltinRepository(StrEnum):
         if self == BuiltinRepository.LOCAL:
             raise RuntimeError("Local repository does not have a git URL")
         if self == BuiltinRepository.CORE:
-            return URL_HASSIO_ADDONS
+            return URL_MCIO_ADDONS
         else:
             return self.value  # For URL-based repos, value is the URL

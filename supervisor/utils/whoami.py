@@ -1,6 +1,6 @@
 """Small wrapper for whoami API.
 
-https://github.com/home-assistant/whoami.home-assistant.io
+https://github.com/muthur-command/whoami.muthur-command.com
 """
 
 from datetime import datetime
@@ -13,7 +13,7 @@ from ..exceptions import WhoamiConnectivityError, WhoamiError, WhoamiSSLError
 from .dt import utc_from_timestamp
 
 _LOGGER: logging.Logger = logging.getLogger(__name__)
-_API_CALL: str = "services.home-assistant.io/whoami/v1"
+_API_CALL: str = "services.muthur-command.com/whoami/v1"
 
 
 @attr.s(slots=True, frozen=True)

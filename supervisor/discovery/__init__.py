@@ -8,9 +8,9 @@ from uuid import uuid4
 
 import attr
 
-from ..const import ATTR_CONFIG, ATTR_DISCOVERY, FILE_HASSIO_DISCOVERY
+from ..const import ATTR_CONFIG, ATTR_DISCOVERY, FILE_MCIO_DISCOVERY
 from ..coresys import CoreSys, CoreSysAttributes
-from ..exceptions import HomeAssistantAPIError
+from ..exceptions import MuthurCommandAPIError
 from ..utils.common import FileConfiguration
 from .validate import SCHEMA_DISCOVERY_CONFIG
 
@@ -38,7 +38,7 @@ class Discovery(CoreSysAttributes, FileConfiguration):
 
     def __init__(self, coresys: CoreSys):
         """Initialize discovery handler."""
-        super().__init__(FILE_HASSIO_DISCOVERY, SCHEMA_DISCOVERY_CONFIG)
+        super().__init__(FILE_MCIO_DISCOVERY, SCHEMA_DISCOVERY_CONFIG)
         self.coresys: CoreSys = coresys
         self.message_obj: dict[str, Message] = {}
 
@@ -111,7 +111,7 @@ class Discovery(CoreSysAttributes, FileConfiguration):
 
     async def _push_discovery(self, message: Message, command: str) -> None:
         """Send a discovery request."""
-        if not await self.sys_homeassistant.api.check_api_state():
+        if not await self.sys_muthurcommand.api.check_api_state():
             _LOGGER.info("Discovery %s message ignore", message.uuid)
             return
 
@@ -119,7 +119,7 @@ class Discovery(CoreSysAttributes, FileConfiguration):
         data.pop(ATTR_CONFIG)
 
         try:
-            async with self.sys_homeassistant.api.make_request(
+            async with self.sys_muthurcommand.api.make_request(
                 command,
                 f"api/hassio_push/discovery/{message.uuid}",
                 json=data,
@@ -127,5 +127,5 @@ class Discovery(CoreSysAttributes, FileConfiguration):
             ):
                 _LOGGER.info("Discovery %s message send", message.uuid)
                 return
-        except HomeAssistantAPIError as err:
+        except MuthurCommandAPIError as err:
             _LOGGER.error("Discovery %s message failed: %s", message.uuid, err)

@@ -42,7 +42,7 @@ class EvaluateRestartPolicy(EvaluateBase):
         """Docker interfaces where no restart is expected policy."""
         return {
             self.sys_supervisor.instance,
-            self.sys_homeassistant.core.instance,
+            self.sys_muthurcommand.core.instance,
             *{
                 plug.instance
                 for plug in self.sys_plugins.all_plugins

@@ -127,7 +127,7 @@ class AddonOptions(CoreSysAttributes):
         # Lookup secret
         if str(value).startswith("!secret "):
             secret: str = value.partition(" ")[2]
-            value = self.sys_homeassistant.secrets.get(secret)
+            value = self.sys_muthurcommand.secrets.get(secret)
             if value is None:
                 raise vol.Invalid(
                     f"Unknown secret '{secret}' in {self._name} ({self._slug})"

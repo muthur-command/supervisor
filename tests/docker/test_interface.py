@@ -24,7 +24,7 @@ from supervisor.exceptions import (
     DockerNotFound,
     DockerRegistryAuthError,
 )
-from supervisor.homeassistant.const import WSEvent, WSType
+from supervisor.muthurcommand.const import WSEvent, WSType
 from supervisor.jobs import ChildJobSyncFilter, JobSchedulerOptions, SupervisorJob
 from supervisor.jobs.decorator import Job
 from supervisor.supervisor import Supervisor
@@ -81,7 +81,7 @@ async def test_docker_image_default_platform(
     "image,registry_key",
     [
         ("homeassistant/amd64-supervisor", DOCKER_HUB),
-        ("ghcr.io/home-assistant/amd64-supervisor", "ghcr.io"),
+        ("ghcr.io/muthur-command/amd64-mcio-supervisor", "ghcr.io"),
     ],
 )
 async def test_private_registry_credentials_passed_to_pull(
@@ -209,7 +209,7 @@ async def test_current_state(
 ):
     """Test current state for container."""
     container.show.return_value = attrs
-    assert await coresys.homeassistant.core.instance.current_state() == expected
+    assert await coresys.muthurcommand.core.instance.current_state() == expected
 
 
 async def test_current_state_failures(coresys: CoreSys):
@@ -218,7 +218,7 @@ async def test_current_state_failures(coresys: CoreSys):
         404, {"message": "dne"}
     )
     assert (
-        await coresys.homeassistant.core.instance.current_state()
+        await coresys.muthurcommand.core.instance.current_state()
         == ContainerState.UNKNOWN
     )
 
@@ -226,7 +226,7 @@ async def test_current_state_failures(coresys: CoreSys):
         500, {"message": "fail"}
     )
     with pytest.raises(DockerAPIError):
-        await coresys.homeassistant.core.instance.current_state()
+        await coresys.muthurcommand.core.instance.current_state()
 
 
 @pytest.mark.parametrize(
@@ -265,7 +265,7 @@ async def test_attach_existing_container(
         patch.object(type(coresys.bus), "fire_event") as fire_event,
         patch("supervisor.docker.interface.time", return_value=1),
     ):
-        await coresys.homeassistant.core.instance.attach(AwesomeVersion("2022.7.3"))
+        await coresys.muthurcommand.core.instance.attach(AwesomeVersion("2022.7.3"))
         await asyncio.sleep(0)
         assert [
             event
@@ -274,12 +274,12 @@ async def test_attach_existing_container(
         ] == [
             call(
                 BusEvent.DOCKER_CONTAINER_STATE_CHANGE,
-                DockerContainerStateEvent("homeassistant", expected, "abc123", 1),
+                DockerContainerStateEvent("muthurcommand", expected, "abc123", 1),
             )
         ]
 
         fire_event.reset_mock()
-        await coresys.homeassistant.core.instance.attach(
+        await coresys.muthurcommand.core.instance.attach(
             AwesomeVersion("2022.7.3"), skip_state_event_if_down=True
         )
         await asyncio.sleep(0)
@@ -292,7 +292,7 @@ async def test_attach_existing_container(
             assert docker_events == [
                 call(
                     BusEvent.DOCKER_CONTAINER_STATE_CHANGE,
-                    DockerContainerStateEvent("homeassistant", expected, "abc123", 1),
+                    DockerContainerStateEvent("muthurcommand", expected, "abc123", 1),
                 )
             ]
         else:
@@ -308,14 +308,14 @@ async def test_attach_container_failure(coresys: CoreSys):
         "sha256:abc123"
     )
     with patch.object(type(coresys.bus), "fire_event") as fire_event:
-        await coresys.homeassistant.core.instance.attach(AwesomeVersion("2022.7.3"))
+        await coresys.muthurcommand.core.instance.attach(AwesomeVersion("2022.7.3"))
         assert not [
             event
             for event in fire_event.call_args_list
             if event.args[0] == BusEvent.DOCKER_CONTAINER_STATE_CHANGE
         ]
         assert (
-            coresys.homeassistant.core.instance.meta_config["Image"] == "sha256:abc123"
+            coresys.muthurcommand.core.instance.meta_config["Image"] == "sha256:abc123"
         )
 
 
@@ -328,7 +328,7 @@ async def test_attach_total_failure(coresys: CoreSys):
         400, {"message": ""}
     )
     with pytest.raises(DockerError):
-        await coresys.homeassistant.core.instance.attach(AwesomeVersion("2022.7.3"))
+        await coresys.muthurcommand.core.instance.attach(AwesomeVersion("2022.7.3"))
 
 
 async def test_image_pull_fail(coresys: CoreSys, capture_exception: Mock):
@@ -337,7 +337,7 @@ async def test_image_pull_fail(coresys: CoreSys, capture_exception: Mock):
         400, {"message": ""}
     )
     with pytest.raises(DockerError):
-        await coresys.homeassistant.core.instance.install(
+        await coresys.muthurcommand.core.instance.install(
             AwesomeVersion("2022.7.3"), arch=CpuArch.AMD64
         )
 
@@ -369,7 +369,7 @@ async def test_install_fires_progress_events(
     # This is from a sample pull. Filtered log to just one per unique status for test
     logs = [
         {
-            "status": "Pulling from home-assistant/odroid-n2-homeassistant",
+            "status": "Pulling from muthur-command/odroid-n2-homeassistant",
             "id": "2025.7.2",
         },
         {"status": "Already exists", "progressDetail": {}, "id": "6e771e15690e"},
@@ -398,7 +398,7 @@ async def test_install_fires_progress_events(
             "status": "Digest: sha256:490080d7da0f385928022927990e04f604615f7b8c622ef3e58253d0f089881d"
         },
         {
-            "status": "Status: Downloaded newer image for ghcr.io/home-assistant/odroid-n2-homeassistant:2025.7.2"
+            "status": "Status: Downloaded newer image for ghcr.io/muthur-command/aarch64-muthurcommand-odroid-n2:2025.7.2"
         },
     ]
     coresys.docker.images.pull.return_value = AsyncIterator(logs)
@@ -430,7 +430,7 @@ async def test_install_fires_progress_events(
     assert events == [
         PullLogEntry(
             job_id=ANY,
-            status="Pulling from home-assistant/odroid-n2-homeassistant",
+            status="Pulling from muthur-command/odroid-n2-homeassistant",
             id="2025.7.2",
         ),
         PullLogEntry(
@@ -489,7 +489,7 @@ async def test_install_fires_progress_events(
         ),
         PullLogEntry(
             job_id=ANY,
-            status="Status: Downloaded newer image for ghcr.io/home-assistant/odroid-n2-homeassistant:2025.7.2",
+            status="Status: Downloaded newer image for ghcr.io/muthur-command/aarch64-muthurcommand-odroid-n2:2025.7.2",
         ),
     ]
 
@@ -506,7 +506,7 @@ async def test_install_progress_rounding_does_not_cause_misses(
     # value and what it was rounded to. It should not raise an out of order exception
     logs = [
         {
-            "status": "Pulling from home-assistant/odroid-n2-homeassistant",
+            "status": "Pulling from muthur-command/odroid-n2-homeassistant",
             "id": "2025.7.1",
         },
         {"status": "Pulling fs layer", "progressDetail": {}, "id": "1e214cd6d7d0"},
@@ -541,7 +541,7 @@ async def test_install_progress_rounding_does_not_cause_misses(
             "status": "Digest: sha256:7d97da645f232f82a768d0a537e452536719d56d484d419836e53dbe3e4ec736"
         },
         {
-            "status": "Status: Downloaded newer image for ghcr.io/home-assistant/odroid-n2-homeassistant:2025.7.1"
+            "status": "Status: Downloaded newer image for ghcr.io/muthur-command/aarch64-muthurcommand-odroid-n2:2025.7.1"
         },
     ]
     coresys.docker.images.pull.return_value = AsyncIterator(logs)
@@ -598,7 +598,7 @@ async def test_install_raises_on_pull_error(
 
     logs = [
         {
-            "status": "Pulling from home-assistant/odroid-n2-homeassistant",
+            "status": "Pulling from muthur-command/odroid-n2-homeassistant",
             "id": "2025.7.2",
         },
         {"status": "Pulling fs layer", "progressDetail": {}, "id": "1578b14a573c"},
@@ -796,7 +796,7 @@ async def test_missing_total_handled_gracefully(
     # Progress details with missing 'total' fields observed in real-world pulls
     logs = [
         {
-            "status": "Pulling from home-assistant/odroid-n2-homeassistant",
+            "status": "Pulling from muthur-command/odroid-n2-homeassistant",
             "id": "2025.7.1",
         },
         {"status": "Pulling fs layer", "progressDetail": {}, "id": "1e214cd6d7d0"},
@@ -819,7 +819,7 @@ async def test_missing_total_handled_gracefully(
             "status": "Digest: sha256:7d97da645f232f82a768d0a537e452536719d56d484d419836e53dbe3e4ec736"
         },
         {
-            "status": "Status: Downloaded newer image for ghcr.io/home-assistant/odroid-n2-homeassistant:2025.7.1"
+            "status": "Status: Downloaded newer image for ghcr.io/muthur-command/aarch64-muthurcommand-odroid-n2:2025.7.1"
         },
     ]
     coresys.docker.images.pull.return_value = AsyncIterator(logs)

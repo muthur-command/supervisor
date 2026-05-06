@@ -49,8 +49,8 @@
     "CgroupnsMode": "private",
     "Dns": ["172.30.32.3"],
     "DnsOptions": null,
-    "DnsSearch": ["local.hass.io"],
-    "ExtraHosts": ["hassio:172.30.32.2", "supervisor:172.30.32.2"],
+    "DnsSearch": ["local.mcio"],
+    "ExtraHosts": ["mcio:172.30.32.2", "supervisor:172.30.32.2"],
     "GroupAdd": null,
     "IpcMode": "private",
     "Cgroup": "",
@@ -165,7 +165,7 @@
   ],
   "Config": {
     "Hostname": "core-mosquitto",
-    "Domainname": "local.hass.io",
+    "Domainname": "local.mcio",
     "User": "",
     "AttachStdin": false,
     "AttachStdout": false,
@@ -193,18 +193,18 @@
     "Entrypoint": ["/init"],
     "OnBuild": null,
     "Labels": {
-      "io.hass.arch": "aarch64",
-      "io.hass.base.arch": "aarch64",
-      "io.hass.base.image": "arm64v8/debian:bullseye-slim",
-      "io.hass.base.name": "debian",
-      "io.hass.base.version": "2022.08.0",
-      "io.hass.description": "An Open Source MQTT broker",
-      "io.hass.name": "Mosquitto broker",
-      "io.hass.type": "addon",
-      "io.hass.url": "https://github.com/home-assistant/hassio-addons/tree/master/mosquitto",
-      "io.hass.version": "6.1.3",
+      "io.mcio.arch": "aarch64",
+      "io.mcio.base.arch": "aarch64",
+      "io.mcio.base.image": "arm64v8/debian:bullseye-slim",
+      "io.mcio.base.name": "debian",
+      "io.mcio.base.version": "2022.08.0",
+      "io.mcio.description": "An Open Source MQTT broker",
+      "io.mcio.name": "Mosquitto broker",
+      "io.mcio.type": "addon",
+      "io.mcio.url": "https://github.com/muthur-command/addons/tree/master/mosquitto",
+      "io.mcio.version": "6.1.3",
       "org.opencontainers.image.created": "2022-08-30 07:33:03+00:00",
-      "org.opencontainers.image.source": "https://github.com/home-assistant/docker-base",
+      "org.opencontainers.image.source": "https://github.com/muthur-command/docker-base",
       "org.opencontainers.image.version": "6.1.3",
       "supervisor_managed": ""
     }
@@ -219,7 +219,7 @@
       ]
     },
     "Networks": {
-      "hassio": {
+      "mcio": {
         "IPAMConfig": null,
         "Links": null,
         "Aliases": ["core-mosquitto", "986e5efadb22"],

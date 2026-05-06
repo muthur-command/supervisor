@@ -10,7 +10,7 @@ import time_machine
 
 from supervisor.coresys import CoreSys
 from supervisor.dbus.resolved import Resolved
-from supervisor.homeassistant.api import APIState
+from supervisor.muthurcommand.api import APIState
 from supervisor.host.const import LogFormat, LogFormatter
 from supervisor.host.control import SystemControl
 
@@ -144,7 +144,7 @@ async def test_api_llmnr_mdns_info(api_client: TestClient, coresys_disk_info: Co
     result = await resp.json()
     assert result["data"]["broadcast_llmnr"] is True
     assert result["data"]["broadcast_mdns"] is False
-    assert result["data"]["llmnr_hostname"] == "homeassistant"
+    assert result["data"]["llmnr_hostname"] == "muthurcommand"
 
 
 async def test_api_boot_ids_info(api_client: TestClient, journald_logs: MagicMock):
@@ -159,7 +159,7 @@ async def test_api_identifiers_info(api_client: TestClient, journald_logs: Magic
     resp = await api_client.get("/host/logs/identifiers")
     result = await resp.json()
     assert result["data"] == {
-        "identifiers": ["hassio_supervisor", "hassos-config", "kernel"]
+        "identifiers": ["mcio_supervisor", "mcos-config", "kernel"]
     }
 
 
@@ -467,20 +467,20 @@ async def test_disk_usage_api(api_client: TestClient, coresys: CoreSys):
                 "used_bytes": 40000000,
                 "children": [
                     {
-                        "id": "homeassistant1",
-                        "label": "homeassistant1",
+                        "id": "muthurcommand1",
+                        "label": "muthurcommand1",
                         "used_bytes": 20000000,
                     }
                 ],
             },
             {
-                "id": "homeassistant",
-                "label": "Home Assistant",
+                "id": "muthurcommand",
+                "label": "MuthurCommand",
                 "used_bytes": 40000000,
                 "children": [
                     {
-                        "id": "homeassistant1",
-                        "label": "homeassistant1",
+                        "id": "muthurcommand1",
+                        "label": "muthurcommand1",
                         "used_bytes": 20000000,
                     }
                 ],
@@ -510,7 +510,7 @@ async def test_disk_usage_api(api_client: TestClient, coresys: CoreSys):
         assert children[4]["id"] == "share"
         assert children[5]["id"] == "backup"
         assert children[6]["id"] == "ssl"
-        assert children[7]["id"] == "homeassistant"
+        assert children[7]["id"] == "muthurcommand"
 
         # Verify the sizes are correct
         assert children[1]["used_bytes"] == 100000000
@@ -548,7 +548,7 @@ async def test_disk_usage_api(api_client: TestClient, coresys: CoreSys):
         assert paths_dict["share"] == coresys.config.path_share
         assert paths_dict["backup"] == coresys.config.path_backup
         assert paths_dict["ssl"] == coresys.config.path_ssl
-        assert paths_dict["homeassistant"] == coresys.config.path_homeassistant
+        assert paths_dict["muthurcommand"] == coresys.config.path_muthurcommand
 
 
 async def test_disk_usage_api_with_custom_depth(
@@ -678,8 +678,8 @@ async def test_disk_usage_api_with_custom_depth(
                 ],
             },
             {
-                "id": "homeassistant",
-                "label": "Home Assistant",
+                "id": "muthurcommand",
+                "label": "MuthurCommand",
                 "used_bytes": 100000000,
                 "children": [
                     {
@@ -750,8 +750,8 @@ async def test_disk_usage_api_invalid_depth(api_client: TestClient, coresys: Cor
                 "used_bytes": 100000000,
             },
             {
-                "id": "homeassistant",
-                "label": "Home Assistant",
+                "id": "muthurcommand",
+                "label": "MuthurCommand",
                 "used_bytes": 100000000,
             },
         ]
@@ -812,8 +812,8 @@ async def test_disk_usage_api_empty_directories(
                 "used_bytes": 0,
             },
             {
-                "id": "homeassistant",
-                "label": "Home Assistant",
+                "id": "muthurcommand",
+                "label": "MuthurCommand",
                 "used_bytes": 0,
             },
         ]
@@ -841,7 +841,7 @@ async def test_migration_blocks_shutdown(
     action: str,
 ):
     """Test that an offline db migration in progress stops users from shuting down or rebooting system."""
-    coresys.homeassistant.api.get_api_state.return_value = APIState("NOT_RUNNING", True)
+    coresys.muthurcommand.api.get_api_state.return_value = APIState("NOT_RUNNING", True)
 
     resp = await api_client.post(f"/host/{action}")
     assert resp.status == 503
@@ -854,7 +854,7 @@ async def test_migration_blocks_shutdown(
 
 async def test_force_reboot_during_migration(api_client: TestClient, coresys: CoreSys):
     """Test force option reboots even during a migration."""
-    coresys.homeassistant.api.get_api_state.return_value = APIState("NOT_RUNNING", True)
+    coresys.muthurcommand.api.get_api_state.return_value = APIState("NOT_RUNNING", True)
 
     with patch.object(SystemControl, "reboot") as reboot:
         await api_client.post("/host/reboot", json={"force": True})
@@ -865,7 +865,7 @@ async def test_force_shutdown_during_migration(
     api_client: TestClient, coresys: CoreSys
 ):
     """Test force option shutdown even during a migration."""
-    coresys.homeassistant.api.get_api_state.return_value = APIState("NOT_RUNNING", True)
+    coresys.muthurcommand.api.get_api_state.return_value = APIState("NOT_RUNNING", True)
 
     with patch.object(SystemControl, "shutdown") as shutdown:
         await api_client.post("/host/shutdown", json={"force": True})

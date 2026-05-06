@@ -31,17 +31,17 @@ from ..const import (
     ATTR_UUID,
     ATTR_VERSION,
     ATTR_WATCHDOG,
-    FILE_HASSIO_HOMEASSISTANT,
+    FILE_MUTHURCOMMAND,
     BusEvent,
-    HomeAssistantUser,
+    MuthurCommandUser,
 )
 from ..coresys import CoreSys, CoreSysAttributes
 from ..exceptions import (
     BackupInvalidError,
     ConfigurationFileError,
-    HomeAssistantBackupError,
-    HomeAssistantError,
-    HomeAssistantWSError,
+    MuthurCommandBackupError,
+    MuthurCommandError,
+    MuthurCommandWSError,
 )
 from ..hardware.const import PolicyGroup
 from ..hardware.data import Device
@@ -49,17 +49,17 @@ from ..jobs.decorator import Job
 from ..utils import remove_folder, remove_folder_with_excludes
 from ..utils.common import FileConfiguration
 from ..utils.json import read_json_file, write_json_file
-from .api import HomeAssistantAPI
+from .api import MuthurCommandAPI
 from .const import ATTR_ERROR, ATTR_OVERRIDE_IMAGE, ATTR_SUCCESS, LANDINGPAGE, WSType
-from .core import HomeAssistantCore
-from .secrets import HomeAssistantSecrets
+from .core import MuthurCommandCore
+from .secrets import MuthurCommandSecrets
 from .validate import SCHEMA_HASS_CONFIG
-from .websocket import HomeAssistantWebSocket
+from .websocket import MuthurCommandWebSocket
 
 _LOGGER: logging.Logger = logging.getLogger(__name__)
 
 
-HOMEASSISTANT_BACKUP_EXCLUDE = [
+MUTHURCOMMAND_BACKUP_EXCLUDE = [
     "**/__pycache__/*",
     "**/.DS_Store",
     "*.db-shm",
@@ -73,41 +73,41 @@ HOMEASSISTANT_BACKUP_EXCLUDE = [
     "tts/*",
     ".cache/*",
 ]
-HOMEASSISTANT_BACKUP_EXCLUDE_DATABASE = [
+MUTHURCOMMAND_BACKUP_EXCLUDE_DATABASE = [
     "home-assistant_v?.db",
     "home-assistant_v?.db-wal",
 ]
 
 
-class HomeAssistant(FileConfiguration, CoreSysAttributes):
+class MuthurCommand(FileConfiguration, CoreSysAttributes):
     """Home Assistant core object for handle it."""
 
     def __init__(self, coresys: CoreSys):
         """Initialize Home Assistant object."""
-        super().__init__(FILE_HASSIO_HOMEASSISTANT, SCHEMA_HASS_CONFIG)
+        super().__init__(FILE_MUTHURCOMMAND, SCHEMA_HASS_CONFIG)
         self.coresys: CoreSys = coresys
-        self._api: HomeAssistantAPI = HomeAssistantAPI(coresys)
-        self._websocket: HomeAssistantWebSocket = HomeAssistantWebSocket(coresys)
-        self._core: HomeAssistantCore = HomeAssistantCore(coresys)
-        self._secrets: HomeAssistantSecrets = HomeAssistantSecrets(coresys)
+        self._api: MuthurCommandAPI = MuthurCommandAPI(coresys)
+        self._websocket: MuthurCommandWebSocket = MuthurCommandWebSocket(coresys)
+        self._core: MuthurCommandCore = MuthurCommandCore(coresys)
+        self._secrets: MuthurCommandSecrets = MuthurCommandSecrets(coresys)
 
     @property
-    def api(self) -> HomeAssistantAPI:
+    def api(self) -> MuthurCommandAPI:
         """Return API handler for core."""
         return self._api
 
     @property
-    def websocket(self) -> HomeAssistantWebSocket:
+    def websocket(self) -> MuthurCommandWebSocket:
         """Return Websocket handler for core."""
         return self._websocket
 
     @property
-    def core(self) -> HomeAssistantCore:
+    def core(self) -> MuthurCommandCore:
         """Return Core handler for docker."""
         return self._core
 
     @property
-    def secrets(self) -> HomeAssistantSecrets:
+    def secrets(self) -> MuthurCommandSecrets:
         """Return Secrets Manager for core."""
         return self._secrets
 
@@ -176,12 +176,17 @@ class HomeAssistant(FileConfiguration, CoreSysAttributes):
     @property
     def latest_version(self) -> AwesomeVersion | None:
         """Return last available version of Home Assistant."""
-        return self.sys_updater.version_homeassistant
+        return self.sys_updater.version_muthurcommand
 
     @property
     def default_image(self) -> str:
         """Return the default image for this system."""
-        return f"ghcr.io/home-assistant/{self.sys_machine}-homeassistant"
+        # Repository must not include a Docker tag; version is appended as ``:tag``
+        # elsewhere (see ``DockerInterface.check_image``). Board goes in the path.
+        return (
+            f"ghcr.io/muthur-command/{self.sys_arch.supervisor}-muthurcommand-"
+            f"{self.sys_machine}"
+        )
 
     @property
     def image(self) -> str:
@@ -288,6 +293,19 @@ class HomeAssistant(FileConfiguration, CoreSysAttributes):
             return False
 
     @property
+    def unused(self) -> bool:
+        """Return True when this MCOS variant ships no Home Assistant Core.
+
+        The version JSON marks per-machine HA Core slots as ``"unused"``
+        for MCOS images that don't ship the legacy single-container Home
+        Assistant. The Updater reduces that to ``version_muthurcommand =
+        None``; combined with no locally installed version, we treat the
+        Core path as inactive (Stage 5 of the A1 plan: don't watchdog
+        what isn't there, don't proxy WebSocket events to a missing HA).
+        """
+        return self.version is None and self.latest_version is None
+
+    @property
     def backups_exclude_database(self) -> bool:
         """Exclude database from core backups by default."""
         return self._data[ATTR_BACKUPS_EXCLUDE_DATABASE]
@@ -345,6 +363,9 @@ class HomeAssistant(FileConfiguration, CoreSysAttributes):
 
     async def _hardware_events(self, device: Device) -> None:
         """Process hardware requests."""
+        if self.unused:
+            # No HA Core to forward USB-rescan events to.
+            return
         if (
             not self.sys_hardware.policy.is_match_cgroup(PolicyGroup.UART, device)
             or not self.version
@@ -356,10 +377,10 @@ class HomeAssistant(FileConfiguration, CoreSysAttributes):
         try:
             configuration: (
                 dict[str, Any] | None
-            ) = await self.sys_homeassistant.websocket.async_send_command(
+            ) = await self.sys_muthurcommand.websocket.async_send_command(
                 {ATTR_TYPE: "get_config"}
             )
-        except HomeAssistantWSError as err:
+        except MuthurCommandWSError as err:
             _LOGGER.warning(
                 "Can't get Home Assistant Core configuration: %s. Not sending hardware events to Home Assistant Core.",
                 err,
@@ -369,7 +390,7 @@ class HomeAssistant(FileConfiguration, CoreSysAttributes):
         if not configuration or "usb" not in configuration.get("components", []):
             return
 
-        self.sys_homeassistant.websocket.send_command({ATTR_TYPE: "usb/scan"})
+        self.sys_muthurcommand.websocket.send_command({ATTR_TYPE: "usb/scan"})
 
     @Job(name="home_assistant_module_begin_backup")
     async def begin_backup(self) -> None:
@@ -378,14 +399,14 @@ class HomeAssistant(FileConfiguration, CoreSysAttributes):
             resp: dict[str, Any] | None = await self.websocket.async_send_command(
                 {ATTR_TYPE: WSType.BACKUP_START}
             )
-        except HomeAssistantWSError as err:
-            raise HomeAssistantBackupError(
+        except MuthurCommandWSError as err:
+            raise MuthurCommandBackupError(
                 f"Preparing backup of Home Assistant Core failed. Failed to inform HA Core: {str(err)}.",
                 _LOGGER.error,
             ) from err
 
         if resp and not resp.get(ATTR_SUCCESS):
-            raise HomeAssistantBackupError(
+            raise MuthurCommandBackupError(
                 f"Preparing backup of Home Assistant Core failed due to: {resp.get(ATTR_ERROR, {}).get(ATTR_MESSAGE, '')}. Check HA Core logs.",
                 _LOGGER.error,
             )
@@ -397,7 +418,7 @@ class HomeAssistant(FileConfiguration, CoreSysAttributes):
             resp: dict[str, Any] | None = await self.websocket.async_send_command(
                 {ATTR_TYPE: WSType.BACKUP_END}
             )
-        except HomeAssistantWSError as err:
+        except MuthurCommandWSError as err:
             _LOGGER.warning(
                 "Error resuming normal operations after backup of Home Assistant Core. Failed to inform HA Core: %s.",
                 str(err),
@@ -414,9 +435,9 @@ class HomeAssistant(FileConfiguration, CoreSysAttributes):
         self, tar_file: SecureTarFile, exclude_database: bool = False
     ) -> None:
         """Backup Home Assistant Core config/directory."""
-        excludes = HOMEASSISTANT_BACKUP_EXCLUDE.copy()
+        excludes = MUTHURCOMMAND_BACKUP_EXCLUDE.copy()
         if exclude_database:
-            excludes += HOMEASSISTANT_BACKUP_EXCLUDE_DATABASE
+            excludes += MUTHURCOMMAND_BACKUP_EXCLUDE_DATABASE
 
         def _is_excluded_by_filter(path: PurePath) -> bool:
             """Filter function to filter out excluded files from the backup."""
@@ -438,7 +459,7 @@ class HomeAssistant(FileConfiguration, CoreSysAttributes):
                 try:
                     write_json_file(temp_path.joinpath("homeassistant.json"), metadata)
                 except ConfigurationFileError as err:
-                    raise HomeAssistantError(
+                    raise MuthurCommandError(
                         f"Can't save meta for Home Assistant Core: {err!s}",
                         _LOGGER.error,
                     ) from err
@@ -451,12 +472,12 @@ class HomeAssistant(FileConfiguration, CoreSysAttributes):
                         # Backup data
                         atomic_contents_add(
                             backup,
-                            self.sys_config.path_homeassistant,
+                            self.sys_config.path_muthurcommand,
                             file_filter=_is_excluded_by_filter,
                             arcname="data",
                         )
                 except (tarfile.TarError, OSError, AddFileError) as err:
-                    raise HomeAssistantBackupError(
+                    raise MuthurCommandBackupError(
                         f"Can't backup Home Assistant Core config folder: {str(err)}",
                         _LOGGER.error,
                     ) from err
@@ -499,7 +520,7 @@ class HomeAssistant(FileConfiguration, CoreSysAttributes):
                         f"Invalid tarfile {tar_file}: {err}", _LOGGER.error
                     ) from err
                 except tarfile.TarError as err:
-                    raise HomeAssistantError(
+                    raise MuthurCommandError(
                         f"Can't read tarfile {tar_file}: {err}", _LOGGER.error
                     ) from err
 
@@ -510,22 +531,22 @@ class HomeAssistant(FileConfiguration, CoreSysAttributes):
                 _LOGGER.info("Restore Home Assistant Core config folder")
                 if exclude_database is True:
                     remove_folder_with_excludes(
-                        self.sys_config.path_homeassistant,
-                        excludes=HOMEASSISTANT_BACKUP_EXCLUDE_DATABASE,
+                        self.sys_config.path_muthurcommand,
+                        excludes=MUTHURCOMMAND_BACKUP_EXCLUDE_DATABASE,
                         tmp_dir=self.sys_config.path_tmp,
                     )
                 else:
-                    remove_folder(self.sys_config.path_homeassistant, content_only=True)
+                    remove_folder(self.sys_config.path_muthurcommand, content_only=True)
 
                 try:
                     shutil.copytree(
                         temp_data,
-                        self.sys_config.path_homeassistant,
+                        self.sys_config.path_muthurcommand,
                         symlinks=True,
                         dirs_exist_ok=True,
                     )
                 except shutil.Error as err:
-                    raise HomeAssistantError(
+                    raise MuthurCommandError(
                         f"Can't restore origin data: {err}", _LOGGER.error
                     ) from err
 
@@ -539,7 +560,7 @@ class HomeAssistant(FileConfiguration, CoreSysAttributes):
                 try:
                     data = read_json_file(temp_meta)
                 except ConfigurationFileError as err:
-                    raise HomeAssistantError() from err
+                    raise MuthurCommandError() from err
 
                 return data
 
@@ -551,7 +572,7 @@ class HomeAssistant(FileConfiguration, CoreSysAttributes):
         try:
             data = SCHEMA_HASS_CONFIG(data)
         except vol.Invalid as err:
-            raise HomeAssistantError(
+            raise MuthurCommandError(
                 f"Can't validate backup data: {humanize_error(data, err)}",
                 _LOGGER.error,
             ) from err
@@ -568,12 +589,12 @@ class HomeAssistant(FileConfiguration, CoreSysAttributes):
             if attr in data:
                 self._data[attr] = data[attr]
 
-    async def list_users(self) -> list[HomeAssistantUser]:
+    async def list_users(self) -> list[MuthurCommandUser]:
         """Fetch list of all users from Home Assistant Core via WebSocket.
 
-        Raises HomeAssistantWSError on WebSocket connection/communication failure.
+        Raises MuthurCommandWSError on WebSocket connection/communication failure.
         """
         raw: list[dict[str, Any]] = await self.websocket.async_send_command(
             {ATTR_TYPE: "config/auth/list"}
         )
-        return [HomeAssistantUser.from_dict(data) for data in raw]
+        return [MuthurCommandUser.from_dict(data) for data in raw]

@@ -6,7 +6,7 @@ from typing import Any
 from .const import OBSERVER_PORT
 
 
-class HassioError(Exception):
+class McioError(Exception):
     """Root exception."""
 
     error_key: str | None = None
@@ -34,14 +34,14 @@ class HassioError(Exception):
             super().__init__()
 
 
-class HassioNotSupportedError(HassioError):
+class McioNotSupportedError(McioError):
     """Function is not supported."""
 
 
 # API
 
 
-class APIError(HassioError):
+class APIError(McioError):
     """API errors."""
 
     status = 400
@@ -128,7 +128,7 @@ class APIUnknownSupervisorError(APIError):
 # JobManager
 
 
-class JobException(HassioError):
+class JobException(McioError):
     """Base job exception."""
 
 
@@ -152,49 +152,68 @@ class JobGroupExecutionLimitExceeded(JobException):
     """Exception when job group execution limit exceeded."""
 
 
-# HomeAssistant
+# MuthurCommand
 
 
-class HomeAssistantError(HassioError):
+class MuthurCommandError(McioError):
     """Home Assistant exception."""
 
 
-class HomeAssistantUpdateError(HomeAssistantError):
+class MuthurCommandUpdateError(MuthurCommandError):
     """Error on update of a Home Assistant."""
 
 
-class HomeAssistantCrashError(HomeAssistantError):
+class MuthurCommandCrashError(MuthurCommandError):
     """Error on crash of a Home Assistant startup."""
 
 
-class HomeAssistantStartupTimeout(HomeAssistantCrashError):
+class MuthurCommandStartupTimeout(MuthurCommandCrashError):
     """Timeout waiting for Home Assistant successful startup."""
 
 
-class HomeAssistantAPIError(HomeAssistantError):
+class MuthurCommandAPIError(MuthurCommandError):
     """Home Assistant API exception."""
 
 
-class HomeAssistantAuthError(HomeAssistantAPIError):
+class MuthurCommandAuthError(MuthurCommandAPIError):
     """Home Assistant Auth API exception."""
 
 
-class HomeAssistantWSError(HomeAssistantAPIError):
+class MuthurCommandWSError(MuthurCommandAPIError):
     """Home Assistant websocket error."""
 
 
-class HomeAssistantWSConnectionError(HomeAssistantWSError):
+class MuthurCommandWSConnectionError(MuthurCommandWSError):
     """Raise when the WebSocket connection has an error."""
 
 
-class HomeAssistantJobError(HomeAssistantError, JobException):
+class MuthurCommandJobError(MuthurCommandError, JobException):
     """Raise on Home Assistant job error."""
+
+
+# MC stack (PostgreSQL → Redis → mc_bd → mc_fd)
+
+
+class MCStackError(McioError):
+    """Generic MC application stack error."""
+
+
+class MCStackStartupError(MCStackError):
+    """Raised when an MC stack container fails to come up in time."""
+
+
+class MCStackUpdateError(MCStackError):
+    """Raised when an MC stack image update fails."""
+
+
+class MCStackJobError(MCStackError, JobException):
+    """Raised on MC stack job condition failure."""
 
 
 # Supervisor
 
 
-class SupervisorError(HassioError):
+class SupervisorError(McioError):
     """Supervisor error."""
 
 
@@ -220,34 +239,34 @@ class SupervisorJobError(SupervisorError, JobException):
 # HassOS
 
 
-class HassOSError(HassioError):
+class McosError(McioError):
     """HassOS exception."""
 
 
-class HassOSUpdateError(HassOSError):
+class McosUpdateError(McosError):
     """Error on update of a HassOS."""
 
 
-class HassOSJobError(HassOSError, JobException):
+class McosJobError(McosError, JobException):
     """Function not supported by HassOS."""
 
 
-class HassOSDataDiskError(HassOSError):
+class McosDataDiskError(McosError):
     """Issues with the DataDisk feature from HAOS."""
 
 
-class HassOSSlotNotFound(HassOSError):
+class McosSlotNotFound(McosError):
     """Could not find boot slot."""
 
 
-class HassOSSlotUpdateError(HassOSError):
+class McosSlotUpdateError(McosError):
     """Error while updating a slot via rauc."""
 
 
 # All Plugins
 
 
-class PluginError(HassioError):
+class PluginError(McioError):
     """Plugin error."""
 
 
@@ -345,7 +364,7 @@ class AudioJobError(AudioError, PluginJobError):
 # Addons
 
 
-class AddonsError(HassioError):
+class AddonsError(McioError):
     """Addons exception."""
 
 
@@ -415,7 +434,7 @@ class AddonPortConflict(AddonsError, APIError):
         super().__init__(None, logger)
 
 
-class AddonNotSupportedError(HassioNotSupportedError):
+class AddonNotSupportedError(McioNotSupportedError):
     """Addon doesn't support a function."""
 
 
@@ -455,7 +474,7 @@ class AddonNotSupportedMachineTypeError(AddonNotSupportedError):
         super().__init__(None, logger)
 
 
-class AddonNotSupportedHomeAssistantVersionError(AddonNotSupportedError):
+class AddonNotSupportedMuthurCommandVersionError(AddonNotSupportedError):
     """Addon does not support system due to Home Assistant version."""
 
     error_key = "addon_not_supported_home_assistant_version_error"
@@ -568,14 +587,14 @@ class AddonsJobError(AddonsError, JobException):
 # Arch
 
 
-class HassioArchNotFound(HassioNotSupportedError):
+class HassioArchNotFound(McioNotSupportedError):
     """No matches with exists arch."""
 
 
 # Updater
 
 
-class UpdaterError(HassioError):
+class UpdaterError(McioError):
     """Error on Updater."""
 
 
@@ -586,7 +605,7 @@ class UpdaterJobError(UpdaterError, JobException):
 # Auth
 
 
-class AuthError(HassioError):
+class AuthError(McioError):
     """Auth errors."""
 
 
@@ -630,7 +649,7 @@ class AuthInvalidNonStringValueError(AuthError, APIUnauthorized):
         super().__init__(None, logger, headers=headers)
 
 
-class AuthHomeAssistantAPIValidationError(AuthError, APIUnknownSupervisorError):
+class AuthMuthurCommandAPIValidationError(AuthError, APIUnknownSupervisorError):
     """Error encountered trying to validate auth details via Home Assistant API."""
 
     error_key = "auth_home_assistant_api_validation_error"
@@ -640,11 +659,11 @@ class AuthHomeAssistantAPIValidationError(AuthError, APIUnknownSupervisorError):
 # Host
 
 
-class HostError(HassioError):
+class HostError(McioError):
     """Internal Host error."""
 
 
-class HostNotSupportedError(HassioNotSupportedError):
+class HostNotSupportedError(McioNotSupportedError):
     """Host function is not supprted."""
 
 
@@ -671,18 +690,18 @@ class HostLogError(HostError):
 # Service / Discovery
 
 
-class DiscoveryError(HassioError):
+class DiscoveryError(McioError):
     """Discovery Errors."""
 
 
-class ServicesError(HassioError):
+class ServicesError(McioError):
     """Services Errors."""
 
 
 # utils/dbus
 
 
-class DBusError(HassioError):
+class DBusError(McioError):
     """D-Bus generic error."""
 
 
@@ -690,15 +709,15 @@ class DBusNotConnectedError(HostNotSupportedError):
     """D-Bus is not connected and call a method."""
 
 
-class DBusServiceUnkownError(HassioNotSupportedError):
+class DBusServiceUnkownError(McioNotSupportedError):
     """D-Bus service was not available."""
 
 
-class DBusInterfaceError(HassioNotSupportedError):
+class DBusInterfaceError(McioNotSupportedError):
     """D-Bus interface not connected."""
 
 
-class DBusObjectError(HassioNotSupportedError):
+class DBusObjectError(McioNotSupportedError):
     """D-Bus object not defined."""
 
 
@@ -779,7 +798,7 @@ class BoardInvalidError(DBusObjectError):
 # util/common
 
 
-class ConfigurationFileError(HassioError):
+class ConfigurationFileError(McioError):
     """Invalid JSON or YAML file."""
 
 
@@ -800,7 +819,7 @@ class YamlFileError(ConfigurationFileError):
 # util/pwned
 
 
-class PwnedError(HassioError):
+class PwnedError(McioError):
     """Errors while checking pwned passwords."""
 
 
@@ -815,7 +834,7 @@ class PwnedConnectivityError(PwnedError):
 # util/whoami
 
 
-class WhoamiError(HassioError):
+class WhoamiError(McioError):
     """Error while using whoami."""
 
 
@@ -830,7 +849,7 @@ class WhoamiConnectivityError(WhoamiError):
 # utils/systemd_journal
 
 
-class SystemdJournalError(HassioError):
+class SystemdJournalError(McioError):
     """Error while processing systemd journal logs."""
 
 
@@ -841,7 +860,7 @@ class MalformedBinaryEntryError(SystemdJournalError):
 # docker/api
 
 
-class DockerError(HassioError):
+class DockerError(McioError):
     """Docker API/Transport errors."""
 
 
@@ -914,7 +933,7 @@ class DockerHubRateLimitExceeded(DockerError, APITooManyRequests):
         "For more details see {dockerhub_rate_limit_url}"
     )
     extra_fields = {
-        "dockerhub_rate_limit_url": "https://www.home-assistant.io/more-info/dockerhub-rate-limit"
+        "dockerhub_rate_limit_url": "https://www.muthur-command.com/more-info/dockerhub-rate-limit"
     }
 
     def __init__(self, logger: Callable[..., None] | None = None) -> None:
@@ -929,7 +948,7 @@ class DockerJobError(DockerError, JobException):
 # Hardware
 
 
-class HardwareError(HassioError):
+class HardwareError(McioError):
     """General Hardware Error on Supervisor."""
 
 
@@ -937,21 +956,21 @@ class HardwareNotFound(HardwareError):
     """Hardware path or device doesn't exist on the Host."""
 
 
-class HardwareNotSupportedError(HassioNotSupportedError):
+class HardwareNotSupportedError(McioNotSupportedError):
     """Raise if hardware function is not supported."""
 
 
 # Pulse Audio
 
 
-class PulseAudioError(HassioError):
+class PulseAudioError(McioError):
     """Raise if an sound error is happening."""
 
 
 # Resolution
 
 
-class ResolutionError(HassioError):
+class ResolutionError(McioError):
     """Raise if an error is happning on resoltuion."""
 
 
@@ -963,7 +982,7 @@ class ResolutionNotFound(ResolutionError):
     """Raise if suggestion/issue was not found."""
 
 
-class ResolutionFixupError(HassioError):
+class ResolutionFixupError(McioError):
     """Rasie if a fixup fails."""
 
 
@@ -1012,7 +1031,7 @@ class ResolutionSuggestionNotFound(ResolutionNotFound, APINotFound):  # pylint: 
 # Store
 
 
-class StoreError(HassioError):
+class StoreError(McioError):
     """Raise if an error on store is happening."""
 
 
@@ -1077,11 +1096,11 @@ class StoreRepositoryUnknownError(StoreError, APIUnknownSupervisorError):
 # Backup
 
 
-class BackupError(HassioError):
+class BackupError(McioError):
     """Raise if an error during backup is happening."""
 
 
-class HomeAssistantBackupError(BackupError, HomeAssistantError):
+class MuthurCommandBackupError(BackupError, MuthurCommandError):
     """Raise if an error during Home Assistant Core backup is happening."""
 
 
@@ -1169,7 +1188,7 @@ class BackupRestoreUnknownError(BackupError, APIUnknownSupervisorError):
 # Security
 
 
-class SecurityError(HassioError):
+class SecurityError(McioError):
     """Raise if an error during security checks are happening."""
 
 
@@ -1180,7 +1199,7 @@ class SecurityJobError(SecurityError, JobException):
 # Mount
 
 
-class MountError(HassioError):
+class MountError(McioError):
     """Raise on an error related to mounting/unmounting."""
 
 
@@ -1203,5 +1222,5 @@ class MountJobError(MountError, JobException):
 # Network
 
 
-class NetworkInterfaceNotFound(HassioError):
+class NetworkInterfaceNotFound(McioError):
     """Raise on network interface not found."""

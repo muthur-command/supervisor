@@ -7,10 +7,10 @@ import pytest
 
 from supervisor.const import CoreState
 from supervisor.coresys import CoreSys
-from supervisor.homeassistant.const import LANDINGPAGE
-from supervisor.homeassistant.module import HomeAssistant
-from supervisor.resolution.evaluations.home_assistant_core_version import (
-    EvaluateHomeAssistantCoreVersion,
+from supervisor.muthurcommand.const import LANDINGPAGE
+from supervisor.muthurcommand.module import MuthurCommand
+from supervisor.resolution.evaluations.muthurcommand_core_version import (
+    EvaluateMuthurCommandCoreVersion,
 )
 
 
@@ -40,17 +40,17 @@ async def test_core_version_evaluation(
     coresys: CoreSys, current: str | None, latest: str | None, expected: bool
 ):
     """Test evaluation logic on Core versions."""
-    evaluation = EvaluateHomeAssistantCoreVersion(coresys)
+    evaluation = EvaluateMuthurCommandCoreVersion(coresys)
     await coresys.core.set_state(CoreState.RUNNING)
 
     with (
         patch.object(
-            HomeAssistant,
+            MuthurCommand,
             "version",
             new=PropertyMock(return_value=current and AwesomeVersion(current)),
         ),
         patch.object(
-            HomeAssistant,
+            MuthurCommand,
             "latest_version",
             new=PropertyMock(return_value=latest and AwesomeVersion(latest)),
         ),
@@ -62,17 +62,17 @@ async def test_core_version_evaluation(
 
 async def test_core_version_evaluation_no_latest(coresys: CoreSys):
     """Test evaluation when no latest version is available."""
-    evaluation = EvaluateHomeAssistantCoreVersion(coresys)
+    evaluation = EvaluateMuthurCommandCoreVersion(coresys)
     await coresys.core.set_state(CoreState.RUNNING)
 
     with (
         patch.object(
-            HomeAssistant,
+            MuthurCommand,
             "version",
             new=PropertyMock(return_value=AwesomeVersion("2022.1.0")),
         ),
         patch.object(
-            HomeAssistant,
+            MuthurCommand,
             "latest_version",
             new=PropertyMock(return_value=None),
         ),
@@ -85,17 +85,17 @@ async def test_core_version_evaluation_no_latest(coresys: CoreSys):
 
 async def test_core_version_invalid_format(coresys: CoreSys):
     """Test evaluation with invalid version format."""
-    evaluation = EvaluateHomeAssistantCoreVersion(coresys)
+    evaluation = EvaluateMuthurCommandCoreVersion(coresys)
     await coresys.core.set_state(CoreState.RUNNING)
 
     with (
         patch.object(
-            HomeAssistant,
+            MuthurCommand,
             "version",
             new=PropertyMock(return_value=AwesomeVersion("invalid.version")),
         ),
         patch.object(
-            HomeAssistant,
+            MuthurCommand,
             "latest_version",
             new=PropertyMock(return_value=AwesomeVersion("2024.12.0")),
         ),
@@ -108,17 +108,17 @@ async def test_core_version_invalid_format(coresys: CoreSys):
 
 async def test_core_version_landingpage(coresys: CoreSys):
     """Test evaluation with landingpage version."""
-    evaluation = EvaluateHomeAssistantCoreVersion(coresys)
+    evaluation = EvaluateMuthurCommandCoreVersion(coresys)
     await coresys.core.set_state(CoreState.RUNNING)
 
     with (
         patch.object(
-            HomeAssistant,
+            MuthurCommand,
             "version",
             new=PropertyMock(return_value=LANDINGPAGE),
         ),
         patch.object(
-            HomeAssistant,
+            MuthurCommand,
             "latest_version",
             new=PropertyMock(return_value=AwesomeVersion("2024.12.0")),
         ),
@@ -131,14 +131,14 @@ async def test_core_version_landingpage(coresys: CoreSys):
 
 async def test_did_run(coresys: CoreSys):
     """Test that the evaluation ran as expected."""
-    evaluation = EvaluateHomeAssistantCoreVersion(coresys)
+    evaluation = EvaluateMuthurCommandCoreVersion(coresys)
     should_run = evaluation.states
     should_not_run = [state for state in CoreState if state not in should_run]
     assert len(should_run) != 0
     assert len(should_not_run) != 0
 
     with patch(
-        "supervisor.resolution.evaluations.home_assistant_core_version.EvaluateHomeAssistantCoreVersion.evaluate",
+        "supervisor.resolution.evaluations.muthurcommand_core_version.EvaluateMuthurCommandCoreVersion.evaluate",
         return_value=None,
     ) as evaluate:
         for state in should_run:

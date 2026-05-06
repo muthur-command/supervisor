@@ -50,11 +50,11 @@ async def test_run_command_success(docker: DockerAPI, container: DockerContainer
             "AttachStdout": False,
             "AttachStderr": False,
             "HostConfig": {
-                "NetworkMode": "hassio",
+                "NetworkMode": "mcio",
                 "Init": False,
                 "Privileged": False,
                 "Dns": ["172.30.32.3"],
-                "DnsSearch": ["local.hass.io"],
+                "DnsSearch": [DNS_SUFFIX],
                 "DnsOptions": ["timeout:10"],
             },
             "Cmd": ["echo", "hello"],
@@ -428,10 +428,10 @@ async def test_repair(
 ):
     """Test repair API."""
     coresys.docker.docker.networks.get.side_effect = [
-        hassio := MagicMock(spec=DockerNetwork),
+        mcio_net := MagicMock(spec=DockerNetwork),
         host := MagicMock(spec=DockerNetwork),
     ]
-    hassio.show.return_value = {
+    mcio_net.show.return_value = {
         "Containers": {
             "good": {"Name": "good"},
             "corrupt": {"Name": "corrupt"},
@@ -454,9 +454,9 @@ async def test_repair(
     coresys.docker.docker.images.prune_builds.assert_called_once()
     coresys.docker.docker.volumes.prune.assert_called_once()
     coresys.docker.docker.networks.prune.assert_called_once()
-    hassio.disconnect.assert_called_once_with({"Container": "corrupt", "Force": True})
+    mcio_net.disconnect.assert_called_once_with({"Container": "corrupt", "Force": True})
     host.disconnect.assert_not_called()
-    assert "Docker fatal error on container fail on hassio" in caplog.text
+    assert "Docker fatal error on container fail on mcio" in caplog.text
 
 
 async def test_repair_failures(coresys: CoreSys, caplog: pytest.LogCaptureFixture):
@@ -480,7 +480,7 @@ async def test_repair_failures(coresys: CoreSys, caplog: pytest.LogCaptureFixtur
     assert f"Error for builds prune: {fail_err!s}" in caplog.text
     assert f"Error for volumes prune: {fail_err!s}" in caplog.text
     assert f"Error for networks prune: {fail_err!s}" in caplog.text
-    assert f"Error for networks hassio prune: {missing_err!s}" in caplog.text
+    assert f"Error for networks mcio prune: {missing_err!s}" in caplog.text
     assert f"Error for networks host prune: {missing_err!s}" in caplog.text
 
 

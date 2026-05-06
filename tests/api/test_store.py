@@ -20,8 +20,8 @@ from supervisor.docker.const import ContainerState
 from supervisor.docker.interface import DockerInterface
 from supervisor.docker.monitor import DockerContainerStateEvent
 from supervisor.exceptions import StoreGitError
-from supervisor.homeassistant.const import WSEvent
-from supervisor.homeassistant.module import HomeAssistant
+from supervisor.muthurcommand.const import WSEvent
+from supervisor.muthurcommand.module import MuthurCommand
 from supervisor.resolution.const import ContextType, IssueType, SuggestionType
 from supervisor.resolution.data import Issue, Suggestion
 from supervisor.store.addon import AddonStore
@@ -713,7 +713,7 @@ async def test_api_store_addons_addon_availability_machine_not_supported(
         ("update", "post", True),
     ],
 )
-async def test_api_store_addons_addon_availability_homeassistant_version_too_old(
+async def test_api_store_addons_addon_availability_muthurcommand_version_too_old(
     api_client: TestClient,
     coresys: CoreSys,
     api_action: str,
@@ -730,7 +730,7 @@ async def test_api_store_addons_addon_availability_homeassistant_version_too_old
     addon_config = {
         "advanced": False,
         "arch": ["amd64"],
-        "homeassistant": "2023.1.1",  # Requires newer version than current
+        "muthurcommand": "2023.1.1",  # Requires newer version than current
         "slug": "test_version_addon",
         "description": "Test version add-on",
         "name": "Test Version Add-on",
@@ -745,7 +745,7 @@ async def test_api_store_addons_addon_availability_homeassistant_version_too_old
 
     # Mock the Home Assistant version to be older
     with patch.object(
-        HomeAssistant,
+        MuthurCommand,
         "version",
         new=PropertyMock(return_value=AwesomeVersion("2022.1.1")),
     ):
@@ -773,11 +773,11 @@ async def test_api_store_addons_addon_availability_installed_addon(
     assert resp.status == 200
 
     install_addon_ssh.data_store["version"] = AwesomeVersion("10.0.0")
-    install_addon_ssh.data_store["homeassistant"] = AwesomeVersion("2023.1.1")
+    install_addon_ssh.data_store["muthurcommand"] = AwesomeVersion("2023.1.1")
 
     # Mock the Home Assistant version to be older
     with patch.object(
-        HomeAssistant,
+        MuthurCommand,
         "version",
         new=PropertyMock(return_value=AwesomeVersion("2022.1.1")),
     ):

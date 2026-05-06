@@ -86,7 +86,7 @@ from ..exceptions import (
     StoreAddonNotFoundError,
 )
 from ..hardware.data import Device
-from ..homeassistant.const import WSEvent
+from ..muthurcommand.const import WSEvent
 from ..jobs.const import JobConcurrency, JobThrottle
 from ..jobs.decorator import Job
 from ..resolution.const import ContextType, IssueType, SuggestionType
@@ -204,7 +204,7 @@ class Addon(AddonModel):
         ):
             self.sys_resolution.dismiss_issue(issue)
 
-        self.sys_homeassistant.websocket.supervisor_event_custom(
+        self.sys_muthurcommand.websocket.supervisor_event_custom(
             WSEvent.ADDON,
             {
                 ATTR_SLUG: self.slug,
@@ -736,7 +736,7 @@ class Addon(AddonModel):
     async def write_options(self) -> None:
         """Return True if add-on options is written to data."""
         # Update secrets for validation
-        await self.sys_homeassistant.secrets.reload()
+        await self.sys_muthurcommand.secrets.reload()
 
         try:
             options = self.schema.validate(self.options)

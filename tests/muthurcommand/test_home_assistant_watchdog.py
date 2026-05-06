@@ -10,35 +10,35 @@ from supervisor.const import BusEvent, CoreState
 from supervisor.coresys import CoreSys
 from supervisor.docker.const import ContainerState
 from supervisor.docker.monitor import DockerContainerStateEvent
-from supervisor.exceptions import HomeAssistantError
+from supervisor.exceptions import MuthurCommandError
 
 
 async def test_home_assistant_watchdog(coresys: CoreSys) -> None:
     """Test homeassistant watchdog works correctly."""
-    coresys.homeassistant.version = AwesomeVersion("2022.7.3")
+    coresys.muthurcommand.version = AwesomeVersion("2022.7.3")
     with (
         patch(
             "supervisor.docker.interface.DockerInterface.version",
             new=PropertyMock(return_value=AwesomeVersion("2022.7.3")),
         ),
-        patch.object(type(coresys.homeassistant.core.instance), "attach"),
+        patch.object(type(coresys.muthurcommand.core.instance), "attach"),
     ):
-        await coresys.homeassistant.core.load()
+        await coresys.muthurcommand.core.load()
 
-    coresys.homeassistant.core.watchdog = True
+    coresys.muthurcommand.core.watchdog = True
 
     with (
-        patch.object(type(coresys.homeassistant.core), "restart") as restart,
-        patch.object(type(coresys.homeassistant.core), "start") as start,
+        patch.object(type(coresys.muthurcommand.core), "restart") as restart,
+        patch.object(type(coresys.muthurcommand.core), "start") as start,
         patch.object(
-            type(coresys.homeassistant.core.instance), "current_state"
+            type(coresys.muthurcommand.core.instance), "current_state"
         ) as current_state,
     ):
         current_state.return_value = ContainerState.UNHEALTHY
         coresys.bus.fire_event(
             BusEvent.DOCKER_CONTAINER_STATE_CHANGE,
             DockerContainerStateEvent(
-                name="homeassistant",
+                name="muthurcommand",
                 state=ContainerState.UNHEALTHY,
                 id="abc123",
                 time=1,
@@ -53,7 +53,7 @@ async def test_home_assistant_watchdog(coresys: CoreSys) -> None:
         coresys.bus.fire_event(
             BusEvent.DOCKER_CONTAINER_STATE_CHANGE,
             DockerContainerStateEvent(
-                name="homeassistant",
+                name="muthurcommand",
                 state=ContainerState.FAILED,
                 id="abc123",
                 time=1,
@@ -69,7 +69,7 @@ async def test_home_assistant_watchdog(coresys: CoreSys) -> None:
         coresys.bus.fire_event(
             BusEvent.DOCKER_CONTAINER_STATE_CHANGE,
             DockerContainerStateEvent(
-                name="homeassistant",
+                name="muthurcommand",
                 state=ContainerState.FAILED,
                 id="abc123",
                 time=1,
@@ -83,7 +83,7 @@ async def test_home_assistant_watchdog(coresys: CoreSys) -> None:
         coresys.bus.fire_event(
             BusEvent.DOCKER_CONTAINER_STATE_CHANGE,
             DockerContainerStateEvent(
-                name="homeassistant",
+                name="muthurcommand",
                 state=ContainerState.STOPPED,
                 id="abc123",
                 time=1,
@@ -110,25 +110,25 @@ async def test_home_assistant_watchdog(coresys: CoreSys) -> None:
 
 async def test_home_assistant_watchdog_rebuild_on_failure(coresys: CoreSys) -> None:
     """Test home assistant watchdog rebuilds if start fails."""
-    coresys.homeassistant.version = AwesomeVersion("2022.7.3")
+    coresys.muthurcommand.version = AwesomeVersion("2022.7.3")
     with (
         patch(
             "supervisor.docker.interface.DockerInterface.version",
             new=PropertyMock(return_value=AwesomeVersion("2022.7.3")),
         ),
-        patch.object(type(coresys.homeassistant.core.instance), "attach"),
+        patch.object(type(coresys.muthurcommand.core.instance), "attach"),
     ):
-        await coresys.homeassistant.core.load()
+        await coresys.muthurcommand.core.load()
 
-    coresys.homeassistant.core.watchdog = True
+    coresys.muthurcommand.core.watchdog = True
 
     with (
         patch.object(
-            type(coresys.homeassistant.core), "start", side_effect=HomeAssistantError()
+            type(coresys.muthurcommand.core), "start", side_effect=MuthurCommandError()
         ) as start,
-        patch.object(type(coresys.homeassistant.core), "rebuild") as rebuild,
+        patch.object(type(coresys.muthurcommand.core), "rebuild") as rebuild,
         patch.object(
-            type(coresys.homeassistant.core.instance),
+            type(coresys.muthurcommand.core.instance),
             "current_state",
             return_value=ContainerState.FAILED,
         ),
@@ -136,7 +136,7 @@ async def test_home_assistant_watchdog_rebuild_on_failure(coresys: CoreSys) -> N
         coresys.bus.fire_event(
             BusEvent.DOCKER_CONTAINER_STATE_CHANGE,
             DockerContainerStateEvent(
-                name="homeassistant",
+                name="muthurcommand",
                 state=ContainerState.FAILED,
                 id="abc123",
                 time=1,
@@ -154,21 +154,21 @@ async def test_home_assistant_watchdog_skip_on_load(
     container.show.return_value["State"]["Status"] = "stopped"
     container.show.return_value["State"]["Running"] = False
     container.show.return_value["State"]["ExitCode"] = 1
-    coresys.homeassistant.core.watchdog = True
+    coresys.muthurcommand.core.watchdog = True
 
     events = AsyncMock()
     coresys.bus.register_event(BusEvent.DOCKER_CONTAINER_STATE_CHANGE, events)
 
-    coresys.homeassistant.version = AwesomeVersion("2022.7.3")
+    coresys.muthurcommand.version = AwesomeVersion("2022.7.3")
     with (
         patch(
             "supervisor.docker.interface.DockerInterface.version",
             new=PropertyMock(return_value=AwesomeVersion("2022.7.3")),
         ),
-        patch.object(type(coresys.homeassistant.core), "restart") as restart,
-        patch.object(type(coresys.homeassistant.core), "start") as start,
+        patch.object(type(coresys.muthurcommand.core), "restart") as restart,
+        patch.object(type(coresys.muthurcommand.core), "start") as start,
     ):
-        await coresys.homeassistant.core.load()
+        await coresys.muthurcommand.core.load()
 
         # No events should be raised on attach
         await asyncio.sleep(0)
@@ -181,27 +181,27 @@ async def test_home_assistant_watchdog_unregisters_on_shutdown(
     coresys: CoreSys,
 ) -> None:
     """Test home assistant watchdog unregisters when entering shutdown states."""
-    coresys.homeassistant.version = AwesomeVersion("2022.7.3")
+    coresys.muthurcommand.version = AwesomeVersion("2022.7.3")
     with (
         patch(
             "supervisor.docker.interface.DockerInterface.version",
             new=PropertyMock(return_value=AwesomeVersion("2022.7.3")),
         ),
-        patch.object(type(coresys.homeassistant.core.instance), "attach"),
+        patch.object(type(coresys.muthurcommand.core.instance), "attach"),
     ):
-        await coresys.homeassistant.core.load()
+        await coresys.muthurcommand.core.load()
 
-    coresys.homeassistant.core.watchdog = True
+    coresys.muthurcommand.core.watchdog = True
 
     # Verify watchdog listener is registered
-    assert coresys.homeassistant.core._watchdog_listener is not None
-    watchdog_listener = coresys.homeassistant.core._watchdog_listener
+    assert coresys.muthurcommand.core._watchdog_listener is not None
+    watchdog_listener = coresys.muthurcommand.core._watchdog_listener
 
     with (
-        patch.object(type(coresys.homeassistant.core), "restart") as restart,
-        patch.object(type(coresys.homeassistant.core), "start") as start,
+        patch.object(type(coresys.muthurcommand.core), "restart") as restart,
+        patch.object(type(coresys.muthurcommand.core), "start") as start,
         patch.object(
-            type(coresys.homeassistant.core.instance),
+            type(coresys.muthurcommand.core.instance),
             "current_state",
             return_value=ContainerState.FAILED,
         ),
@@ -210,7 +210,7 @@ async def test_home_assistant_watchdog_unregisters_on_shutdown(
         coresys.bus.fire_event(
             BusEvent.DOCKER_CONTAINER_STATE_CHANGE,
             DockerContainerStateEvent(
-                name="homeassistant",
+                name="muthurcommand",
                 state=ContainerState.FAILED,
                 id="abc123",
                 time=1,
@@ -223,20 +223,20 @@ async def test_home_assistant_watchdog_unregisters_on_shutdown(
         # Test each shutdown state
         for shutdown_state in (CoreState.SHUTDOWN, CoreState.STOPPING, CoreState.CLOSE):
             # Reload to reset listener
-            coresys.homeassistant.core._watchdog_listener = watchdog_listener
+            coresys.muthurcommand.core._watchdog_listener = watchdog_listener
 
             # Fire shutdown state change
             coresys.bus.fire_event(BusEvent.SUPERVISOR_STATE_CHANGE, shutdown_state)
             await asyncio.sleep(0)
 
             # Verify watchdog listener is unregistered
-            assert coresys.homeassistant.core._watchdog_listener is None
+            assert coresys.muthurcommand.core._watchdog_listener is None
 
             # Watchdog should not respond to events after shutdown
             coresys.bus.fire_event(
                 BusEvent.DOCKER_CONTAINER_STATE_CHANGE,
                 DockerContainerStateEvent(
-                    name="homeassistant",
+                    name="muthurcommand",
                     state=ContainerState.FAILED,
                     id="abc123",
                     time=1,

@@ -42,8 +42,8 @@ async def test_check(coresys: CoreSys, dns_query: AsyncMock, capture_exception: 
 
     await dns_server.run_check.__wrapped__(dns_server)
     assert dns_query.call_args_list == [
-        call("_checkdns.home-assistant.io", "A"),
-        call("_checkdns.home-assistant.io", "A"),
+        call("_checkdns.muthur-command.com", "A"),
+        call("_checkdns.muthur-command.com", "A"),
     ]
     assert len(coresys.resolution.issues) == 0
 
@@ -53,7 +53,7 @@ async def test_check(coresys: CoreSys, dns_query: AsyncMock, capture_exception: 
 
     dns_query.side_effect = (err := DNSError())
     await dns_server.run_check.__wrapped__(dns_server)
-    dns_query.assert_called_once_with("_checkdns.home-assistant.io", "A")
+    dns_query.assert_called_once_with("_checkdns.muthur-command.com", "A")
 
     assert len(coresys.resolution.issues) == 1
     assert coresys.resolution.issues[0].type is IssueType.DNS_SERVER_FAILED
@@ -74,12 +74,12 @@ async def test_approve(coresys: CoreSys, supervisor_internet, dns_query: AsyncMo
     dns_query.assert_not_called()
 
     assert await dns_server.approve_check(reference="dns://192.168.30.1") is True
-    dns_query.assert_called_once_with("_checkdns.home-assistant.io", "A")
+    dns_query.assert_called_once_with("_checkdns.muthur-command.com", "A")
 
     dns_query.reset_mock()
     dns_query.side_effect = None
     assert await dns_server.approve_check(reference="dns://192.168.30.1") is False
-    dns_query.assert_called_once_with("_checkdns.home-assistant.io", "A")
+    dns_query.assert_called_once_with("_checkdns.muthur-command.com", "A")
 
 
 async def test_did_run(coresys: CoreSys):

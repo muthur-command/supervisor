@@ -1,6 +1,6 @@
-[36m22-10-11 14:04:23 DEBUG (MainThread) [supervisor.utils.dbus] D-Bus call - org.freedesktop.DBus.Properties.call_get_all on /io/hass/os[0m
-[36m22-10-11 14:04:23 DEBUG (MainThread) [supervisor.utils.dbus] D-Bus call - org.freedesktop.DBus.Properties.call_get_all on /io/hass/os/AppArmor[0m
-[36m22-10-11 14:04:23 DEBUG (MainThread) [supervisor.utils.dbus] D-Bus call - org.freedesktop.DBus.Properties.call_get_all on /io/hass/os/DataDisk[0m
+[36m22-10-11 14:04:23 DEBUG (MainThread) [supervisor.utils.dbus] D-Bus call - org.freedesktop.DBus.Properties.call_get_all on /io/muthurcommand/os[0m
+[36m22-10-11 14:04:23 DEBUG (MainThread) [supervisor.utils.dbus] D-Bus call - org.freedesktop.DBus.Properties.call_get_all on /io/muthurcommand/os/AppArmor[0m
+[36m22-10-11 14:04:23 DEBUG (MainThread) [supervisor.utils.dbus] D-Bus call - org.freedesktop.DBus.Properties.call_get_all on /io/muthurcommand/os/DataDisk[0m
 [32m22-10-11 14:04:23 INFO (MainThread) [supervisor.host.sound] Updating PulseAudio information[0m
 [32m22-10-11 14:04:23 INFO (MainThread) [supervisor.host.manager] Host information reload completed[0m
 [36m22-10-11 14:06:59 DEBUG (MainThread) [supervisor.api.middleware.security] Passthrough /supervisor/ping[0m

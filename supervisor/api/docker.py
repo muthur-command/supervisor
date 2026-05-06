@@ -140,7 +140,7 @@ class APIDocker(CoreSysAttributes):
             or self.coresys.os.version < AwesomeVersion("17.0.dev0")
         ):
             raise APINotFound(
-                "Home Assistant OS 17.0 or newer required for Docker storage driver migration"
+                "Muthur Command OS 17.0 or newer required for Docker storage driver migration"
             )
 
         body = await api_validate(SCHEMA_MIGRATE_DOCKER_STORAGE_DRIVER, request)

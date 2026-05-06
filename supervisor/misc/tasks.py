@@ -9,15 +9,18 @@ from ..addons.const import ADDON_UPDATE_CONDITIONS
 from ..backups.const import LOCATION_CLOUD_BACKUP, LOCATION_TYPE
 from ..const import ATTR_TYPE, AddonState
 from ..coresys import CoreSysAttributes
+from ..docker.const import ContainerState
 from ..exceptions import (
     AddonsError,
     BackupFileNotFoundError,
-    HomeAssistantError,
-    HomeAssistantWSError,
+    DockerError,
+    MCStackError,
+    MuthurCommandError,
+    MuthurCommandWSError,
     ObserverError,
     SupervisorUpdateError,
 )
-from ..homeassistant.const import LANDINGPAGE, WSType
+from ..muthurcommand.const import LANDINGPAGE, WSType
 from ..jobs.const import JobConcurrency
 from ..jobs.decorator import Job, JobCondition
 from ..plugins.const import PLUGIN_UPDATE_CONDITIONS
@@ -49,8 +52,13 @@ RUN_WATCHDOG_HOMEASSISTANT_API = 120
 
 RUN_WATCHDOG_ADDON_APPLICATON = 120
 RUN_WATCHDOG_OBSERVER_APPLICATION = 180
+RUN_WATCHDOG_MC_STACK = 120
 
 RUN_CORE_BACKUP_CLEANUP = 86200
+
+# MC stack watchdog cache keys
+MC_STACK_WATCHDOG_API_FAILURES = "MC_STACK_WATCHDOG_API_FAILURES"
+MC_STACK_WATCHDOG_MAX_API_ATTEMPTS = 2
 
 PLUGIN_AUTO_UPDATE_CONDITIONS = PLUGIN_UPDATE_CONDITIONS + [
     JobCondition.AUTO_UPDATE,
@@ -88,13 +96,16 @@ class Tasks(CoreSysAttributes):
 
         # Watchdog
         self.sys_scheduler.register_task(
-            self._watchdog_homeassistant_api, RUN_WATCHDOG_HOMEASSISTANT_API
+            self._watchdog_muthurcommand_api, RUN_WATCHDOG_HOMEASSISTANT_API
         )
         self.sys_scheduler.register_task(
             self._watchdog_observer_application, RUN_WATCHDOG_OBSERVER_APPLICATION
         )
         self.sys_scheduler.register_task(
             self._watchdog_addon_application, RUN_WATCHDOG_ADDON_APPLICATON
+        )
+        self.sys_scheduler.register_task(
+            self._watchdog_mc_stack, RUN_WATCHDOG_MC_STACK
         )
 
         # Cleanup
@@ -155,35 +166,40 @@ class Tasks(CoreSysAttributes):
                 message,
             )
             try:
-                await self.sys_homeassistant.websocket.async_send_command(message)
-            except HomeAssistantWSError as err:
+                await self.sys_muthurcommand.websocket.async_send_command(message)
+            except MuthurCommandWSError as err:
                 _LOGGER.warning(
                     "Could not send app update command to Home Assistant Core: %s",
                     err,
                 )
 
-    async def _watchdog_homeassistant_api(self):
+    async def _watchdog_muthurcommand_api(self):
         """Create scheduler task for monitoring running state of API.
 
         Try 2 times to call API before we restart Home-Assistant. Maybe we had
         a delay in our system.
         """
-        if not self.sys_homeassistant.watchdog:
+        if self.sys_muthurcommand.unused:
+            # MCOS variant doesn't ship Home Assistant Core — Stage 5 of
+            # the A1 plan tells us the MC stack watchdog (mc_bd HTTP probe)
+            # is the source of truth instead.
+            return
+        if not self.sys_muthurcommand.watchdog:
             # Watchdog is not enabled for Home Assistant
             return
-        if self.sys_homeassistant.error_state:
+        if self.sys_muthurcommand.error_state:
             # Home Assistant is in an error state, this is handled by the rollback feature
             return
-        if self.sys_homeassistant.version == LANDINGPAGE:
+        if self.sys_muthurcommand.version == LANDINGPAGE:
             # Skip watchdog for landingpage
             return
-        if not await self.sys_homeassistant.core.is_running():
+        if not await self.sys_muthurcommand.core.is_running():
             # The home assistant container is not running
             return
-        if self.sys_homeassistant.core.in_progress:
+        if self.sys_muthurcommand.core.in_progress:
             # Home Assistant has a task in progress
             return
-        if await self.sys_homeassistant.api.check_api_state():
+        if await self.sys_muthurcommand.api.check_api_state():
             # Home Assistant is running properly
             self._cache[HASS_WATCHDOG_REANIMATE_FAILURES] = 0
             self._cache[HASS_WATCHDOG_API_FAILURES] = 0
@@ -217,10 +233,10 @@ class Tasks(CoreSysAttributes):
 
         try:
             if safe_mode:
-                await self.sys_homeassistant.core.rebuild(safe_mode=True)
+                await self.sys_muthurcommand.core.rebuild(safe_mode=True)
             else:
-                await self.sys_homeassistant.core.restart()
-        except HomeAssistantError as err:
+                await self.sys_muthurcommand.core.restart()
+        except MuthurCommandError as err:
             if reanimate_fails == 0 or safe_mode:
                 await async_capture_exception(err)
 
@@ -348,7 +364,7 @@ class Tasks(CoreSysAttributes):
         conditions=[
             JobCondition.SUPERVISOR_UPDATED,
             JobCondition.OS_SUPPORTED,
-            JobCondition.HOME_ASSISTANT_CORE_SUPPORTED,
+            JobCondition.MUTHURCOMMAND_CORE_SUPPORTED,
         ],
     )
     async def _reload_store(self) -> None:
@@ -388,6 +404,90 @@ class Tasks(CoreSysAttributes):
         )
         with suppress(SupervisorUpdateError):
             await self.sys_supervisor.update()
+
+    async def _watchdog_mc_stack(self) -> None:
+        """Watch mc_bd HTTP health and revive crashed stack containers.
+
+        Recovery policy (A1 plan, stage 5):
+
+        1. Backend ``mc_bd`` HTTP probe must answer within
+           ``MC_STACK_WATCHDOG_MAX_API_ATTEMPTS`` polls. A single missed
+           probe is forgiven; two in a row trigger recovery.
+        2. **First**: restart only the ``mc_bd`` container — that's the
+           cheapest fix and the most common failure mode.
+        3. **Then**: if ``mc_bd`` is actually crashed (``FAILED`` /
+           ``STOPPED``), do a full ordered stack restart. PostgreSQL and
+           Redis containers are recreated, but their bind-mount data
+           volumes are *never* removed by this method.
+        4. **Never**: touch persistent data without explicit user action.
+        """
+        stack = self.sys_mc_stack
+        if not stack.enabled:
+            return
+        if not stack.watchdog:
+            # Operator has switched the stack watchdog off (e.g. during
+            # planned maintenance). Reset the failure counter so a future
+            # re-enable starts from a clean slate.
+            self._cache[MC_STACK_WATCHDOG_API_FAILURES] = 0
+            return
+
+        backend = stack.backend
+        if not await backend.is_running():
+            # Container hasn't been brought up yet (maybe still pulling on
+            # first boot). Don't compete with ``MCStack.start`` here.
+            return
+
+        # HTTP probe — same code path the start-up health check uses.
+        if await stack._check_backend_ready():  # noqa: SLF001
+            if self._cache.get(MC_STACK_WATCHDOG_API_FAILURES):
+                _LOGGER.info("MC stack watchdog: mc_bd recovered")
+            self._cache[MC_STACK_WATCHDOG_API_FAILURES] = 0
+            return
+
+        api_fails = self._cache.get(MC_STACK_WATCHDOG_API_FAILURES, 0) + 1
+        if api_fails < MC_STACK_WATCHDOG_MAX_API_ATTEMPTS:
+            self._cache[MC_STACK_WATCHDOG_API_FAILURES] = api_fails
+            _LOGGER.warning(
+                "MC stack watchdog missed an mc_bd health response (%s/%s)",
+                api_fails,
+                MC_STACK_WATCHDOG_MAX_API_ATTEMPTS,
+            )
+            return
+
+        # Reset failure counter so the next pass starts fresh after recovery.
+        self._cache[MC_STACK_WATCHDOG_API_FAILURES] = 0
+        _LOGGER.error(
+            "MC stack watchdog: mc_bd unresponsive %s times, attempting recovery",
+            MC_STACK_WATCHDOG_MAX_API_ATTEMPTS,
+        )
+
+        # Tier 1: container-only restart of mc_bd.
+        try:
+            await backend.restart()
+        except DockerError as err:
+            _LOGGER.warning("MC stack watchdog: mc_bd restart failed: %s", err)
+        else:
+            _LOGGER.info(
+                "MC stack watchdog: mc_bd restarted; re-probing on next tick"
+            )
+            return
+
+        # Tier 2: if mc_bd is actually dead, restart the whole stack
+        # (postgres + redis are not destroyed, only restarted).
+        if await backend.current_state() in (
+            ContainerState.FAILED,
+            ContainerState.STOPPED,
+        ):
+            _LOGGER.error(
+                "MC stack watchdog: mc_bd is %s, restarting whole MC stack — "
+                "PostgreSQL/Redis volumes are preserved",
+                await backend.current_state(),
+            )
+            try:
+                await stack.restart()
+            except MCStackError as err:
+                _LOGGER.error("MC stack watchdog: stack restart failed: %s", err)
+                await async_capture_exception(err)
 
     @Job(name="tasks_core_backup_cleanup", conditions=[JobCondition.HEALTHY])
     async def _core_backup_cleanup(self) -> None:

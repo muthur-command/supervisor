@@ -91,7 +91,7 @@ async def test_api_send_del_discovery(
 ):
     """Test adding and removing discovery."""
     install_addon_ssh.data["discovery"] = ["test"]
-    coresys.homeassistant.api.ensure_access_token = AsyncMock()
+    coresys.muthurcommand.api.ensure_access_token = AsyncMock()
 
     resp = await api_client.post("/discovery", json={"service": "test", "config": {}})
     assert resp.status == 200

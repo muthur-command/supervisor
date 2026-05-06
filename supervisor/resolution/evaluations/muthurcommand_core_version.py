@@ -10,7 +10,7 @@ from awesomeversion import (
 
 from ...const import CoreState
 from ...coresys import CoreSys
-from ...homeassistant.const import LANDINGPAGE
+from ...muthurcommand.const import LANDINGPAGE
 from ..const import UnsupportedReason
 from .base import EvaluateBase
 
@@ -19,21 +19,21 @@ _LOGGER: logging.Logger = logging.getLogger(__name__)
 
 def setup(coresys: CoreSys) -> EvaluateBase:
     """Initialize evaluation-setup function."""
-    return EvaluateHomeAssistantCoreVersion(coresys)
+    return EvaluateMuthurCommandCoreVersion(coresys)
 
 
-class EvaluateHomeAssistantCoreVersion(EvaluateBase):
+class EvaluateMuthurCommandCoreVersion(EvaluateBase):
     """Evaluate the Home Assistant Core version."""
 
     @property
     def reason(self) -> UnsupportedReason:
         """Return a UnsupportedReason enum."""
-        return UnsupportedReason.HOME_ASSISTANT_CORE_VERSION
+        return UnsupportedReason.MUTHURCOMMAND_CORE_VERSION
 
     @property
     def on_failure(self) -> str:
         """Return a string that is printed when self.evaluate is True."""
-        return f"Home Assistant Core version '{self.sys_homeassistant.version}' is more than 2 years old!"
+        return f"Home Assistant Core version '{self.sys_muthurcommand.version}' is more than 2 years old!"
 
     @property
     def states(self) -> list[CoreState]:
@@ -42,8 +42,14 @@ class EvaluateHomeAssistantCoreVersion(EvaluateBase):
 
     async def evaluate(self) -> bool:
         """Run evaluation."""
-        if not (current := self.sys_homeassistant.version) or not (
-            latest := self.sys_homeassistant.latest_version
+        # Stage 6 of the A1 plan: MCOS variants that ship no Home Assistant
+        # Core ("unused" slot in the version JSON) must not be flagged as
+        # unsupported just because the legacy Core is missing.
+        if self.sys_muthurcommand.unused:
+            return False
+
+        if not (current := self.sys_muthurcommand.version) or not (
+            latest := self.sys_muthurcommand.latest_version
         ):
             return False
 

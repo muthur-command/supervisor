@@ -174,8 +174,8 @@ MOUNT_UDEV = DockerMount(
 )
 
 PATH_PRIVATE_DATA = PurePath("/data")
-PATH_HOMEASSISTANT_CONFIG_LEGACY = PurePath("/config")
-PATH_HOMEASSISTANT_CONFIG = PurePath("/homeassistant")
+PATH_MUTHURCOMMAND_CONFIG_LEGACY = PurePath("/config")
+PATH_MUTHURCOMMAND_CONFIG = PurePath("/muthurcommand")
 PATH_PUBLIC_CONFIG = PurePath("/config")
 PATH_ALL_ADDON_CONFIGS = PurePath("/addon_configs")
 PATH_SSL = PurePath("/ssl")

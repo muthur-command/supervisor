@@ -14,7 +14,7 @@ from awesomeversion import AwesomeVersion
 from multidict import MultiMapping
 
 from ..coresys import CoreSys, CoreSysAttributes
-from ..exceptions import HomeAssistantAPIError, HomeAssistantAuthError
+from ..exceptions import MuthurCommandAPIError, MuthurCommandAuthError
 from ..utils import version_is_new_enough
 from .const import LANDINGPAGE
 
@@ -31,7 +31,7 @@ class APIState:
     offline_db_migration: bool
 
 
-class HomeAssistantAPI(CoreSysAttributes):
+class MuthurCommandAPI(CoreSysAttributes):
     """Home Assistant core object for handle it."""
 
     def __init__(self, coresys: CoreSys):
@@ -47,7 +47,7 @@ class HomeAssistantAPI(CoreSysAttributes):
         """Ensure there is a valid access token.
 
         Raises:
-            HomeAssistantAuthError: When we cannot get a valid token
+            MuthurCommandAuthError: When we cannot get a valid token
             aiohttp.ClientError: On network or connection errors
             TimeoutError: On request timeouts
 
@@ -71,16 +71,16 @@ class HomeAssistantAPI(CoreSysAttributes):
                 return
 
             async with self.sys_websession.post(
-                f"{self.sys_homeassistant.api_url}/auth/token",
+                f"{self.sys_muthurcommand.api_url}/auth/token",
                 timeout=aiohttp.ClientTimeout(total=30),
                 data={
                     "grant_type": "refresh_token",
-                    "refresh_token": self.sys_homeassistant.refresh_token,
+                    "refresh_token": self.sys_muthurcommand.refresh_token,
                 },
                 ssl=False,
             ) as resp:
                 if resp.status != 200:
-                    raise HomeAssistantAuthError(
+                    raise MuthurCommandAuthError(
                         "Can't update Home Assistant access token!", _LOGGER.error
                     )
 
@@ -112,7 +112,7 @@ class HomeAssistantAPI(CoreSysAttributes):
         Error Handling:
         - HTTP error status codes (4xx, 5xx) are preserved in the response
         - Authentication is handled transparently with one retry on 401
-        - Network/connection failures raise HomeAssistantAPIError
+        - Network/connection failures raise MuthurCommandAPIError
         - No logging is performed - callers should handle logging as needed
 
         Args:
@@ -129,11 +129,11 @@ class HomeAssistantAPI(CoreSysAttributes):
             aiohttp.ClientResponse: The HTTP response object
 
         Raises:
-            HomeAssistantAPIError: When request cannot be completed due to
+            MuthurCommandAPIError: When request cannot be completed due to
                 network errors, timeouts, or connection failures
 
         """
-        url = f"{self.sys_homeassistant.api_url}/{path}"
+        url = f"{self.sys_muthurcommand.api_url}/{path}"
         headers = headers or {}
         client_timeout = aiohttp.ClientTimeout(total=timeout)
 
@@ -163,23 +163,23 @@ class HomeAssistantAPI(CoreSysAttributes):
                     return
             except TimeoutError as err:
                 _LOGGER.debug("Timeout on call %s.", url)
-                raise HomeAssistantAPIError(str(err)) from err
+                raise MuthurCommandAPIError(str(err)) from err
             except aiohttp.ClientError as err:
                 _LOGGER.debug("Error on call %s: %s", url, err)
-                raise HomeAssistantAPIError(str(err)) from err
+                raise MuthurCommandAPIError(str(err)) from err
 
     async def _get_json(self, path: str) -> dict[str, Any]:
         """Return Home Assistant get API."""
         async with self.make_request("get", path) as resp:
             if resp.status in (200, 201):
                 return await resp.json()
-            raise HomeAssistantAPIError(f"Home Assistant Core API return {resp.status}")
+            raise MuthurCommandAPIError(f"Home Assistant Core API return {resp.status}")
 
     async def get_config(self) -> dict[str, Any]:
         """Return Home Assistant config."""
         config = await self._get_json("api/config")
         if config is None or not isinstance(config, dict):
-            raise HomeAssistantAPIError("No config received from Home Assistant API")
+            raise MuthurCommandAPIError("No config received from Home Assistant API")
         return config
 
     async def get_core_state(self) -> dict[str, Any]:
@@ -190,8 +190,8 @@ class HomeAssistantAPI(CoreSysAttributes):
         """Return state of Home Assistant Core or None."""
         # Skip check on landingpage
         if (
-            self.sys_homeassistant.version is None
-            or self.sys_homeassistant.version == LANDINGPAGE
+            self.sys_muthurcommand.version is None
+            or self.sys_muthurcommand.version == LANDINGPAGE
         ):
             return None
 
@@ -201,7 +201,7 @@ class HomeAssistantAPI(CoreSysAttributes):
             # since it is significantly faster than get_config because
             # it does not require serializing the entire config
             if version_is_new_enough(
-                self.sys_homeassistant.version, GET_CORE_STATE_MIN_VERSION
+                self.sys_muthurcommand.version, GET_CORE_STATE_MIN_VERSION
             ):
                 data = await self.get_core_state()
             else:
@@ -214,7 +214,7 @@ class HomeAssistantAPI(CoreSysAttributes):
                 migrating = recorder_state.get("migration_in_progress", False)
                 live_migration = recorder_state.get("migration_is_live", False)
                 return APIState(state, migrating and not live_migration)
-        except HomeAssistantAPIError as err:
+        except MuthurCommandAPIError as err:
             _LOGGER.debug("Can't connect to Home Assistant API: %s", err)
 
         return None
@@ -250,6 +250,6 @@ class HomeAssistantAPI(CoreSysAttributes):
                     return False
                 _LOGGER.warning("Frontend returned status %s", resp.status)
                 return False
-        except HomeAssistantAPIError as err:
+        except MuthurCommandAPIError as err:
             _LOGGER.debug("Cannot reach frontend: %s", err)
             return False

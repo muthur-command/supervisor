@@ -19,8 +19,8 @@ from attrs.validators import ge, le
 
 from ..const import BusEvent
 from ..coresys import CoreSys, CoreSysAttributes
-from ..exceptions import HassioError, JobNotFound, JobStartException
-from ..homeassistant.const import WSEvent
+from ..exceptions import McioError, JobNotFound, JobStartException
+from ..muthurcommand.const import WSEvent
 from ..utils.common import FileConfiguration
 from ..utils.dt import utcnow
 from ..utils.sentinel import DEFAULT
@@ -97,7 +97,7 @@ class ParentJobSync:
 class SupervisorJobError:
     """Representation of an error occurring during a supervisor job."""
 
-    type_: type[HassioError] = HassioError
+    type_: type[McioError] = McioError
     message: str = "Unknown error, see Supervisor logs"
     stage: str | None = None
     error_key: str | None = None
@@ -157,7 +157,7 @@ class SupervisorJob:
             "extra": self.extra,
         }
 
-    def capture_error(self, err: HassioError | None = None) -> None:
+    def capture_error(self, err: McioError | None = None) -> None:
         """Capture an error or record that an unknown error has occurred."""
         if err:
             new_error = SupervisorJobError(
@@ -277,7 +277,7 @@ class JobManager(FileConfiguration, CoreSysAttributes):
 
         # Notify Home Assistant of change if its not internal
         if not job.internal:
-            self.sys_homeassistant.websocket.supervisor_event(WSEvent.JOB, job_data)
+            self.sys_muthurcommand.websocket.supervisor_event(WSEvent.JOB, job_data)
 
         # If we have any parent job syncs, sync progress to them
         for sync in job.parent_job_syncs:

@@ -185,7 +185,7 @@ async def test_start_transient_unit(
             StartUnitMode.FAIL,
             [
                 ("Description", Variant("s", "Test")),
-                ("What", Variant("s", "//homeassistant/config")),
+                ("What", Variant("s", "//muthurcommand/config")),
                 ("Type", Variant("s", "cifs")),
                 ("Options", Variant("s", "username=homeassistant,password=password")),
             ],
@@ -198,7 +198,7 @@ async def test_start_transient_unit(
             "fail",
             [
                 ("Description", Variant("s", "Test")),
-                ("What", Variant("s", "//homeassistant/config")),
+                ("What", Variant("s", "//muthurcommand/config")),
                 ("Type", Variant("s", "cifs")),
                 ("Options", Variant("s", "username=homeassistant,password=password")),
             ],

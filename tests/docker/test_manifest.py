@@ -15,20 +15,18 @@ from supervisor.docker.manifest import (
 def test_parse_image_reference_ghcr_io():
     """Test parsing ghcr.io image."""
     registry, repo, tag = parse_image_reference(
-        "ghcr.io/home-assistant/home-assistant", "2025.1.0"
+        "ghcr.io/muthur-command/amd64-muthurcommand", "2025.1.0"
     )
     assert registry == "ghcr.io"
-    assert repo == "home-assistant/home-assistant"
+    assert repo == "muthur-command/amd64-muthurcommand"
     assert tag == "2025.1.0"
 
 
 def test_parse_image_reference_docker_hub_with_org():
     """Test parsing Docker Hub image with organization."""
-    registry, repo, tag = parse_image_reference(
-        "homeassistant/home-assistant", "latest"
-    )
+    registry, repo, tag = parse_image_reference("muthurcommand/muthurcommand", "latest")
     assert registry == DOCKER_HUB
-    assert repo == "homeassistant/home-assistant"
+    assert repo == "muthurcommand/muthurcommand"
     assert tag == "latest"
 
 

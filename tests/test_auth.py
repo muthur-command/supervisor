@@ -21,7 +21,7 @@ def mock_auth_backend_fixture(coresys):
 def mock_api_state_fixture(coresys):
     """Fix auth backend request."""
     mock_api_state = AsyncMock()
-    coresys.homeassistant.api.check_api_state = mock_api_state
+    coresys.muthurcommand.api.check_api_state = mock_api_state
 
     yield mock_api_state
 

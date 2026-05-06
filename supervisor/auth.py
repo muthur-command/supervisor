@@ -6,15 +6,15 @@ import logging
 from typing import Any, TypedDict, cast
 
 from .addons.addon import Addon
-from .const import ATTR_PASSWORD, ATTR_USERNAME, FILE_HASSIO_AUTH, HomeAssistantUser
+from .const import ATTR_PASSWORD, ATTR_USERNAME, FILE_MCIO_AUTH, MuthurCommandUser
 from .coresys import CoreSys, CoreSysAttributes
 from .exceptions import (
-    AuthHomeAssistantAPIValidationError,
+    AuthMuthurCommandAPIValidationError,
     AuthInvalidNonStringValueError,
     AuthListUsersError,
     AuthPasswordResetError,
-    HomeAssistantAPIError,
-    HomeAssistantWSError,
+    MuthurCommandAPIError,
+    MuthurCommandWSError,
 )
 from .utils.common import FileConfiguration
 from .validate import SCHEMA_AUTH_CONFIG
@@ -25,7 +25,7 @@ _LOGGER: logging.Logger = logging.getLogger(__name__)
 class BackendAuthRequest(TypedDict):
     """Model for a backend auth request.
 
-    https://github.com/home-assistant/core/blob/ed9503324d9d255e6fb077f1614fb6d55800f389/homeassistant/components/hassio/auth.py#L66-L73
+    https://github.com/muthur-command/mc_bd (auth integration with Supervisor API)
     """
 
     username: str
@@ -38,7 +38,7 @@ class Auth(FileConfiguration, CoreSysAttributes):
 
     def __init__(self, coresys: CoreSys) -> None:
         """Initialize updater."""
-        super().__init__(FILE_HASSIO_AUTH, SCHEMA_AUTH_CONFIG)
+        super().__init__(FILE_MCIO_AUTH, SCHEMA_AUTH_CONFIG)
         self.coresys: CoreSys = coresys
 
         self._running: dict[str, asyncio.Task] = {}
@@ -93,7 +93,7 @@ class Auth(FileConfiguration, CoreSysAttributes):
         cache_hit = self._check_cache(username, password)
 
         # Check API state
-        if not await self.sys_homeassistant.api.check_api_state():
+        if not await self.sys_muthurcommand.api.check_api_state():
             _LOGGER.info("Home Assistant not running, checking cache")
             return cache_hit is True
 
@@ -113,7 +113,7 @@ class Auth(FileConfiguration, CoreSysAttributes):
     async def _backend_login(self, addon: Addon, username: str, password: str) -> bool:
         """Check username login on core."""
         try:
-            async with self.sys_homeassistant.api.make_request(
+            async with self.sys_muthurcommand.api.make_request(
                 "post",
                 "api/hassio_auth",
                 json=cast(
@@ -131,17 +131,17 @@ class Auth(FileConfiguration, CoreSysAttributes):
                 _LOGGER.warning("Unauthorized login for '%s'", username)
                 await self._dismatch_cache(username, password)
                 return False
-        except HomeAssistantAPIError as err:
+        except MuthurCommandAPIError as err:
             _LOGGER.error("Can't request auth on Home Assistant: %s", err)
         finally:
             self._running.pop(username, None)
 
-        raise AuthHomeAssistantAPIValidationError()
+        raise AuthMuthurCommandAPIValidationError()
 
     async def change_password(self, username: str, password: str) -> None:
         """Change user password login."""
         try:
-            async with self.sys_homeassistant.api.make_request(
+            async with self.sys_muthurcommand.api.make_request(
                 "post",
                 "api/hassio_auth/password_reset",
                 json={ATTR_USERNAME: username, ATTR_PASSWORD: password},
@@ -151,16 +151,16 @@ class Auth(FileConfiguration, CoreSysAttributes):
                     return
 
                 _LOGGER.warning("The user '%s' is not registered", username)
-        except HomeAssistantAPIError as err:
+        except MuthurCommandAPIError as err:
             _LOGGER.error("Can't request password reset on Home Assistant: %s", err)
 
         raise AuthPasswordResetError(user=username)
 
-    async def list_users(self) -> list[HomeAssistantUser]:
+    async def list_users(self) -> list[MuthurCommandUser]:
         """List users on the Home Assistant instance."""
         try:
-            return await self.sys_homeassistant.list_users()
-        except HomeAssistantWSError as err:
+            return await self.sys_muthurcommand.list_users()
+        except MuthurCommandWSError as err:
             _LOGGER.error("Can't request listing users on Home Assistant: %s", err)
             raise AuthListUsersError() from err
 

@@ -13,8 +13,8 @@ import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
 from ..const import (
+    HEADER_MCIO_KEY,
     HEADER_TOKEN,
-    HEADER_TOKEN_OLD,
     JSON_DATA,
     JSON_ERROR_KEY,
     JSON_EXTRA_FIELDS,
@@ -26,7 +26,7 @@ from ..const import (
     RESULT_OK,
 )
 from ..coresys import CoreSys, CoreSysAttributes
-from ..exceptions import APIError, DockerAPIError, HassioError
+from ..exceptions import APIError, DockerAPIError, McioError
 from ..jobs import JobSchedulerOptions, SupervisorJob
 from ..utils import check_exception_chain, get_message_from_exception_chain
 from ..utils.json import json_dumps, json_loads as json_loads_util
@@ -39,8 +39,7 @@ def extract_supervisor_token(request: web.Request) -> str | None:
     if supervisor_token := request.headers.get(HEADER_TOKEN):
         return supervisor_token
 
-    # Old Supervisor fallback
-    if supervisor_token := request.headers.get(HEADER_TOKEN_OLD):
+    if supervisor_token := request.headers.get(HEADER_MCIO_KEY):
         return supervisor_token
 
     # API access only
@@ -71,7 +70,7 @@ def api_process(method):
             return api_return_error(
                 err, status=err.status, job_id=err.job_id, headers=err.headers
             )
-        except HassioError as err:
+        except McioError as err:
             return api_return_error(err)
 
         if isinstance(answer, (dict, list)):
@@ -87,14 +86,14 @@ def api_process(method):
     return wrap_api
 
 
-def require_home_assistant(method):
+def require_muthurcommand(method):
     """Ensure that the request comes from Home Assistant."""
 
     async def wrap_api(api: CoreSysAttributes, *args, **kwargs) -> Any:
         """Return API information."""
         coresys: CoreSys = api.coresys
         request: Request = args[0]
-        if request[REQUEST_FROM] != coresys.homeassistant:
+        if request[REQUEST_FROM] != coresys.muthurcommand:
             raise HTTPUnauthorized()
         return await method(api, *args, **kwargs)
 
@@ -118,7 +117,7 @@ def api_process_raw(content, *, error_type=None):
                     status=err.status,
                     job_id=err.job_id,
                 )
-            except HassioError as err:
+            except McioError as err:
                 return api_return_error(
                     err, error_type=error_type or const.CONTENT_TYPE_BINARY
                 )
@@ -134,7 +133,7 @@ def api_process_raw(content, *, error_type=None):
 
 
 def api_return_error(
-    error: HassioError | None = None,
+    error: McioError | None = None,
     message: str | None = None,
     error_type: str | None = None,
     status: int = 400,

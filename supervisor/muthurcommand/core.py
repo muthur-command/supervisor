@@ -16,23 +16,23 @@ from awesomeversion import AwesomeVersion
 from supervisor.utils import remove_colors
 
 from ..bus import EventListener
-from ..const import ATTR_HOMEASSISTANT, BusEvent, CoreState
+from ..const import ATTR_MUTHURCOMMAND, BusEvent, CoreState
 from ..coresys import CoreSys
 from ..docker.const import ContainerState
-from ..docker.homeassistant import DockerHomeAssistant
+from ..docker.muthurcommand import DockerMuthurCommand
 from ..docker.monitor import DockerContainerStateEvent
 from ..docker.stats import DockerStats
 from ..exceptions import (
     DockerError,
-    HomeAssistantCrashError,
-    HomeAssistantError,
-    HomeAssistantJobError,
-    HomeAssistantStartupTimeout,
-    HomeAssistantUpdateError,
+    MuthurCommandCrashError,
+    MuthurCommandError,
+    MuthurCommandJobError,
+    MuthurCommandStartupTimeout,
+    MuthurCommandUpdateError,
     JobException,
 )
 from ..jobs import ChildJobSyncFilter
-from ..jobs.const import JOB_GROUP_HOME_ASSISTANT_CORE, JobConcurrency, JobThrottle
+from ..jobs.const import JOB_GROUP_MUTHURCOMMAND_CORE, JobConcurrency, JobThrottle
 from ..jobs.decorator import Job, JobCondition
 from ..jobs.job_group import JobGroup
 from ..resolution.const import ContextType, IssueType
@@ -68,13 +68,13 @@ class ConfigResult:
     log: str
 
 
-class HomeAssistantCore(JobGroup):
+class MuthurCommandCore(JobGroup):
     """Home Assistant core object for handle it."""
 
     def __init__(self, coresys: CoreSys):
         """Initialize Home Assistant object."""
-        super().__init__(coresys, JOB_GROUP_HOME_ASSISTANT_CORE)
-        self.instance: DockerHomeAssistant = DockerHomeAssistant(coresys)
+        super().__init__(coresys, JOB_GROUP_MUTHURCOMMAND_CORE)
+        self.instance: DockerMuthurCommand = DockerMuthurCommand(coresys)
         self._error_state: bool = False
         self._watchdog_listener: EventListener | None = None
 
@@ -94,43 +94,43 @@ class HomeAssistantCore(JobGroup):
 
         try:
             # Evaluate Version if we lost this information
-            if self.sys_homeassistant.version:
-                version = self.sys_homeassistant.version
+            if self.sys_muthurcommand.version:
+                version = self.sys_muthurcommand.version
             else:
-                self.sys_homeassistant.version = (
+                self.sys_muthurcommand.version = (
                     version
                 ) = await self.instance.get_latest_version()
 
             await self.instance.attach(version=version, skip_state_event_if_down=True)
 
             # Ensure we are using correct image for this system (unless user has overridden it)
-            if not self.sys_homeassistant.override_image:
+            if not self.sys_muthurcommand.override_image:
                 await self.instance.check_image(
-                    version, self.sys_homeassistant.default_image
+                    version, self.sys_muthurcommand.default_image
                 )
-                self.sys_homeassistant.set_image(self.sys_homeassistant.default_image)
+                self.sys_muthurcommand.set_image(self.sys_muthurcommand.default_image)
         except DockerError:
             _LOGGER.info(
-                "No Home Assistant Docker image %s found.", self.sys_homeassistant.image
+                "No Home Assistant Docker image %s found.", self.sys_muthurcommand.image
             )
             await self.install_landingpage()
         else:
-            self.sys_homeassistant.version = self.instance.version or version
-            self.sys_homeassistant.set_image(self.instance.image)
-            await self.sys_homeassistant.save_data()
+            self.sys_muthurcommand.version = self.instance.version or version
+            self.sys_muthurcommand.set_image(self.instance.image)
+            await self.sys_muthurcommand.save_data()
 
         # Start landingpage
         if self.instance.version != LANDINGPAGE:
             return
 
-        _LOGGER.info("Starting HomeAssistant landingpage")
+        _LOGGER.info("Starting MuthurCommand landingpage")
         if not await self.instance.is_running():
-            with suppress(HomeAssistantError):
+            with suppress(MuthurCommandError):
                 await self.start()
 
     @Job(
         name="home_assistant_core_install_landing_page",
-        on_condition=HomeAssistantJobError,
+        on_condition=MuthurCommandJobError,
         concurrency=JobConcurrency.GROUP_REJECT,
     )
     async def install_landingpage(self) -> None:
@@ -144,14 +144,14 @@ class HomeAssistantCore(JobGroup):
             pass
         else:
             _LOGGER.info("Using preinstalled landingpage")
-            self.sys_homeassistant.version = LANDINGPAGE
-            self.sys_homeassistant.set_image(self.instance.image)
-            await self.sys_homeassistant.save_data()
+            self.sys_muthurcommand.version = LANDINGPAGE
+            self.sys_muthurcommand.set_image(self.instance.image)
+            await self.sys_muthurcommand.save_data()
             return
 
         _LOGGER.info("Setting up Home Assistant landingpage")
         while True:
-            if not self.sys_updater.image_homeassistant:
+            if not self.sys_updater.image_muthurcommand:
                 _LOGGER.warning(
                     "Found no information about Home Assistant. Retrying in 30sec"
                 )
@@ -161,7 +161,7 @@ class HomeAssistantCore(JobGroup):
 
             try:
                 await self.instance.install(
-                    LANDINGPAGE, image=self.sys_updater.image_homeassistant
+                    LANDINGPAGE, image=self.sys_updater.image_muthurcommand
                 )
                 break
             except (DockerError, JobException):
@@ -172,13 +172,13 @@ class HomeAssistantCore(JobGroup):
             _LOGGER.warning("Failed to install landingpage, retrying after 30sec")
             await asyncio.sleep(30)
 
-        self.sys_homeassistant.version = LANDINGPAGE
-        self.sys_homeassistant.set_image(self.sys_updater.image_homeassistant)
-        await self.sys_homeassistant.save_data()
+        self.sys_muthurcommand.version = LANDINGPAGE
+        self.sys_muthurcommand.set_image(self.sys_updater.image_muthurcommand)
+        await self.sys_muthurcommand.save_data()
 
     @Job(
         name="home_assistant_core_install",
-        on_condition=HomeAssistantJobError,
+        on_condition=MuthurCommandJobError,
         concurrency=JobConcurrency.GROUP_REJECT,
     )
     async def install(self) -> None:
@@ -204,16 +204,16 @@ class HomeAssistantCore(JobGroup):
         try:
             while True:
                 # read homeassistant tag and install it
-                if not self.sys_homeassistant.latest_version:
+                if not self.sys_muthurcommand.latest_version:
                     await self.sys_updater.reload()
 
-                if to_version := self.sys_homeassistant.latest_version:
+                if to_version := self.sys_muthurcommand.latest_version:
                     try:
                         await self.instance.update(
                             to_version,
-                            image=self.sys_updater.image_homeassistant,
+                            image=self.sys_updater.image_muthurcommand,
                         )
-                        self.sys_homeassistant.version = (
+                        self.sys_muthurcommand.version = (
                             self.instance.version or to_version
                         )
                         break
@@ -231,14 +231,14 @@ class HomeAssistantCore(JobGroup):
             await progress_task
 
         _LOGGER.info("Home Assistant docker now installed")
-        self.sys_homeassistant.set_image(self.sys_updater.image_homeassistant)
-        await self.sys_homeassistant.save_data()
+        self.sys_muthurcommand.set_image(self.sys_updater.image_muthurcommand)
+        await self.sys_muthurcommand.save_data()
 
         # finishing
         try:
             _LOGGER.info("Starting Home Assistant")
             await self.start()
-        except HomeAssistantError:
+        except MuthurCommandError:
             _LOGGER.error("Can't start Home Assistant!")
 
         # Cleanup
@@ -254,7 +254,7 @@ class HomeAssistantCore(JobGroup):
             JobCondition.PLUGINS_UPDATED,
             JobCondition.SUPERVISOR_UPDATED,
         ],
-        on_condition=HomeAssistantJobError,
+        on_condition=MuthurCommandJobError,
         concurrency=JobConcurrency.GROUP_REJECT,
         # We assume for now the docker image pull is 100% of this task. But from
         # a user perspective that isn't true. Other steps that take time which
@@ -270,21 +270,21 @@ class HomeAssistantCore(JobGroup):
         backup: bool | None = False,
         validation_complete: asyncio.Event | None = None,
     ) -> None:
-        """Update HomeAssistant version."""
-        to_version = version or self.sys_homeassistant.latest_version
+        """Update MuthurCommand version."""
+        to_version = version or self.sys_muthurcommand.latest_version
         if not to_version:
-            raise HomeAssistantUpdateError(
+            raise MuthurCommandUpdateError(
                 "Cannot determine latest version of Home Assistant for update",
                 _LOGGER.error,
             )
 
-        old_image = self.sys_homeassistant.image
-        rollback = self.sys_homeassistant.version if not self.error_state else None
+        old_image = self.sys_muthurcommand.image
+        rollback = self.sys_muthurcommand.version if not self.error_state else None
         running = await self.instance.is_running()
         exists = await self.instance.exists()
 
         if exists and to_version == self.instance.version:
-            raise HomeAssistantUpdateError(
+            raise MuthurCommandUpdateError(
                 f"Version {to_version!s} is already installed", _LOGGER.warning
             )
 
@@ -296,7 +296,7 @@ class HomeAssistantCore(JobGroup):
             await self.sys_backups.do_backup_partial(
                 name=f"core_{self.instance.version}",
                 homeassistant=True,
-                folders=[ATTR_HOMEASSISTANT],
+                folders=[ATTR_MUTHURCOMMAND],
             )
 
         # process an update
@@ -305,33 +305,33 @@ class HomeAssistantCore(JobGroup):
             _LOGGER.info("Updating Home Assistant to version %s", to_version)
             try:
                 await self.instance.update(
-                    to_version, image=self.sys_updater.image_homeassistant
+                    to_version, image=self.sys_updater.image_muthurcommand
                 )
             except DockerError as err:
-                raise HomeAssistantUpdateError(
+                raise MuthurCommandUpdateError(
                     "Updating Home Assistant image failed", _LOGGER.warning
                 ) from err
 
-            self.sys_homeassistant.version = self.instance.version or to_version
-            self.sys_homeassistant.set_image(self.sys_updater.image_homeassistant)
+            self.sys_muthurcommand.version = self.instance.version or to_version
+            self.sys_muthurcommand.set_image(self.sys_updater.image_muthurcommand)
 
             if running:
                 await self.start()
             _LOGGER.info("Successfully started Home Assistant %s", to_version)
 
             # Successfull - last step
-            await self.sys_homeassistant.save_data()
+            await self.sys_muthurcommand.save_data()
             with suppress(DockerError):
                 await self.instance.cleanup(old_image=old_image)
 
         # Update Home Assistant
-        with suppress(HomeAssistantError):
+        with suppress(MuthurCommandError):
             await _update(to_version)
 
         if not self.error_state and rollback:
             try:
-                data = await self.sys_homeassistant.api.get_config()
-            except HomeAssistantError:
+                data = await self.sys_muthurcommand.api.get_config()
+            except MuthurCommandError:
                 # The API stoped responding between the up checks an now
                 self._error_state = True
                 return
@@ -341,7 +341,7 @@ class HomeAssistantCore(JobGroup):
                 _LOGGER.error("API responds but frontend is not loaded")
                 self._error_state = True
             # Check that the frontend is actually accessible
-            elif not await self.sys_homeassistant.api.check_frontend_available():
+            elif not await self.sys_muthurcommand.api.check_frontend_available():
                 _LOGGER.error(
                     "Frontend component loaded but frontend is not accessible"
                 )
@@ -351,16 +351,16 @@ class HomeAssistantCore(JobGroup):
 
         # Update going wrong, revert it
         if self.error_state and rollback:
-            _LOGGER.critical("HomeAssistant update failed -> rollback!")
+            _LOGGER.critical("MuthurCommand update failed -> rollback!")
             self.sys_resolution.create_issue(
-                IssueType.UPDATE_ROLLBACK, ContextType.CORE
+                IssueType.UPDATE_ROLLBACK, ContextType.MC_BD
             )
 
             # Make a copy of the current log file if it exists
-            logfile = self.sys_config.path_homeassistant / "home-assistant.log"
+            logfile = self.sys_config.path_muthurcommand / "home-assistant.log"
             if await self.sys_run_in_executor(logfile.exists):
                 rollback_log = (
-                    self.sys_config.path_homeassistant / "home-assistant-rollback.log"
+                    self.sys_config.path_muthurcommand / "home-assistant-rollback.log"
                 )
 
                 await self.sys_run_in_executor(shutil.copy, logfile, rollback_log)
@@ -369,12 +369,12 @@ class HomeAssistantCore(JobGroup):
                 )
             await _update(rollback)
         else:
-            self.sys_resolution.create_issue(IssueType.UPDATE_FAILED, ContextType.CORE)
-            raise HomeAssistantUpdateError()
+            self.sys_resolution.create_issue(IssueType.UPDATE_FAILED, ContextType.MC_BD)
+            raise MuthurCommandUpdateError()
 
     @Job(
         name="home_assistant_core_start",
-        on_condition=HomeAssistantJobError,
+        on_condition=MuthurCommandJobError,
         concurrency=JobConcurrency.GROUP_REJECT,
     )
     async def start(self) -> None:
@@ -388,28 +388,28 @@ class HomeAssistantCore(JobGroup):
             try:
                 await self.instance.start()
             except DockerError as err:
-                raise HomeAssistantError() from err
+                raise MuthurCommandError() from err
 
             await self._block_till_run()
         # No Instance/Container found, extended start
         else:
             # Create new API token
-            self.sys_homeassistant.supervisor_token = secrets.token_hex(56)
-            await self.sys_homeassistant.save_data()
+            self.sys_muthurcommand.supervisor_token = secrets.token_hex(56)
+            await self.sys_muthurcommand.save_data()
 
             # Write audio settings
-            await self.sys_homeassistant.write_pulse()
+            await self.sys_muthurcommand.write_pulse()
 
             try:
                 await self.instance.run(restore_job_id=self.sys_backups.current_restore)
             except DockerError as err:
-                raise HomeAssistantError() from err
+                raise MuthurCommandError() from err
 
             await self._block_till_run()
 
     @Job(
         name="home_assistant_core_stop",
-        on_condition=HomeAssistantJobError,
+        on_condition=MuthurCommandJobError,
         concurrency=JobConcurrency.GROUP_REJECT,
     )
     async def stop(self, *, remove_container: bool = False) -> None:
@@ -417,11 +417,11 @@ class HomeAssistantCore(JobGroup):
         try:
             return await self.instance.stop(remove_container=remove_container)
         except DockerError as err:
-            raise HomeAssistantError() from err
+            raise MuthurCommandError() from err
 
     @Job(
         name="home_assistant_core_restart",
-        on_condition=HomeAssistantJobError,
+        on_condition=MuthurCommandJobError,
         concurrency=JobConcurrency.GROUP_REJECT,
     )
     async def restart(self, *, safe_mode: bool = False) -> None:
@@ -430,19 +430,19 @@ class HomeAssistantCore(JobGroup):
         if safe_mode:
             _LOGGER.debug("Creating safe mode marker file.")
             await self.sys_run_in_executor(
-                (self.sys_config.path_homeassistant / SAFE_MODE_FILENAME).touch
+                (self.sys_config.path_muthurcommand / SAFE_MODE_FILENAME).touch
             )
 
         try:
             await self.instance.restart()
         except DockerError as err:
-            raise HomeAssistantError() from err
+            raise MuthurCommandError() from err
 
         await self._block_till_run()
 
     @Job(
         name="home_assistant_core_rebuild",
-        on_condition=HomeAssistantJobError,
+        on_condition=MuthurCommandJobError,
         concurrency=JobConcurrency.GROUP_REJECT,
     )
     async def rebuild(self, *, safe_mode: bool = False) -> None:
@@ -451,7 +451,7 @@ class HomeAssistantCore(JobGroup):
         if safe_mode:
             _LOGGER.debug("Creating safe mode marker file.")
             await self.sys_run_in_executor(
-                (self.sys_config.path_homeassistant / SAFE_MODE_FILENAME).touch
+                (self.sys_config.path_muthurcommand / SAFE_MODE_FILENAME).touch
             )
 
         with suppress(DockerError):
@@ -463,7 +463,7 @@ class HomeAssistantCore(JobGroup):
         try:
             return await self.instance.stats()
         except DockerError as err:
-            raise HomeAssistantError() from err
+            raise MuthurCommandError() from err
 
     def is_running(self) -> Awaitable[bool]:
         """Return True if Docker container is running.
@@ -491,7 +491,7 @@ class HomeAssistantCore(JobGroup):
                 [
                     "python3",
                     "-m",
-                    "homeassistant",
+                    "muthurcommand",
                     "-c",
                     "/config",
                     "--script",
@@ -499,11 +499,11 @@ class HomeAssistantCore(JobGroup):
                 ]
             )
         except DockerError as err:
-            raise HomeAssistantError() from err
+            raise MuthurCommandError() from err
 
         # If not valid
         if result.exit_code is None:
-            raise HomeAssistantError("Fatal error on config check!", _LOGGER.error)
+            raise MuthurCommandError("Fatal error on config check!", _LOGGER.error)
 
         # Convert output
         log = remove_colors("\n".join(result.log))
@@ -520,7 +520,7 @@ class HomeAssistantCore(JobGroup):
     async def _block_till_run(self) -> None:
         """Block until Home-Assistant is booting up or startup timeout."""
         # Skip landingpage
-        if self.sys_homeassistant.version == LANDINGPAGE:
+        if self.sys_muthurcommand.version == LANDINGPAGE:
             return
         _LOGGER.info("Wait until Home Assistant is ready")
 
@@ -535,7 +535,7 @@ class HomeAssistantCore(JobGroup):
                 break
 
             # 2: Check API response
-            if state := await self.sys_homeassistant.api.get_api_state():
+            if state := await self.sys_muthurcommand.api.get_api_state():
                 if last_state is None:
                     # API initially available, move deadline up and check API
                     # state to be running now
@@ -556,11 +556,11 @@ class HomeAssistantCore(JobGroup):
 
         self._error_state = True
         if timeout:
-            raise HomeAssistantStartupTimeout(
+            raise MuthurCommandStartupTimeout(
                 "No Home Assistant Core response, assuming a fatal startup error",
                 _LOGGER.error,
             )
-        raise HomeAssistantCrashError()
+        raise MuthurCommandCrashError()
 
     @Job(
         name="home_assistant_core_repair",
@@ -574,15 +574,15 @@ class HomeAssistantCore(JobGroup):
         if await self.instance.exists():
             return
 
-        _LOGGER.info("Repair Home Assistant %s", self.sys_homeassistant.version)
+        _LOGGER.info("Repair Home Assistant %s", self.sys_muthurcommand.version)
         try:
-            await self.instance.install(self.sys_homeassistant.version)
+            await self.instance.install(self.sys_muthurcommand.version)
         except DockerError:
             _LOGGER.error("Repairing of Home Assistant failed")
 
     async def watchdog_container(self, event: DockerContainerStateEvent) -> None:
         """Process state changes in Home Assistant container and restart if necessary."""
-        if not (event.name == self.instance.name and self.sys_homeassistant.watchdog):
+        if not (event.name == self.instance.name and self.sys_muthurcommand.watchdog):
             return
 
         if event.state in [ContainerState.FAILED, ContainerState.UNHEALTHY]:
@@ -616,7 +616,7 @@ class HomeAssistantCore(JobGroup):
                 if state == ContainerState.FAILED and attempts == 0:
                     try:
                         await self.start()
-                    except HomeAssistantError as err:
+                    except MuthurCommandError as err:
                         await async_capture_exception(err)
                     else:
                         break
@@ -626,7 +626,7 @@ class HomeAssistantCore(JobGroup):
                         await self.rebuild()
                     else:
                         await self.restart()
-                except HomeAssistantError as err:
+                except MuthurCommandError as err:
                     attempts = attempts + 1
                     _LOGGER.error("Watchdog restart of Home Assistant failed!")
                     await async_capture_exception(err)

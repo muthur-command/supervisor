@@ -28,7 +28,7 @@ async def api_system(aiohttp_client, coresys: CoreSys) -> TestClient:
     api = RestAPI(coresys)
     api.webapp = web.Application()
     with patch("supervisor.docker.supervisor.os") as os:
-        os.environ = {"SUPERVISOR_NAME": "hassio_supervisor"}
+        os.environ = {"SUPERVISOR_NAME": "mcio_supervisor"}
         await api.load()
 
     api.webapp.middlewares.append(api.security.block_bad_requests)
@@ -44,7 +44,7 @@ async def api_token_validation(aiohttp_client, coresys: CoreSys) -> TestClient:
     api = RestAPI(coresys)
     api.webapp = web.Application()
     with patch("supervisor.docker.supervisor.os") as os:
-        os.environ = {"SUPERVISOR_NAME": "hassio_supervisor"}
+        os.environ = {"SUPERVISOR_NAME": "mcio_supervisor"}
         await api.start()
 
     api.webapp.middlewares.append(api.security.token_validation)
@@ -178,9 +178,9 @@ async def test_bad_requests(
         ("get", "/backups/abc123/download", {"admin", "manager", "backup"}),
         ("post", "/backups/new/full", {"admin", "manager", "backup"}),
         ("post", "/backups/abc123/restore/full", {"admin", "manager", "backup"}),
-        ("get", "/core/info", set(ROLE_ALL)),
-        ("post", "/core/update", {"admin", "manager", "homeassistant"}),
-        ("post", "/core/restart", {"admin", "manager", "homeassistant"}),
+        ("get", "/mc_bd/info", set(ROLE_ALL)),
+        ("post", "/mc_bd/update", {"admin", "manager", "muthurcommand"}),
+        ("post", "/mc_bd/restart", {"admin", "manager", "muthurcommand"}),
         ("get", "/addons/self/options/config", set(ROLE_ALL)),
         ("post", "/addons/self/options", set(ROLE_ALL)),
         ("post", "/addons/self/restart", set(ROLE_ALL)),
@@ -204,16 +204,16 @@ async def test_token_validation(
 ):
     """Test token validation paths."""
     install_addon_example.persist["access_token"] = "abc123"
-    install_addon_example.data["hassio_api"] = True
+    install_addon_example.data["mcio_api"] = True
     for role in success_roles:
-        install_addon_example.data["hassio_role"] = role
+        install_addon_example.data["mcio_role"] = role
         resp = await getattr(api_token_validation, request_method)(
             request_path, headers={"Authorization": "Bearer abc123"}
         )
         assert resp.status == 200
 
     for role in set(ROLE_ALL) - success_roles:
-        install_addon_example.data["hassio_role"] = role
+        install_addon_example.data["mcio_role"] = role
         resp = await getattr(api_token_validation, request_method)(
             request_path, headers={"Authorization": "Bearer abc123"}
         )
@@ -223,7 +223,7 @@ async def test_token_validation(
 @pytest.mark.usefixtures("plugin_tokens")
 async def test_home_assistant_paths(api_token_validation: TestClient, coresys: CoreSys):
     """Test Home Assistant only paths."""
-    coresys.homeassistant.supervisor_token = "abc123"
+    coresys.muthurcommand.supervisor_token = "abc123"
     resp = await api_token_validation.post(
         "/addons/local_test/sys_options", headers={"Authorization": "Bearer abc123"}
     )

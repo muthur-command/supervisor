@@ -24,7 +24,7 @@ class Resolved(DBusServiceMock):
     @dbus_property(access=PropertyAccess.READ)
     def LLMNRHostname(self) -> "s":
         """Get LLMNRHostname."""
-        return "homeassistant"
+        return "muthurcommand"
 
     @dbus_property(access=PropertyAccess.READ)
     def LLMNR(self) -> "s":
@@ -182,7 +182,7 @@ class Resolved(DBusServiceMock):
     @dbus_property(access=PropertyAccess.READ)
     def Domains(self) -> "a(isb)":
         """Get Domains."""
-        return [(0, "local.hass.io", False)]
+        return [(0, "local.mcio", False)]
 
     @dbus_property(access=PropertyAccess.READ)
     def TransactionStatistics(self) -> "(tt)":

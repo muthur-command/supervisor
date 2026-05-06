@@ -11,7 +11,7 @@ from typing import Any, cast
 from ..const import CoreState
 from ..coresys import CoreSys, CoreSysAttributes
 from ..exceptions import (
-    HassioError,
+    McioError,
     JobConditionException,
     JobException,
     JobGroupExecutionLimitExceeded,
@@ -302,7 +302,7 @@ class Job(CoreSysAttributes):
                         # These should be handled like normal JobConditions as much as possible
                         except JobConditionException as err:
                             return self._handle_job_condition_exception(err)
-                        except HassioError as err:
+                        except McioError as err:
                             job.capture_error(err)
                             raise err
                         except Exception as err:
@@ -388,9 +388,9 @@ class Job(CoreSysAttributes):
                     f"'{method_name}' blocked from execution, no host internet connection"
                 )
 
-        if JobCondition.HAOS in used_conditions and not coresys.sys_os.available:
+        if JobCondition.MCOS in used_conditions and not coresys.sys_os.available:
             raise JobConditionException(
-                f"'{method_name}' blocked from execution, no Home Assistant OS available"
+                f"'{method_name}' blocked from execution, no Muthur Command OS host environment available"
             )
 
         if (
@@ -398,7 +398,7 @@ class Job(CoreSysAttributes):
             and HostFeature.OS_AGENT not in coresys.sys_host.features
         ):
             raise JobConditionException(
-                f"'{method_name}' blocked from execution, no Home Assistant OS-Agent available"
+                f"'{method_name}' blocked from execution, no OS-Agent available on Muthur Command OS"
             )
 
         if (
@@ -410,8 +410,8 @@ class Job(CoreSysAttributes):
             )
 
         if (
-            JobCondition.HOME_ASSISTANT_CORE_SUPPORTED in used_conditions
-            and UnsupportedReason.HOME_ASSISTANT_CORE_VERSION
+            JobCondition.MUTHURCOMMAND_CORE_SUPPORTED in used_conditions
+            and UnsupportedReason.MUTHURCOMMAND_CORE_VERSION
             in coresys.sys_resolution.unsupported
         ):
             raise JobConditionException(

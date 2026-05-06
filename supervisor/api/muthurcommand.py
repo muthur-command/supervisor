@@ -82,14 +82,14 @@ SCHEMA_STOP = vol.Schema(
 )
 
 
-class APIHomeAssistant(CoreSysAttributes):
+class APIMuthurCommand(CoreSysAttributes):
     """Handle RESTful API for Home Assistant functions."""
 
     async def _check_offline_migration(self, force: bool = False) -> None:
         """Check and raise if there's an offline DB migration in progress."""
         if (
             not force
-            and (state := await self.sys_homeassistant.api.get_api_state())
+            and (state := await self.sys_muthurcommand.api.get_api_state())
             and state.offline_db_migration
         ):
             raise APIDBMigrationInProgress(
@@ -100,21 +100,21 @@ class APIHomeAssistant(CoreSysAttributes):
     async def info(self, request: web.Request) -> dict[str, Any]:
         """Return host information."""
         return {
-            ATTR_VERSION: self.sys_homeassistant.version,
-            ATTR_VERSION_LATEST: self.sys_homeassistant.latest_version,
-            ATTR_UPDATE_AVAILABLE: self.sys_homeassistant.need_update,
-            ATTR_MACHINE: self.sys_homeassistant.machine,
-            ATTR_IP_ADDRESS: str(self.sys_homeassistant.ip_address),
-            ATTR_ARCH: self.sys_homeassistant.arch,
-            ATTR_IMAGE: self.sys_homeassistant.image,
-            ATTR_BOOT: self.sys_homeassistant.boot,
-            ATTR_PORT: self.sys_homeassistant.api_port,
-            ATTR_SSL: self.sys_homeassistant.api_ssl,
-            ATTR_WATCHDOG: self.sys_homeassistant.watchdog,
-            ATTR_AUDIO_INPUT: self.sys_homeassistant.audio_input,
-            ATTR_AUDIO_OUTPUT: self.sys_homeassistant.audio_output,
-            ATTR_BACKUPS_EXCLUDE_DATABASE: self.sys_homeassistant.backups_exclude_database,
-            ATTR_DUPLICATE_LOG_FILE: self.sys_homeassistant.duplicate_log_file,
+            ATTR_VERSION: self.sys_muthurcommand.version,
+            ATTR_VERSION_LATEST: self.sys_muthurcommand.latest_version,
+            ATTR_UPDATE_AVAILABLE: self.sys_muthurcommand.need_update,
+            ATTR_MACHINE: self.sys_muthurcommand.machine,
+            ATTR_IP_ADDRESS: str(self.sys_muthurcommand.ip_address),
+            ATTR_ARCH: self.sys_muthurcommand.arch,
+            ATTR_IMAGE: self.sys_muthurcommand.image,
+            ATTR_BOOT: self.sys_muthurcommand.boot,
+            ATTR_PORT: self.sys_muthurcommand.api_port,
+            ATTR_SSL: self.sys_muthurcommand.api_ssl,
+            ATTR_WATCHDOG: self.sys_muthurcommand.watchdog,
+            ATTR_AUDIO_INPUT: self.sys_muthurcommand.audio_input,
+            ATTR_AUDIO_OUTPUT: self.sys_muthurcommand.audio_output,
+            ATTR_BACKUPS_EXCLUDE_DATABASE: self.sys_muthurcommand.backups_exclude_database,
+            ATTR_DUPLICATE_LOG_FILE: self.sys_muthurcommand.duplicate_log_file,
         }
 
     @api_process
@@ -123,46 +123,46 @@ class APIHomeAssistant(CoreSysAttributes):
         body = await api_validate(SCHEMA_OPTIONS, request)
 
         if ATTR_IMAGE in body:
-            self.sys_homeassistant.set_image(body[ATTR_IMAGE])
-            self.sys_homeassistant.override_image = (
-                self.sys_homeassistant.image != self.sys_homeassistant.default_image
+            self.sys_muthurcommand.set_image(body[ATTR_IMAGE])
+            self.sys_muthurcommand.override_image = (
+                self.sys_muthurcommand.image != self.sys_muthurcommand.default_image
             )
 
         if ATTR_BOOT in body:
-            self.sys_homeassistant.boot = body[ATTR_BOOT]
+            self.sys_muthurcommand.boot = body[ATTR_BOOT]
 
         if ATTR_PORT in body:
-            self.sys_homeassistant.api_port = body[ATTR_PORT]
+            self.sys_muthurcommand.api_port = body[ATTR_PORT]
 
         if ATTR_SSL in body:
-            self.sys_homeassistant.api_ssl = body[ATTR_SSL]
+            self.sys_muthurcommand.api_ssl = body[ATTR_SSL]
 
         if ATTR_WATCHDOG in body:
-            self.sys_homeassistant.watchdog = body[ATTR_WATCHDOG]
+            self.sys_muthurcommand.watchdog = body[ATTR_WATCHDOG]
 
         if ATTR_REFRESH_TOKEN in body:
-            self.sys_homeassistant.refresh_token = body[ATTR_REFRESH_TOKEN]
+            self.sys_muthurcommand.refresh_token = body[ATTR_REFRESH_TOKEN]
 
         if ATTR_AUDIO_INPUT in body:
-            self.sys_homeassistant.audio_input = body[ATTR_AUDIO_INPUT]
+            self.sys_muthurcommand.audio_input = body[ATTR_AUDIO_INPUT]
 
         if ATTR_AUDIO_OUTPUT in body:
-            self.sys_homeassistant.audio_output = body[ATTR_AUDIO_OUTPUT]
+            self.sys_muthurcommand.audio_output = body[ATTR_AUDIO_OUTPUT]
 
         if ATTR_BACKUPS_EXCLUDE_DATABASE in body:
-            self.sys_homeassistant.backups_exclude_database = body[
+            self.sys_muthurcommand.backups_exclude_database = body[
                 ATTR_BACKUPS_EXCLUDE_DATABASE
             ]
 
         if ATTR_DUPLICATE_LOG_FILE in body:
-            self.sys_homeassistant.duplicate_log_file = body[ATTR_DUPLICATE_LOG_FILE]
+            self.sys_muthurcommand.duplicate_log_file = body[ATTR_DUPLICATE_LOG_FILE]
 
-        await self.sys_homeassistant.save_data()
+        await self.sys_muthurcommand.save_data()
 
     @api_process
     async def stats(self, request: web.Request) -> dict[str, Any]:
         """Return resource information."""
-        stats = await self.sys_homeassistant.core.stats()
+        stats = await self.sys_muthurcommand.core.stats()
         if not stats:
             raise APIError("No stats available")
 
@@ -186,8 +186,8 @@ class APIHomeAssistant(CoreSysAttributes):
         background = body[ATTR_BACKGROUND]
         update_task, job_id = await background_task(
             self,
-            self.sys_homeassistant.core.update,
-            version=body.get(ATTR_VERSION, self.sys_homeassistant.latest_version),
+            self.sys_muthurcommand.core.update,
+            version=body.get(ATTR_VERSION, self.sys_muthurcommand.latest_version),
             backup=body.get(ATTR_BACKUP),
         )
 
@@ -202,12 +202,12 @@ class APIHomeAssistant(CoreSysAttributes):
         body = await api_validate(SCHEMA_STOP, request)
         await self._check_offline_migration(force=body[ATTR_FORCE])
 
-        return await asyncio.shield(self.sys_homeassistant.core.stop())
+        return await asyncio.shield(self.sys_muthurcommand.core.stop())
 
     @api_process
     def start(self, request: web.Request) -> Awaitable[None]:
         """Start Home Assistant."""
-        return asyncio.shield(self.sys_homeassistant.core.start())
+        return asyncio.shield(self.sys_muthurcommand.core.start())
 
     @api_process
     async def restart(self, request: web.Request) -> None:
@@ -216,7 +216,7 @@ class APIHomeAssistant(CoreSysAttributes):
         await self._check_offline_migration(force=body[ATTR_FORCE])
 
         await asyncio.shield(
-            self.sys_homeassistant.core.restart(safe_mode=body[ATTR_SAFE_MODE])
+            self.sys_muthurcommand.core.restart(safe_mode=body[ATTR_SAFE_MODE])
         )
 
     @api_process
@@ -226,12 +226,12 @@ class APIHomeAssistant(CoreSysAttributes):
         await self._check_offline_migration(force=body[ATTR_FORCE])
 
         await asyncio.shield(
-            self.sys_homeassistant.core.rebuild(safe_mode=body[ATTR_SAFE_MODE])
+            self.sys_muthurcommand.core.rebuild(safe_mode=body[ATTR_SAFE_MODE])
         )
 
     @api_process
     async def check(self, request: web.Request) -> None:
         """Check configuration of Home Assistant."""
-        result = await self.sys_homeassistant.core.check_config()
+        result = await self.sys_muthurcommand.core.check_config()
         if not result.valid:
             raise APIError(result.log)

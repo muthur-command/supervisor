@@ -78,7 +78,7 @@ async def test_update_failed(coresys: CoreSys, capture_exception: Mock):
     """Test update failure."""
     # pylint: disable-next=protected-access
     coresys.updater._data.setdefault("image", {})["supervisor"] = (
-        "ghcr.io/home-assistant/aarch64-hassio-supervisor"
+        "ghcr.io/muthur-command/aarch64-mcio-supervisor"
     )
     err = DockerError()
     with (
@@ -110,7 +110,7 @@ async def test_update_apparmor(
         await coresys.supervisor.update_apparmor()
 
         websession.get.assert_called_once_with(
-            f"https://version.home-assistant.io/apparmor_{channel}.txt",
+            f"https://version.muthur-command.com/apparmor_{channel}.txt",
             timeout=ClientTimeout(total=10),
         )
         load_profile.assert_called_once()

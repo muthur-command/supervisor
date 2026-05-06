@@ -20,8 +20,8 @@ from supervisor.docker.utils import get_registry_from_image
         ("homeassistant/amd64-supervisor", None),
         ("homeassistant/amd64-supervisor:1.2.3", None),
         # Registry with dot
-        ("ghcr.io/homeassistant/amd64-supervisor", "ghcr.io"),
-        ("ghcr.io/homeassistant/amd64-supervisor:latest", "ghcr.io"),
+        ("ghcr.io/muthurcommand/amd64-supervisor", "ghcr.io"),
+        ("ghcr.io/muthurcommand/amd64-supervisor:latest", "ghcr.io"),
         ("myregistry.com/nginx", "myregistry.com"),
         ("registry.example.com/org/image:v1", "registry.example.com"),
         ("127.0.0.1/myimage", "127.0.0.1"),
@@ -56,10 +56,10 @@ def test_no_credentials(coresys: CoreSys, test_docker_interface: DockerInterface
     assert image == "ghcr.io/homeassistant"
 
     credentials, image = test_docker_interface._get_credentials(
-        "ghcr.io/homeassistant/amd64-supervisor"
+        "ghcr.io/muthurcommand/amd64-supervisor"
     )
     assert not credentials
-    assert image == "ghcr.io/homeassistant/amd64-supervisor"
+    assert image == "ghcr.io/muthurcommand/amd64-supervisor"
 
 
 def test_no_matching_credentials(
@@ -74,10 +74,10 @@ def test_no_matching_credentials(
     assert image == "ghcr.io/homeassistant"
 
     credentials, image = test_docker_interface._get_credentials(
-        "ghcr.io/homeassistant/amd64-supervisor"
+        "ghcr.io/muthurcommand/amd64-supervisor"
     )
     assert not credentials
-    assert image == "ghcr.io/homeassistant/amd64-supervisor"
+    assert image == "ghcr.io/muthurcommand/amd64-supervisor"
 
 
 def test_matching_credentials(coresys: CoreSys, test_docker_interface: DockerInterface):
@@ -88,10 +88,10 @@ def test_matching_credentials(coresys: CoreSys, test_docker_interface: DockerInt
     }
 
     credentials, image = test_docker_interface._get_credentials(
-        "ghcr.io/homeassistant/amd64-supervisor"
+        "ghcr.io/muthurcommand/amd64-supervisor"
     )
     assert credentials["registry"] == "ghcr.io"
-    assert image == "ghcr.io/homeassistant/amd64-supervisor"
+    assert image == "ghcr.io/muthurcommand/amd64-supervisor"
 
     credentials, image = test_docker_interface._get_credentials(
         "homeassistant/amd64-supervisor"

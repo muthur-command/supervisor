@@ -11,30 +11,48 @@ from typing import Any, NotRequired, Self, TypedDict
 from aiohttp import __version__ as aiohttpversion
 
 SUPERVISOR_VERSION = "9999.09.9.dev9999"
-SERVER_SOFTWARE = f"HomeAssistantSupervisor/{SUPERVISOR_VERSION} aiohttp/{aiohttpversion} Python/{systemversion[0]}.{systemversion[1]}"
+SERVER_SOFTWARE = (
+    f"MuthurCommandSupervisor/{SUPERVISOR_VERSION} "
+    f"aiohttp/{aiohttpversion} Python/{systemversion[0]}.{systemversion[1]}"
+)
 
-DOCKER_PREFIX: str = "hassio"
+DOCKER_PREFIX: str = "mcio"
 OBSERVER_DOCKER_NAME: str = f"{DOCKER_PREFIX}_observer"
 SUPERVISOR_DOCKER_NAME: str = f"{DOCKER_PREFIX}_supervisor"
+MC_POSTGRES_DOCKER_NAME: str = f"{DOCKER_PREFIX}_mc_postgres"
+MC_REDIS_DOCKER_NAME: str = f"{DOCKER_PREFIX}_mc_redis"
+MC_BACKEND_DOCKER_NAME: str = f"{DOCKER_PREFIX}_mc_bd"
+MC_FRONTEND_DOCKER_NAME: str = f"{DOCKER_PREFIX}_mc_fd"
 
-URL_HASSIO_ADDONS = "https://github.com/home-assistant/addons"
-URL_HASSIO_APPARMOR = "https://version.home-assistant.io/apparmor_{channel}.txt"
-URL_HASSIO_VERSION = "https://version.home-assistant.io/{channel}.json"
+# MC stack defaults (must match mc_bd / mc_fd build expectations).
+MC_POSTGRES_DEFAULT_USER: str = "postgres"
+MC_POSTGRES_DEFAULT_DB: str = "postgres"
+MC_POSTGRES_PORT: int = 5432
+MC_REDIS_PORT: int = 6379
+MC_BACKEND_PORT: int = 8001
+MC_FRONTEND_PORT: int = 80
+MC_BACKEND_HEALTH_PATH: str = "/v1/health/ping"
+
+URL_MCIO_ADDONS = "https://github.com/muthur-command/addons"
+URL_MCIO_APPARMOR = "https://version.muthur-command.com/apparmor_{channel}.txt"
+URL_MCIO_VERSION = "https://version.muthur-command.com/{channel}.json"
 
 SUPERVISOR_DATA = Path("/data")
 
-FILE_HASSIO_ADDONS = Path(SUPERVISOR_DATA, "addons.json")
-FILE_HASSIO_AUTH = Path(SUPERVISOR_DATA, "auth.json")
-FILE_HASSIO_BACKUPS = Path(SUPERVISOR_DATA, "backups.json")
-FILE_HASSIO_BOARD = Path(SUPERVISOR_DATA, "board.json")
-FILE_HASSIO_CONFIG = Path(SUPERVISOR_DATA, "config.json")
-FILE_HASSIO_DISCOVERY = Path(SUPERVISOR_DATA, "discovery.json")
-FILE_HASSIO_DOCKER = Path(SUPERVISOR_DATA, "docker.json")
-FILE_HASSIO_HOMEASSISTANT = Path(SUPERVISOR_DATA, "homeassistant.json")
-FILE_HASSIO_INGRESS = Path(SUPERVISOR_DATA, "ingress.json")
-FILE_HASSIO_SERVICES = Path(SUPERVISOR_DATA, "services.json")
-FILE_HASSIO_UPDATER = Path(SUPERVISOR_DATA, "updater.json")
-FILE_HASSIO_SECURITY = Path(SUPERVISOR_DATA, "security.json")
+FILE_MCIO_ADDONS = Path(SUPERVISOR_DATA, "addons.json")
+FILE_MCIO_AUTH = Path(SUPERVISOR_DATA, "auth.json")
+FILE_MCIO_BACKUPS = Path(SUPERVISOR_DATA, "backups.json")
+FILE_MCIO_BOARD = Path(SUPERVISOR_DATA, "board.json")
+FILE_MCIO_CONFIG = Path(SUPERVISOR_DATA, "config.json")
+FILE_MCIO_DISCOVERY = Path(SUPERVISOR_DATA, "discovery.json")
+FILE_MCIO_DOCKER = Path(SUPERVISOR_DATA, "docker.json")
+FILE_MUTHURCOMMAND = Path(SUPERVISOR_DATA, "muthurcommand.json")
+FILE_MC_STACK = Path(SUPERVISOR_DATA, "mc_stack.json")
+FILE_MC_STACK_SECRETS = Path(SUPERVISOR_DATA, "mc_stack_secrets.json")
+FILE_MCIO_INGRESS = Path(SUPERVISOR_DATA, "ingress.json")
+FILE_MCIO_SERVICES = Path(SUPERVISOR_DATA, "services.json")
+FILE_MCIO_UPDATER = Path(SUPERVISOR_DATA, "updater.json")
+FILE_MCIO_SECURITY = Path(SUPERVISOR_DATA, "security.json")
 
 FILE_SUFFIX_CONFIGURATION = [".yaml", ".yml", ".json"]
 
@@ -45,7 +63,7 @@ RUN_SUPERVISOR_STATE = Path("/run/supervisor")
 SYSTEMD_JOURNAL_PERSISTENT = Path("/var/log/journal")
 SYSTEMD_JOURNAL_VOLATILE = Path("/run/log/journal")
 
-DOCKER_NETWORK = "hassio"
+DOCKER_NETWORK = "mcio"
 DOCKER_NETWORK_DRIVER = "bridge"
 DOCKER_IPV6_NETWORK_MASK = IPv6Network("fd0c:ac1e:2100::/48")
 DOCKER_IPV4_NETWORK_MASK = IPv4Network("172.30.32.0/23")
@@ -62,19 +80,33 @@ DOCKER_CPU_RUNTIME_TOTAL = 950_000
 # on a quad core system.
 DOCKER_CPU_RUNTIME_ALLOCATION = int(DOCKER_CPU_RUNTIME_TOTAL / 5)
 
-DNS_SUFFIX = "local.hass.io"
+DNS_SUFFIX = "local.mcio"
 
-LABEL_ARCH = "io.hass.arch"
-LABEL_DESCRIPTION = "io.hass.description"
-LABEL_MACHINE = "io.hass.machine"
-LABEL_NAME = "io.hass.name"
-LABEL_TYPE = "io.hass.type"
-LABEL_URL = "io.hass.url"
-LABEL_VERSION = "io.hass.version"
+LABEL_ARCH = "io.mcio.arch"
+LABEL_DESCRIPTION = "io.mcio.description"
+LABEL_MACHINE = "io.mcio.machine"
+LABEL_NAME = "io.mcio.name"
+LABEL_TYPE = "io.mcio.type"
+LABEL_URL = "io.mcio.url"
+LABEL_VERSION = "io.mcio.version"
+
+# Runtime labels added to MC application stack containers so Observer /
+# external monitoring can filter them by stack and component role.
+LABEL_MC_STACK = "io.muthur.stack"
+LABEL_MC_ROLE = "io.muthur.role"
+LABEL_MC_MANAGED_BY = "io.muthur.managed-by"
+
+MC_STACK_NAME = "mc"
+MC_STACK_MANAGED_BY = "supervisor"
+
+MC_ROLE_POSTGRES = "postgres"
+MC_ROLE_REDIS = "redis"
+MC_ROLE_BACKEND = "backend"
+MC_ROLE_FRONTEND = "frontend"
 
 META_ADDON = "addon"  # legacy label for app
 META_APP = "app"
-META_HOMEASSISTANT = "homeassistant"
+META_MUTHURCOMMAND = "muthurcommand"
 META_SUPERVISOR = "supervisor"
 
 JSON_DATA = "data"
@@ -90,17 +122,17 @@ RESULT_OK = "ok"
 HEADER_REMOTE_USER_ID = "X-Remote-User-Id"
 HEADER_REMOTE_USER_NAME = "X-Remote-User-Name"
 HEADER_REMOTE_USER_DISPLAY_NAME = "X-Remote-User-Display-Name"
-HEADER_TOKEN_OLD = "X-Hassio-Key"
+HEADER_MCIO_KEY = "X-Mcio-Key"
 HEADER_TOKEN = "X-Supervisor-Token"
 
-ENV_HOMEASSISTANT_REPOSITORY = "HOMEASSISTANT_REPOSITORY"
+ENV_MUTHURCOMMAND_REPOSITORY = "MUTHURCOMMAND_REPOSITORY"
 ENV_SUPERVISOR_DEV = "SUPERVISOR_DEV"
 ENV_SUPERVISOR_MACHINE = "SUPERVISOR_MACHINE"
 ENV_SUPERVISOR_NAME = "SUPERVISOR_NAME"
 ENV_SUPERVISOR_SHARE = "SUPERVISOR_SHARE"
 ENV_SUPERVISOR_CPU_RT = "SUPERVISOR_CPU_RT"
 
-REQUEST_FROM = "HASSIO_FROM"
+REQUEST_FROM = "MCIO_FROM"
 
 ATTR_ACCESS_TOKEN = "access_token"
 ATTR_ACCESSPOINTS = "accesspoints"
@@ -203,16 +235,16 @@ ATTR_FREQUENCY = "frequency"
 ATTR_FULL_ACCESS = "full_access"
 ATTR_GATEWAY = "gateway"
 ATTR_GPIO = "gpio"
-ATTR_HASSIO_API = "hassio_api"
-ATTR_HASSIO_ROLE = "hassio_role"
-ATTR_HASSOS = "hassos"
-ATTR_HASSOS_UNRESTRICTED = "hassos_unrestricted"
-ATTR_HASSOS_UPGRADE = "hassos_upgrade"
+ATTR_MCIO_API = "mcio_api"
+ATTR_MCIO_ROLE = "mcio_role"
+ATTR_MCOS = "mcos"
+ATTR_MCOS_UNRESTRICTED = "mcos_unrestricted"
+ATTR_MCOS_UPGRADE = "mcos_upgrade"
 ATTR_HEALTHY = "healthy"
 ATTR_HEARTBEAT_LED = "heartbeat_led"
-ATTR_HOMEASSISTANT = "homeassistant"
-ATTR_HOMEASSISTANT_EXCLUDE_DATABASE = "homeassistant_exclude_database"
-ATTR_HOMEASSISTANT_API = "homeassistant_api"
+ATTR_MUTHURCOMMAND = "muthurcommand"
+ATTR_MUTHURCOMMAND_EXCLUDE_DATABASE = "muthurcommand_exclude_database"
+ATTR_MUTHURCOMMAND_API = "muthurcommand_api"
 ATTR_HOST = "host"
 ATTR_HOST_DBUS = "host_dbus"
 ATTR_HOST_INTERNET = "host_internet"
@@ -270,6 +302,10 @@ ATTR_MESSAGE = "message"
 ATTR_METHOD = "method"
 ATTR_MODE = "mode"
 ATTR_MULTICAST = "multicast"
+ATTR_MC_BD = "mc_bd"
+ATTR_MC_FD = "mc_fd"
+ATTR_POSTGRESQL = "postgresql"
+ATTR_REDIS = "redis"
 ATTR_NAME = "name"
 ATTR_NAMESERVERS = "nameservers"
 ATTR_NETWORK = "network"
@@ -409,23 +445,26 @@ MACHINE_DEPRECATED = [
 REPOSITORY_CORE = "core"
 REPOSITORY_LOCAL = "local"
 
-FOLDER_HOMEASSISTANT = "homeassistant"
+FOLDER_MUTHURCOMMAND = "muthurcommand"
 FOLDER_SHARE = "share"
 FOLDER_ADDONS = "addons/local"
 FOLDER_SSL = "ssl"
 FOLDER_MEDIA = "media"
+FOLDER_MC_BACKEND = "mc_bd"
+FOLDER_MC_POSTGRES = "mc_postgres"
+FOLDER_MC_REDIS = "mc_redis"
 
 SECURITY_PROFILE = "profile"
 SECURITY_DEFAULT = "default"
 SECURITY_DISABLE = "disable"
 
 ROLE_DEFAULT = "default"
-ROLE_HOMEASSISTANT = "homeassistant"
+ROLE_MUTHURCOMMAND = "muthurcommand"
 ROLE_BACKUP = "backup"
 ROLE_MANAGER = "manager"
 ROLE_ADMIN = "admin"
 
-ROLE_ALL = [ROLE_DEFAULT, ROLE_HOMEASSISTANT, ROLE_BACKUP, ROLE_MANAGER, ROLE_ADMIN]
+ROLE_ALL = [ROLE_DEFAULT, ROLE_MUTHURCOMMAND, ROLE_BACKUP, ROLE_MANAGER, ROLE_ADMIN]
 
 OBSERVER_PORT = 4357
 
@@ -519,7 +558,7 @@ class LogLevel(StrEnum):
 class HostFeature(StrEnum):
     """Host feature."""
 
-    HASSOS = "hassos"
+    MCOS = "mcos"
     HOSTNAME = "hostname"
     NETWORK = "network"
     REBOOT = "reboot"
@@ -549,7 +588,7 @@ class CpuArch(StrEnum):
 
 
 @dataclass
-class HomeAssistantUser:
+class MuthurCommandUser:
     """A Home Assistant Core user.
 
     Incomplete model — Core's User object has additional fields
@@ -603,7 +642,7 @@ class IngressSessionDataDict(TypedDict):
 class IngressSessionData:
     """Ingress session data attached to a session token."""
 
-    user: HomeAssistantUser
+    user: MuthurCommandUser
 
     def to_dict(self) -> IngressSessionDataDict:
         """Get dictionary representation."""
@@ -618,7 +657,7 @@ class IngressSessionData:
     @classmethod
     def from_dict(cls, data: Mapping[str, Any]) -> Self:
         """Return object from dictionary representation."""
-        return cls(user=HomeAssistantUser.from_dict(data["user"]))
+        return cls(user=MuthurCommandUser.from_dict(data["user"]))
 
 
 STARTING_STATES = [

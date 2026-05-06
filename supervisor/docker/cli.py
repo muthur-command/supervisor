@@ -11,7 +11,7 @@ from .interface import DockerInterface
 
 _LOGGER: logging.Logger = logging.getLogger(__name__)
 
-CLI_DOCKER_NAME: str = "hassio_cli"
+CLI_DOCKER_NAME: str = "mcio_cli"
 
 
 class DockerCli(DockerInterface, CoreSysAttributes):

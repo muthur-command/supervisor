@@ -29,10 +29,10 @@ from ..const import (
     ATTR_ENVIRONMENT,
     ATTR_FULL_ACCESS,
     ATTR_GPIO,
-    ATTR_HASSIO_API,
-    ATTR_HASSIO_ROLE,
-    ATTR_HOMEASSISTANT,
-    ATTR_HOMEASSISTANT_API,
+    ATTR_MCIO_API,
+    ATTR_MCIO_ROLE,
+    ATTR_MUTHURCOMMAND,
+    ATTR_MUTHURCOMMAND_API,
     ATTR_HOST_DBUS,
     ATTR_HOST_IPC,
     ATTR_HOST_NETWORK,
@@ -93,7 +93,7 @@ from ..docker.const import Capabilities
 from ..exceptions import (
     AddonNotSupportedArchitectureError,
     AddonNotSupportedError,
-    AddonNotSupportedHomeAssistantVersionError,
+    AddonNotSupportedMuthurCommandVersionError,
     AddonNotSupportedMachineTypeError,
     HassioArchNotFound,
 )
@@ -387,19 +387,19 @@ class AddonModel(JobGroup, ABC):
         return self.data[ATTR_DOCKER_API]
 
     @property
-    def access_hassio_api(self) -> bool:
+    def access_mcio_api(self) -> bool:
         """Return True if the add-on access to Supervisor REASTful API."""
-        return self.data[ATTR_HASSIO_API]
+        return self.data[ATTR_MCIO_API]
 
     @property
-    def access_homeassistant_api(self) -> bool:
+    def access_muthurcommand_api(self) -> bool:
         """Return True if the add-on access to Home Assistant API proxy."""
-        return self.data[ATTR_HOMEASSISTANT_API]
+        return self.data[ATTR_MUTHURCOMMAND_API]
 
     @property
-    def hassio_role(self) -> str:
+    def mcio_role(self) -> str:
         """Return Supervisor role for API."""
-        return self.data[ATTR_HASSIO_ROLE]
+        return self.data[ATTR_MCIO_ROLE]
 
     @property
     def backup_exclude(self) -> list[str]:
@@ -512,9 +512,9 @@ class AddonModel(JobGroup, ABC):
         return self.data[ATTR_VIDEO]
 
     @property
-    def homeassistant_version(self) -> AwesomeVersion | None:
+    def muthurcommand_version(self) -> AwesomeVersion | None:
         """Return min Home Assistant version they needed by Add-on."""
-        return self.data.get(ATTR_HOMEASSISTANT)
+        return self.data.get(ATTR_MUTHURCOMMAND)
 
     @property
     def url(self) -> str | None:
@@ -729,12 +729,12 @@ class AddonModel(JobGroup, ABC):
             )
 
         # Home Assistant
-        version: AwesomeVersion | None = config.get(ATTR_HOMEASSISTANT)
+        version: AwesomeVersion | None = config.get(ATTR_MUTHURCOMMAND)
         with suppress(AwesomeVersionException, TypeError):
             if version and not version_is_new_enough(
-                self.sys_homeassistant.version, version
+                self.sys_muthurcommand.version, version
             ):
-                raise AddonNotSupportedHomeAssistantVersionError(
+                raise AddonNotSupportedMuthurCommandVersionError(
                     logger, slug=self.slug, version=str(version)
                 )
 

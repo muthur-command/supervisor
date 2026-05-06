@@ -99,17 +99,17 @@ async def test_resolution_create_issue_suggestion(coresys: CoreSys):
     """Test resolution manager issue and suggestion."""
     coresys.resolution.create_issue(
         IssueType.UPDATE_ROLLBACK,
-        ContextType.CORE,
+        ContextType.MC_BD,
         "slug",
         [SuggestionType.EXECUTE_REPAIR],
     )
 
     assert coresys.resolution.issues[-1].type == IssueType.UPDATE_ROLLBACK
-    assert coresys.resolution.issues[-1].context == ContextType.CORE
+    assert coresys.resolution.issues[-1].context == ContextType.MC_BD
     assert coresys.resolution.issues[-1].reference == "slug"
 
     assert coresys.resolution.suggestions[-1].type == SuggestionType.EXECUTE_REPAIR
-    assert coresys.resolution.suggestions[-1].context == ContextType.CORE
+    assert coresys.resolution.suggestions[-1].context == ContextType.MC_BD
 
 
 @pytest.mark.asyncio
@@ -169,7 +169,7 @@ async def test_issues_for_suggestion(coresys: CoreSys):
     )
 
     # Unrelated issues don't appear
-    coresys.resolution.add_issue(Issue(IssueType.FATAL_ERROR, ContextType.CORE))
+    coresys.resolution.add_issue(Issue(IssueType.FATAL_ERROR, ContextType.MC_BD))
     coresys.resolution.add_issue(
         Issue(IssueType.CORRUPT_REPOSITORY, ContextType.STORE, "other_repo")
     )
@@ -312,7 +312,7 @@ async def test_resolution_apply_suggestion_multiple_copies(coresys: CoreSys):
 async def test_events_on_unsupported_changed(coresys: CoreSys):
     """Test events fired when unsupported changes."""
     with patch.object(
-        type(coresys.homeassistant.websocket), "_async_send_command"
+        type(coresys.muthurcommand.websocket), "_async_send_command"
     ) as send_message:
         # Marking system as unsupported tells HA
         assert coresys.resolution.unsupported == set()
@@ -376,7 +376,7 @@ async def test_events_on_unsupported_changed(coresys: CoreSys):
 async def test_events_on_unhealthy_changed(coresys: CoreSys):
     """Test events fired when unhealthy changes."""
     with patch.object(
-        type(coresys.homeassistant.websocket), "_async_send_command"
+        type(coresys.muthurcommand.websocket), "_async_send_command"
     ) as send_message:
         # Marking system as unhealthy tells HA
         assert coresys.resolution.unhealthy == set()
@@ -415,7 +415,7 @@ async def test_events_on_unhealthy_changed(coresys: CoreSys):
 async def test_dismiss_issue_removes_orphaned_suggestions(coresys: CoreSys):
     """Test dismissing an issue also removes any suggestions which have been orphaned."""
     with patch.object(
-        type(coresys.homeassistant.websocket), "_async_send_command"
+        type(coresys.muthurcommand.websocket), "_async_send_command"
     ) as send_message:
         coresys.resolution.create_issue(
             IssueType.MOUNT_FAILED,

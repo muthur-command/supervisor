@@ -15,10 +15,10 @@ from ..dbus.agent.boards.const import BOARD_NAME_SUPERVISED
 from ..dbus.rauc import RaucState, SlotStatusDataType
 from ..exceptions import (
     DBusError,
-    HassOSJobError,
-    HassOSSlotNotFound,
-    HassOSSlotUpdateError,
-    HassOSUpdateError,
+    McosJobError,
+    McosSlotNotFound,
+    McosSlotUpdateError,
+    McosUpdateError,
 )
 from ..jobs.const import JobConcurrency, JobCondition
 from ..jobs.decorator import Job
@@ -106,12 +106,12 @@ class OSManager(CoreSysAttributes):
     @property
     def latest_version(self) -> AwesomeVersion | None:
         """Return version of HassOS."""
-        return self.sys_updater.version_hassos
+        return self.sys_updater.version_mcos
 
     @property
     def latest_version_unrestricted(self) -> AwesomeVersion | None:
         """Return current latest version of HassOS for board ignoring upgrade restrictions."""
-        return self.sys_updater.version_hassos_unrestricted
+        return self.sys_updater.version_mcos_unrestricted
 
     @property
     def need_update(self) -> bool:
@@ -150,30 +150,24 @@ class OSManager(CoreSysAttributes):
     def get_slot_name(self, boot_name: str) -> str:
         """Get slot name from boot name."""
         if not self._slots:
-            raise HassOSSlotNotFound()
+            raise McosSlotNotFound()
 
         for name, status in self._slots.items():
             if status.bootname == boot_name:
                 return name
-        raise HassOSSlotNotFound()
+        raise McosSlotNotFound()
 
     def _get_download_url(self, version: AwesomeVersion) -> str:
         raw_url = self.sys_updater.ota_url
         if raw_url is None:
-            raise HassOSUpdateError("Don't have an URL for OTA updates!", _LOGGER.error)
+            raise McosUpdateError("Don't have an URL for OTA updates!", _LOGGER.error)
 
         update_board = self.board
-        update_os_name = self.os_name
+        update_os_name = "mcos"
 
         # OS version 6 and later renamed intel-nuc to generic-x86-64...
         if update_board == "intel-nuc" and version >= 6.0:
             update_board = "generic-x86-64"
-
-        # The OS name used to be hassos before renaming to haos...
-        if version < 6.0:
-            update_os_name = "hassos"
-        else:
-            update_os_name = "haos"
 
         url = raw_url.format(
             version=str(version), board=update_board, os_name=update_os_name
@@ -187,7 +181,7 @@ class OSManager(CoreSysAttributes):
             timeout = aiohttp.ClientTimeout(total=60 * 60, connect=180)
             async with self.sys_websession.get(url, timeout=timeout) as request:
                 if request.status != 200:
-                    raise HassOSUpdateError(
+                    raise McosUpdateError(
                         f"Error raised from OTA Webserver: {request.status}",
                         _LOGGER.error,
                     )
@@ -207,17 +201,17 @@ class OSManager(CoreSysAttributes):
 
         except (aiohttp.ClientError, TimeoutError) as err:
             self.sys_supervisor.connectivity = False
-            raise HassOSUpdateError(
+            raise McosUpdateError(
                 f"Can't fetch OTA update from {url}: {err!s}", _LOGGER.error
             ) from err
 
         except OSError as err:
             self.sys_resolution.check_oserror(err)
-            raise HassOSUpdateError(
+            raise McosUpdateError(
                 f"Can't write OTA file: {err!s}", _LOGGER.error
             ) from err
 
-    @Job(name="os_manager_reload", conditions=[JobCondition.HAOS], internal=True)
+    @Job(name="os_manager_reload", conditions=[JobCondition.MCOS], internal=True)
     async def reload(self) -> None:
         """Update cache of slot statuses."""
         self._slots = {
@@ -233,11 +227,11 @@ class OSManager(CoreSysAttributes):
 
             cpe = CPE(self.sys_host.info.cpe)
             os_name = cpe.get_product()[0]
-            if os_name not in ("hassos", "haos"):
+            if os_name != "mcos":
                 self._board = BOARD_NAME_SUPERVISED.lower()
                 raise NotImplementedError()
         except NotImplementedError:
-            _LOGGER.info("No Home Assistant Operating System found")
+            _LOGGER.info("No Muthur Command OS found")
             return
 
         # Store meta data
@@ -252,33 +246,31 @@ class OSManager(CoreSysAttributes):
         await self.datadisk.load()
 
         _LOGGER.info(
-            "Detect Home Assistant Operating System %s / BootSlot %s",
+            "Detect Muthur Command OS %s / BootSlot %s",
             self.version,
             self.sys_dbus.rauc.boot_slot,
         )
 
     @Job(
         name="os_manager_config_sync",
-        conditions=[JobCondition.HAOS],
-        on_condition=HassOSJobError,
+        conditions=[JobCondition.MCOS],
+        on_condition=McosJobError,
     )
     async def config_sync(self) -> None:
         """Trigger a host config reload from usb."""
-        _LOGGER.info(
-            "Synchronizing configuration from USB with Home Assistant Operating System."
-        )
-        await self.sys_host.services.restart("hassos-config.service")
+        _LOGGER.info("Synchronizing configuration from USB with Muthur Command OS.")
+        await self.sys_host.services.restart("mcos-config.service")
 
     @Job(
         name="os_manager_update",
         conditions=[
-            JobCondition.HAOS,
+            JobCondition.MCOS,
             JobCondition.HEALTHY,
             JobCondition.INTERNET_SYSTEM,
             JobCondition.RUNNING,
             JobCondition.SUPERVISOR_UPDATED,
         ],
-        on_condition=HassOSJobError,
+        on_condition=McosJobError,
         concurrency=JobConcurrency.REJECT,
     )
     async def update(self, version: AwesomeVersion | None = None) -> None:
@@ -287,17 +279,17 @@ class OSManager(CoreSysAttributes):
 
         # Check installed version
         if not version:
-            raise HassOSUpdateError(
+            raise McosUpdateError(
                 "No version information available, cannot update", _LOGGER.error
             )
         if version == self.version:
-            raise HassOSUpdateError(
+            raise McosUpdateError(
                 f"Version {version!s} is already installed", _LOGGER.warning
             )
 
         # Fetch files from internet
         ota_url = self._get_download_url(version)
-        int_ota = Path(self.sys_config.path_tmp, f"hassos-{version!s}.raucb")
+        int_ota = Path(self.sys_config.path_tmp, f"mcos-{version!s}.raucb")
         await self._download_raucb(ota_url, int_ota)
         ext_ota = Path(self.sys_config.path_extern_tmp, int_ota.name)
 
@@ -310,28 +302,26 @@ class OSManager(CoreSysAttributes):
                 completed = await signal.wait_for_signal()
 
         except DBusError as err:
-            raise HassOSUpdateError("Rauc communication error", _LOGGER.error) from err
+            raise McosUpdateError("Rauc communication error", _LOGGER.error) from err
 
         finally:
             int_ota.unlink()
 
         # Update success
         if 0 in completed:
-            _LOGGER.info(
-                "Install of Home Assistant Operating System %s success", version
-            )
+            _LOGGER.info("Install of Muthur Command OS %s success", version)
             self.sys_create_task(self.sys_host.control.reboot())
             return
 
         # Update failed
         await self.sys_dbus.rauc.update()
         _LOGGER.error(
-            "Home Assistant Operating System update failed with: %s",
+            "Muthur Command OS update failed with: %s",
             self.sys_dbus.rauc.last_error,
         )
-        raise HassOSUpdateError()
+        raise McosUpdateError()
 
-    @Job(name="os_manager_mark_healthy", conditions=[JobCondition.HAOS], internal=True)
+    @Job(name="os_manager_mark_healthy", conditions=[JobCondition.MCOS], internal=True)
     async def mark_healthy(self) -> None:
         """Set booted partition as good for rauc."""
         try:
@@ -352,8 +342,8 @@ class OSManager(CoreSysAttributes):
 
     @Job(
         name="os_manager_set_boot_slot",
-        conditions=[JobCondition.HAOS],
-        on_condition=HassOSJobError,
+        conditions=[JobCondition.MCOS],
+        on_condition=McosJobError,
         internal=True,
     )
     async def set_boot_slot(self, boot_name: str) -> None:
@@ -364,7 +354,7 @@ class OSManager(CoreSysAttributes):
             )
         except DBusError as err:
             await async_capture_exception(err)
-            raise HassOSSlotUpdateError(
+            raise McosSlotUpdateError(
                 f"Can't mark {boot_name} as active!", _LOGGER.error
             ) from err
 

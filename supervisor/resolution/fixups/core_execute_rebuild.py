@@ -20,7 +20,7 @@ class FixupCoreExecuteRebuild(FixupBase):
 
     async def process_fixup(self, reference: str | None = None) -> None:
         """Rebuild the core container."""
-        state = await self.sys_homeassistant.core.instance.current_state()
+        state = await self.sys_muthurcommand.core.instance.current_state()
 
         if state == ContainerState.UNKNOWN:
             _LOGGER.info(
@@ -30,9 +30,9 @@ class FixupCoreExecuteRebuild(FixupBase):
             _LOGGER.info(
                 "Home Assistant is stopped, removing its container so it rebuilds when started next"
             )
-            await self.sys_homeassistant.core.instance.stop()
+            await self.sys_muthurcommand.core.instance.stop()
         else:
-            await self.sys_homeassistant.core.rebuild()
+            await self.sys_muthurcommand.core.rebuild()
 
     @property
     def suggestion(self) -> SuggestionType:
@@ -42,7 +42,7 @@ class FixupCoreExecuteRebuild(FixupBase):
     @property
     def context(self) -> ContextType:
         """Return a ContextType enum."""
-        return ContextType.CORE
+        return ContextType.MC_BD
 
     @property
     def issues(self) -> list[IssueType]:

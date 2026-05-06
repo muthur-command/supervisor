@@ -1,6 +1,6 @@
 """Home Assistant observer plugin.
 
-Code: https://github.com/home-assistant/plugin-observer
+Code: https://github.com/muthur-command/plugin-observer
 """
 
 import logging
@@ -28,7 +28,7 @@ from ..jobs.decorator import Job
 from ..utils.sentry import async_capture_exception
 from .base import PluginBase
 from .const import (
-    FILE_HASSIO_OBSERVER,
+    FILE_MCIO_OBSERVER,
     PLUGIN_UPDATE_CONDITIONS,
     WATCHDOG_THROTTLE_MAX_CALLS,
     WATCHDOG_THROTTLE_PERIOD,
@@ -43,7 +43,7 @@ class PluginObserver(PluginBase):
 
     def __init__(self, coresys: CoreSys):
         """Initialize observer handler."""
-        super().__init__(FILE_HASSIO_OBSERVER, SCHEMA_OBSERVER_CONFIG)
+        super().__init__(FILE_MCIO_OBSERVER, SCHEMA_OBSERVER_CONFIG)
         self.slug = "observer"
         self.coresys: CoreSys = coresys
         self.instance: DockerObserver = DockerObserver(coresys)

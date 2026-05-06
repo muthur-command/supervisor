@@ -16,7 +16,7 @@ from ..const import (
     ATTR_EXCLUDE_DATABASE,
     ATTR_EXTRA,
     ATTR_FOLDERS,
-    ATTR_HOMEASSISTANT,
+    ATTR_MUTHURCOMMAND,
     ATTR_NAME,
     ATTR_PROTECTED,
     ATTR_REPOSITORIES,
@@ -26,7 +26,7 @@ from ..const import (
     ATTR_TYPE,
     ATTR_VERSION,
     FOLDER_ADDONS,
-    FOLDER_HOMEASSISTANT,
+    FOLDER_MUTHURCOMMAND,
     FOLDER_MEDIA,
     FOLDER_SHARE,
     FOLDER_SSL,
@@ -51,7 +51,7 @@ def unique_addons(addons_list):
     return addons_list
 
 
-def v1_homeassistant(
+def v1_muthurcommand(
     homeassistant_data: dict[str, Any] | None,
 ) -> dict[str, Any] | None:
     """Cleanup homeassistant artefacts from v1."""
@@ -66,8 +66,8 @@ def v1_homeassistant(
 
 def v1_folderlist(folder_data: list[str]) -> list[str]:
     """Cleanup folder artefacts from v1."""
-    if FOLDER_HOMEASSISTANT in folder_data:
-        folder_data.remove(FOLDER_HOMEASSISTANT)
+    if FOLDER_MUTHURCOMMAND in folder_data:
+        folder_data.remove(FOLDER_MUTHURCOMMAND)
     return folder_data
 
 
@@ -96,8 +96,8 @@ SCHEMA_BACKUP = vol.Schema(
             v1_protected, vol.Boolean()
         ),
         vol.Remove("crypto"): vol.Maybe("aes128"),
-        vol.Optional(ATTR_HOMEASSISTANT, default=None): vol.All(
-            v1_homeassistant,
+        vol.Optional(ATTR_MUTHURCOMMAND, default=None): vol.All(
+            v1_muthurcommand,
             vol.Maybe(
                 vol.Schema(
                     {

@@ -9,20 +9,20 @@ VALID_DEFAULT = {
 }
 
 
-def test_v1_homeassistant_migration():
+def test_v1_muthurcommand_migration():
     """Test v1 homeassistant validation migration."""
 
     data = validate.SCHEMA_BACKUP(
         {
             **VALID_DEFAULT,
             **{
-                validate.ATTR_HOMEASSISTANT: {validate.ATTR_VERSION: None},
+                validate.ATTR_MUTHURCOMMAND: {validate.ATTR_VERSION: None},
                 validate.ATTR_TYPE: validate.BackupType.PARTIAL,
             },
         }
     )
 
-    assert data[validate.ATTR_HOMEASSISTANT] is None
+    assert data[validate.ATTR_MUTHURCOMMAND] is None
 
 
 def test_v1_folder_migration():
@@ -34,7 +34,7 @@ def test_v1_folder_migration():
                 validate.ATTR_TYPE: validate.BackupType.PARTIAL,
                 validate.ATTR_FOLDERS: [
                     validate.FOLDER_ADDONS,
-                    validate.ATTR_HOMEASSISTANT,
+                    validate.ATTR_MUTHURCOMMAND,
                 ],
             },
         }

@@ -10,9 +10,12 @@ from ..const import (
     ATTR_ARCH,
     ATTR_CHANNEL,
     ATTR_DOCKER,
+    ATTR_ENABLED,
     ATTR_FEATURES,
-    ATTR_HASSOS,
-    ATTR_HOMEASSISTANT,
+    ATTR_MC_BD,
+    ATTR_MC_FD,
+    ATTR_MCOS,
+    ATTR_MUTHURCOMMAND,
     ATTR_HOSTNAME,
     ATTR_ICON,
     ATTR_LOGGING,
@@ -20,16 +23,21 @@ from ..const import (
     ATTR_MACHINE_ID,
     ATTR_NAME,
     ATTR_OPERATING_SYSTEM,
+    ATTR_POSTGRESQL,
+    ATTR_REDIS,
     ATTR_STATE,
     ATTR_SUPERVISOR,
     ATTR_SUPPORTED,
     ATTR_SUPPORTED_ARCH,
     ATTR_TIMEZONE,
+    ATTR_VERSION,
     ATTR_VERSION_LATEST,
 )
 from ..coresys import CoreSysAttributes
 from .const import ATTR_AVAILABLE_UPDATES, ATTR_PANEL_PATH, ATTR_UPDATE_TYPE
 from .utils import api_process
+
+ATTR_MC_STACK = "mc_stack"
 
 _LOGGER: logging.Logger = logging.getLogger(__name__)
 
@@ -42,8 +50,8 @@ class APIRoot(CoreSysAttributes):
         """Show system info."""
         return {
             ATTR_SUPERVISOR: self.sys_supervisor.version,
-            ATTR_HOMEASSISTANT: self.sys_homeassistant.version,
-            ATTR_HASSOS: self.sys_os.version,
+            ATTR_MUTHURCOMMAND: self.sys_muthurcommand.version,
+            ATTR_MCOS: self.sys_os.version,
             ATTR_DOCKER: self.sys_docker.info.version,
             ATTR_HOSTNAME: self.sys_host.info.hostname,
             ATTR_OPERATING_SYSTEM: self.sys_host.info.operating_system,
@@ -57,6 +65,28 @@ class APIRoot(CoreSysAttributes):
             ATTR_CHANNEL: self.sys_updater.channel,
             ATTR_LOGGING: self.sys_config.logging,
             ATTR_TIMEZONE: self.sys_timezone,
+            # MC application stack version snapshot (Stage 6 of A1 plan).
+            # ``enabled`` lets clients hide the legacy HA Core panels when
+            # the MC stack is the user-facing entry point.
+            ATTR_MC_STACK: {
+                ATTR_ENABLED: self.sys_mc_stack.enabled,
+                ATTR_MC_BD: {
+                    ATTR_VERSION: self.sys_mc_stack.backend.version,
+                    ATTR_VERSION_LATEST: self.sys_updater.version_mc_bd,
+                },
+                ATTR_MC_FD: {
+                    ATTR_VERSION: self.sys_mc_stack.frontend.version,
+                    ATTR_VERSION_LATEST: self.sys_updater.version_mc_fd,
+                },
+                ATTR_POSTGRESQL: {
+                    ATTR_VERSION: self.sys_mc_stack.postgres.version,
+                    ATTR_VERSION_LATEST: self.sys_updater.version_postgresql,
+                },
+                ATTR_REDIS: {
+                    ATTR_VERSION: self.sys_mc_stack.redis.version,
+                    ATTR_VERSION_LATEST: self.sys_updater.version_redis,
+                },
+            },
         }
 
     @api_process
@@ -65,14 +95,51 @@ class APIRoot(CoreSysAttributes):
         available_updates = []
 
         # Core
-        if self.sys_homeassistant.need_update:
+        if self.sys_muthurcommand.need_update:
             available_updates.append(
                 {
-                    ATTR_UPDATE_TYPE: "core",
-                    ATTR_PANEL_PATH: "/update-available/core",
-                    ATTR_VERSION_LATEST: self.sys_homeassistant.latest_version,
+                    ATTR_UPDATE_TYPE: "mc_bd",
+                    ATTR_PANEL_PATH: "/update-available/mc_bd",
+                    ATTR_VERSION_LATEST: self.sys_muthurcommand.latest_version,
                 }
             )
+
+        # MC stack components (Stage 6: every application-half component
+        # gets its own update entry so the panel can offer them
+        # independently). ``MCStack.update`` orchestrates them as a
+        # single transaction when invoked.
+        if self.sys_mc_stack.enabled:
+            for kind, current, latest in (
+                (
+                    "mc_bd",
+                    self.sys_mc_stack.backend.version,
+                    self.sys_updater.version_mc_bd,
+                ),
+                (
+                    "mc_fd",
+                    self.sys_mc_stack.frontend.version,
+                    self.sys_updater.version_mc_fd,
+                ),
+                (
+                    "postgresql",
+                    self.sys_mc_stack.postgres.version,
+                    self.sys_updater.version_postgresql,
+                ),
+                (
+                    "redis",
+                    self.sys_mc_stack.redis.version,
+                    self.sys_updater.version_redis,
+                ),
+            ):
+                if latest is None or current is None or current >= latest:
+                    continue
+                available_updates.append(
+                    {
+                        ATTR_UPDATE_TYPE: kind,
+                        ATTR_PANEL_PATH: f"/update-available/{kind}",
+                        ATTR_VERSION_LATEST: latest,
+                    }
+                )
 
         # Supervisor
         if self.sys_supervisor.need_update:

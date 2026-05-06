@@ -32,7 +32,7 @@ async def test_evaluation(coresys: CoreSys, install_addon_ssh: Addon):
     async def get_container(name: str) -> DockerContainer:
         meta = MagicMock(spec=DockerContainer)
         meta.show.return_value = (
-            observer_attrs if name == "hassio_observer" else addon_attrs
+            observer_attrs if name == "mcio_observer" else addon_attrs
         )
         return meta
 

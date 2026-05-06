@@ -233,7 +233,7 @@ class APISupervisor(CoreSysAttributes):
         """Reload add-ons, configuration, etc."""
         await asyncio.gather(
             asyncio.shield(self.sys_updater.reload()),
-            asyncio.shield(self.sys_homeassistant.secrets.reload()),
+            asyncio.shield(self.sys_muthurcommand.secrets.reload()),
             asyncio.shield(self.sys_resolution.evaluate.evaluate_system()),
         )
 

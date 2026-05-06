@@ -37,7 +37,7 @@ from ..const import (
     ATTR_EXCLUDE_DATABASE,
     ATTR_EXTRA,
     ATTR_FOLDERS,
-    ATTR_HOMEASSISTANT,
+    ATTR_MUTHURCOMMAND,
     ATTR_NAME,
     ATTR_PROTECTED,
     ATTR_REGISTRIES,
@@ -59,13 +59,13 @@ from ..exceptions import (
     BackupPermissionError,
     MountError,
 )
-from ..homeassistant.const import LANDINGPAGE
 from ..jobs.const import JOB_GROUP_BACKUP
 from ..jobs.decorator import Job
 from ..jobs.job_group import JobGroup
 from ..mounts.const import ATTR_DEFAULT_BACKUP_MOUNT, ATTR_MOUNTS
 from ..mounts.mount import Mount
 from ..mounts.validate import SCHEMA_MOUNTS_CONFIG
+from ..muthurcommand.const import LANDINGPAGE
 from ..utils import remove_folder, version_is_new_enough
 from ..utils.dt import parse_datetime, utcnow
 from ..utils.json import json_bytes
@@ -189,23 +189,23 @@ class Backup(JobGroup):
         self._data[ATTR_REPOSITORIES] = value
 
     @property
-    def homeassistant_version(self) -> AwesomeVersion | None:
-        """Return backup Home Assistant version."""
-        if self.homeassistant is None:
+    def muthurcommand_version(self) -> AwesomeVersion | None:
+        """Return backup Muthur Command application version."""
+        if self.muthurcommand is None:
             return None
-        return self.homeassistant[ATTR_VERSION]
+        return self.muthurcommand[ATTR_VERSION]
 
     @property
-    def homeassistant_exclude_database(self) -> bool | None:
-        """Return whether database was excluded from Home Assistant backup."""
-        if self.homeassistant is None:
+    def muthurcommand_exclude_database(self) -> bool | None:
+        """Return whether database was excluded from Muthur Command backup."""
+        if self.muthurcommand is None:
             return None
-        return self.homeassistant[ATTR_EXCLUDE_DATABASE]
+        return self.muthurcommand[ATTR_EXCLUDE_DATABASE]
 
     @property
-    def homeassistant(self) -> dict[str, Any] | None:
+    def muthurcommand(self) -> dict[str, Any] | None:
         """Return backup Home Assistant data."""
-        return self._data[ATTR_HOMEASSISTANT]
+        return self._data[ATTR_MUTHURCOMMAND]
 
     @property
     def supervisor_version(self) -> AwesomeVersion:
@@ -456,7 +456,7 @@ class Backup(JobGroup):
     @asynccontextmanager
     async def create(self) -> AsyncGenerator[None]:
         """Create new backup file."""
-        core_version = self.sys_homeassistant.version
+        core_version = self.sys_muthurcommand.version
         if (
             core_version is not None
             and core_version != LANDINGPAGE
@@ -902,70 +902,72 @@ class Backup(JobGroup):
                 success = False
         return success
 
-    @Job(name="backup_store_homeassistant", cleanup=False)
-    async def store_homeassistant(self, exclude_database: bool = False):
+    @Job(name="backup_store_muthurcommand", cleanup=False)
+    async def store_muthurcommand(self, exclude_database: bool = False):
         """Backup Home Assistant Core configuration folder."""
         if not self._outer_secure_tarfile:
             raise RuntimeError(
                 "Cannot backup components without initializing backup tar"
             )
 
-        self._data[ATTR_HOMEASSISTANT] = {
-            ATTR_VERSION: self.sys_homeassistant.version,
+        self._data[ATTR_MUTHURCOMMAND] = {
+            ATTR_VERSION: self.sys_muthurcommand.version,
             ATTR_EXCLUDE_DATABASE: exclude_database,
         }
 
-        tar_name = f"homeassistant.tar{'.gz' if self.compressed else ''}"
-        # Backup Home Assistant Core config directory
-        homeassistant_file = self._outer_secure_tarfile.create_tar(
+        tar_name = f"muthurcommand.tar{'.gz' if self.compressed else ''}"
+        mc_tar = self._outer_secure_tarfile.create_tar(
             f"./{tar_name}",
             gzip=self.compressed,
         )
 
-        await self.sys_homeassistant.backup(homeassistant_file, exclude_database)
+        await self.sys_muthurcommand.backup(mc_tar, exclude_database)
 
         # Store size
-        self._data[ATTR_HOMEASSISTANT][ATTR_SIZE] = await self.sys_run_in_executor(
-            getattr, homeassistant_file, "size"
+        self._data[ATTR_MUTHURCOMMAND][ATTR_SIZE] = await self.sys_run_in_executor(
+            getattr, mc_tar, "size"
         )
 
-    @Job(name="backup_restore_homeassistant", cleanup=False)
-    async def restore_homeassistant(self) -> Awaitable[None]:
+    @Job(name="backup_restore_muthurcommand", cleanup=False)
+    async def restore_muthurcommand(self) -> Awaitable[None]:
         """Restore Home Assistant Core configuration folder."""
         if not self._tmp:
             raise RuntimeError("Cannot restore components without opening backup tar")
 
-        await self.sys_homeassistant.core.stop(remove_container=True)
+        await self.sys_muthurcommand.core.stop(remove_container=True)
 
-        # Restore Home Assistant Core config directory
-        tar_name = Path(
-            self._tmp.name, f"homeassistant.tar{'.gz' if self.compressed else ''}"
-        )
-        homeassistant_file = SecureTarFile(
-            tar_name,
+        suffix = ".tar.gz" if self.compressed else ".tar"
+        tar_path = Path(self._tmp.name, f"muthurcommand{suffix}")
+        if not await self.sys_run_in_executor(tar_path.exists):
+            raise BackupFileNotFoundError(
+                f"No muthurcommand backup payload in archive ({tar_path.name})",
+                _LOGGER.error,
+            )
+        mc_tar = SecureTarFile(
+            tar_path,
             gzip=self.compressed,
             bufsize=BUF_SIZE,
             password=self._password,
         )
 
-        await self.sys_homeassistant.restore(
-            homeassistant_file, self.homeassistant_exclude_database
+        await self.sys_muthurcommand.restore(
+            mc_tar, self.muthurcommand_exclude_database
         )
 
         # Generate restore task
         async def _core_update():
             try:
-                if self.homeassistant_version == self.sys_homeassistant.version:
+                if self.muthurcommand_version == self.sys_muthurcommand.version:
                     return
             except TypeError:
                 # Home Assistant is not yet installed / None
                 pass
             except AwesomeVersionCompareException as err:
                 raise BackupError(
-                    f"Invalid Home Assistant Core version {self.homeassistant_version}",
+                    f"Invalid Home Assistant Core version {self.muthurcommand_version}",
                     _LOGGER.error,
                 ) from err
-            await self.sys_homeassistant.core.update(self.homeassistant_version)
+            await self.sys_muthurcommand.core.update(self.muthurcommand_version)
 
         return self.sys_create_task(_core_update())
 

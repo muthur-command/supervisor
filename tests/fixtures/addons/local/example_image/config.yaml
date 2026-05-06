@@ -1,9 +1,9 @@
-# https://developers.home-assistant.io/docs/add-ons/configuration#add-on-config
+# https://www.muthur-command.com/docs/docs/add-ons/configuration#add-on-config
 name: Example add-on with image
 version: "1.2.0"
 slug: example_image
 description: Example add-on
-url: "https://github.com/home-assistant/addons-example/tree/main/example"
+url: "https://github.com/muthur-command/addons-example/tree/main/example"
 arch:
   - aarch64
   - amd64

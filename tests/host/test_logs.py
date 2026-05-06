@@ -129,7 +129,7 @@ async def test_logs_verbose_no_colors(journald_gateway: MagicMock, coresys: Core
         # Colors should be stripped in verbose format too
         assert (
             line
-            == "2024-03-04 22:56:56.709 ha-hloub hassio_supervisor[466]: 24-03-04 23:56:56 INFO (MainThread) [__main__] Closing Supervisor"
+            == "2024-03-04 22:56:56.709 ha-hloub mcio_supervisor[466]: 24-03-04 23:56:56 INFO (MainThread) [__main__] Closing Supervisor"
         )
 
 
@@ -214,8 +214,8 @@ async def test_identifiers(journald_gateway: MagicMock, coresys: CoreSys):
     identifiers = await coresys.host.logs.get_identifiers()
     for identifier in [
         "addon_local_ssh",
-        "hassio_dns",
-        "hassio_supervisor",
+        "mcio_dns",
+        "mcio_supervisor",
         "kernel",
         "os-agent",
     ]:

@@ -29,8 +29,8 @@ async def test_start(
 
         run.assert_called_once()
         assert run.call_args.kwargs["ipv4"] == IPv4Address("172.30.32.4")
-        assert run.call_args.kwargs["name"] == "hassio_audio"
-        assert run.call_args.kwargs["hostname"] == "hassio-audio"
+        assert run.call_args.kwargs["name"] == "mcio_audio"
+        assert run.call_args.kwargs["hostname"] == "mcio-audio"
         assert run.call_args.kwargs["cap_add"] == ["SYS_NICE", "SYS_RESOURCE"]
         assert run.call_args.kwargs["ulimits"] == [
             Ulimit(name="rtprio", soft=10, hard=10)

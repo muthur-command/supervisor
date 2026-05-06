@@ -9,7 +9,7 @@ from aiohttp import hdrs
 import attr
 from sentry_sdk.types import Event, Hint
 
-from ..const import DOCKER_IPV4_NETWORK_MASK, HEADER_TOKEN, HEADER_TOKEN_OLD, CoreState
+from ..const import DOCKER_IPV4_NETWORK_MASK, HEADER_MCIO_KEY, HEADER_TOKEN, CoreState
 from ..coresys import CoreSys
 from ..exceptions import AddonConfigurationError
 
@@ -108,11 +108,21 @@ def filter_data(coresys: CoreSys, event: Event, hint: Hint) -> Event | None:
                 "images": list(coresys.resolution.evaluate.cached_images),
             },
             "versions": {
-                "core": coresys.homeassistant.version,
+                "muthurcommand": coresys.muthurcommand.version,
                 "os": coresys.os.version,
                 "agent": coresys.dbus.agent.version,
                 "docker": coresys.docker.info.version,
                 "supervisor": coresys.supervisor.version,
+                # Stage 6 of A1 plan: ship the MC stack versions in the
+                # diagnostic context so Sentry events and ``/info`` dumps
+                # surface what the operator is actually running.
+                "mc_bd": coresys.mc_stack.backend.version,
+                "mc_fd": coresys.mc_stack.frontend.version,
+                "postgresql": coresys.mc_stack.postgres.version,
+                "redis": coresys.mc_stack.redis.version,
+            },
+            "mc_stack": {
+                "enabled": coresys.mc_stack.enabled,
             },
             "docker": {
                 "storage_driver": coresys.docker.info.storage,
@@ -153,8 +163,8 @@ def filter_data(coresys: CoreSys, event: Event, hint: Hint) -> Event | None:
                 headers[hdrs.REFERER] = sanitize_url(headers[hdrs.REFERER])
             if HEADER_TOKEN in headers:
                 headers[HEADER_TOKEN] = "XXXXXXXXXXXXXXXXXXX"
-            if HEADER_TOKEN_OLD in headers:
-                headers[HEADER_TOKEN_OLD] = "XXXXXXXXXXXXXXXXXXX"
+            if HEADER_MCIO_KEY in headers:
+                headers[HEADER_MCIO_KEY] = "XXXXXXXXXXXXXXXXXXX"
             if hdrs.HOST in headers:
                 headers[hdrs.HOST] = sanitize_host(headers[hdrs.HOST])
             if hdrs.X_FORWARDED_HOST in headers:

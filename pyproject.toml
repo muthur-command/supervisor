@@ -6,21 +6,21 @@ build-backend = "setuptools.build_meta"
 name = "Supervisor"
 dynamic = ["version", "dependencies"]
 license = { text = "Apache-2.0" }
-description = "Open-source private cloud os for Home-Assistant based on HassOS"
+description = "Muthur Command Supervisor: container stack for Core and add-ons on Muthur Command OS-class hosts"
 readme = "README.md"
 authors = [
-  { name = "The Home Assistant Authors", email = "hello@home-assistant.io" },
+  { name = "The Muthur Command Authors", email = "morty@muthur-command.com" },
 ]
-keywords = ["docker", "home-assistant", "api"]
+keywords = ["docker", "muthur-command", "muthur-command-os", "supervisor", "api"]
 requires-python = ">=3.14.0"
 
 [project.urls]
-"Homepage" = "https://www.home-assistant.io/"
-"Source Code" = "https://github.com/home-assistant/supervisor"
-"Bug Reports" = "https://github.com/home-assistant/supervisor/issues"
-"Docs: Dev" = "https://developers.home-assistant.io/"
-"Discord" = "https://www.home-assistant.io/join-chat/"
-"Forum" = "https://community.home-assistant.io/"
+"Homepage" = "https://www.muthur-command.com/"
+"Source Code" = "https://github.com/muthur-command/supervisor"
+"Bug Reports" = "https://github.com/muthur-command/supervisor/issues"
+"Docs: Dev" = "https://www.muthur-command.com/docs/"
+"Discord" = "https://www.muthur-command.com/join-chat/"
+"Forum" = "https://www.muthur-command.com/community/"
 
 [tool.setuptools]
 platforms = ["any"]

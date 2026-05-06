@@ -35,7 +35,7 @@ async def test_dbus_resolved_info(
 
     await resolved.connect(dbus_session_bus)
 
-    assert resolved.llmnr_hostname == "homeassistant"
+    assert resolved.llmnr_hostname == "muthurcommand"
     assert resolved.llmnr == MulticastProtocolEnabled.YES
     assert resolved.multicast_dns == MulticastProtocolEnabled.RESOLVE
     assert resolved.dns_over_tls == DNSOverTLSEnabled.NO
@@ -80,7 +80,7 @@ async def test_dbus_resolved_info(
     )
 
     assert len(resolved.domains) == 1
-    assert resolved.domains[0] == (0, "local.hass.io", False)
+    assert resolved.domains[0] == (0, "local.mcio", False)
 
     assert resolved.transaction_statistics == (0, 100000)
     assert resolved.cache_statistics == (10, 50000, 10000)
@@ -101,7 +101,7 @@ async def test_dbus_resolved_info(
     resolved_service.emit_properties_changed({}, ["LLMNRHostname"])
     await resolved_service.ping()
     await resolved_service.ping()  # To process the follow-up get all properties call
-    assert resolved.llmnr_hostname == "homeassistant"
+    assert resolved.llmnr_hostname == "muthurcommand"
 
 
 async def test_dbus_resolved_connect_error(

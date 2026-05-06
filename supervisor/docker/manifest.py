@@ -49,10 +49,10 @@ def parse_image_reference(image: str, tag: str) -> tuple[str, str, str]:
     """Parse image reference into (registry, repository, tag).
 
     Examples:
-        ghcr.io/home-assistant/home-assistant:2025.1.0
-            -> (ghcr.io, home-assistant/home-assistant, 2025.1.0)
-        homeassistant/home-assistant:latest
-            -> (registry-1.docker.io, homeassistant/home-assistant, latest)
+        ghcr.io/muthur-command/amd64-muthurcommand:2025.1.0
+            -> (ghcr.io, muthur-command/amd64-muthurcommand, 2025.1.0)
+        muthurcommand/muthurcommand:latest
+            -> (registry-1.docker.io, muthurcommand/muthurcommand, latest)
         alpine:3.18
             -> (registry-1.docker.io, library/alpine, 3.18)
 
@@ -283,7 +283,7 @@ class RegistryManifestFetcher:
         """Fetch manifest and extract layer sizes.
 
         Args:
-            image: Image name (e.g., "ghcr.io/home-assistant/home-assistant")
+            image: Image name (e.g., "ghcr.io/muthur-command/amd64-muthurcommand")
             tag: Image tag (e.g., "2025.1.0")
             platform: Target platform (e.g., "linux/amd64")
 

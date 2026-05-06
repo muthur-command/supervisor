@@ -82,9 +82,9 @@ async def test_apply_gateway_firewall_rules_exec_start_rules(coresys: CoreSys):
     assert entries[0].argv == [
         BIN_SH,
         "-c",
-        f"{IPTABLES_CMD} -t raw -C PREROUTING ! -i hassio -d {GATEWAY_IPV4}"
+        f"{IPTABLES_CMD} -t raw -C PREROUTING ! -i mcio -d {GATEWAY_IPV4}"
         f" -j DROP 2>/dev/null"
-        f" || {IPTABLES_CMD} -t raw -I PREROUTING ! -i hassio -d {GATEWAY_IPV4}"
+        f" || {IPTABLES_CMD} -t raw -I PREROUTING ! -i mcio -d {GATEWAY_IPV4}"
         f" -j DROP",
     ]
     assert entries[0].ignore_failure is False
@@ -106,9 +106,9 @@ async def test_apply_gateway_firewall_rules_exec_start_rules(coresys: CoreSys):
     assert entries[2].argv == [
         BIN_SH,
         "-c",
-        f"{IP6TABLES_CMD} -t raw -C PREROUTING ! -i hassio -d {GATEWAY_IPV6}"
+        f"{IP6TABLES_CMD} -t raw -C PREROUTING ! -i mcio -d {GATEWAY_IPV6}"
         f" -j DROP 2>/dev/null"
-        f" || {IP6TABLES_CMD} -t raw -I PREROUTING ! -i hassio -d {GATEWAY_IPV6}"
+        f" || {IP6TABLES_CMD} -t raw -I PREROUTING ! -i mcio -d {GATEWAY_IPV6}"
         f" -j DROP",
     ]
     assert entries[2].ignore_failure is False

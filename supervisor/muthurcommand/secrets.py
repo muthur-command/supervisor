@@ -13,7 +13,7 @@ from ..utils.yaml import read_yaml_file
 _LOGGER: logging.Logger = logging.getLogger(__name__)
 
 
-class HomeAssistantSecrets(CoreSysAttributes):
+class MuthurCommandSecrets(CoreSysAttributes):
     """Manage Home Assistant secrets."""
 
     def __init__(self, coresys: CoreSys):
@@ -24,7 +24,7 @@ class HomeAssistantSecrets(CoreSysAttributes):
     @property
     def path_secrets(self) -> Path:
         """Return path to secret file."""
-        return Path(self.sys_config.path_homeassistant, "secrets.yaml")
+        return Path(self.sys_config.path_muthurcommand, "secrets.yaml")
 
     def get(self, secret: str) -> bool | float | int | str | None:
         """Get secret from store."""

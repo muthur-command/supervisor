@@ -5,7 +5,7 @@ import json
 from pathlib import Path
 from unittest.mock import ANY, patch
 
-from supervisor.const import HomeAssistantUser, IngressSessionData
+from supervisor.const import MuthurCommandUser, IngressSessionData
 from supervisor.coresys import CoreSys
 from supervisor.ingress import Ingress
 from supervisor.utils.dt import utc_from_timestamp
@@ -35,7 +35,7 @@ def test_session_handling(coresys: CoreSys):
 def test_session_handling_with_session_data(coresys: CoreSys):
     """Create and test session."""
     session = coresys.ingress.create_session(
-        IngressSessionData(HomeAssistantUser("some-id"))
+        IngressSessionData(MuthurCommandUser("some-id"))
     )
 
     assert session
@@ -74,10 +74,10 @@ async def test_dynamic_ports(coresys: CoreSys):
 async def test_ingress_save_data(coresys: CoreSys, tmp_supervisor_data: Path):
     """Test saving ingress data to file."""
     config_file = tmp_supervisor_data / "ingress.json"
-    with patch("supervisor.ingress.FILE_HASSIO_INGRESS", new=config_file):
+    with patch("supervisor.ingress.FILE_MCIO_INGRESS", new=config_file):
         ingress = await Ingress(coresys).load_config()
         session = ingress.create_session(
-            IngressSessionData(HomeAssistantUser("123", name="Test", username="test"))
+            IngressSessionData(MuthurCommandUser("123", name="Test", username="test"))
         )
         await ingress.save_data()
 
@@ -119,7 +119,7 @@ async def test_ingress_load_legacy_displayname(
         )
     )
 
-    with patch("supervisor.ingress.FILE_HASSIO_INGRESS", new=config_file):
+    with patch("supervisor.ingress.FILE_MCIO_INGRESS", new=config_file):
         ingress = await Ingress(coresys).load_config()
 
     session_data = ingress.get_session_data(session_token)

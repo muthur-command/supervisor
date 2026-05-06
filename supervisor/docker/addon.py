@@ -53,8 +53,8 @@ from .const import (
     MOUNT_UDEV,
     PATH_ALL_ADDON_CONFIGS,
     PATH_BACKUP,
-    PATH_HOMEASSISTANT_CONFIG,
-    PATH_HOMEASSISTANT_CONFIG_LEGACY,
+    PATH_MUTHURCOMMAND_CONFIG,
+    PATH_MUTHURCOMMAND_CONFIG_LEGACY,
     PATH_LOCAL_ADDONS,
     PATH_MEDIA,
     PATH_PRIVATE_DATA,
@@ -110,9 +110,9 @@ class DockerAddon(DockerInterface):
         # Extract IP-Address
         try:
             return IPv4Address(
-                self._meta["NetworkSettings"]["Networks"]["hassio"]["IPAddress"]
+                self._meta["NetworkSettings"]["Networks"]["mcio"]["IPAddress"]
             )
-        except KeyError, TypeError, ValueError:
+        except (KeyError, TypeError, ValueError):
             return NO_ADDDRESS
 
     @property
@@ -265,7 +265,7 @@ class DockerAddon(DockerInterface):
         """Return hosts mapping."""
         return {
             "supervisor": self.sys_docker.network.supervisor,
-            "hassio": self.sys_docker.network.supervisor,
+            "mcio": self.sys_docker.network.supervisor,
         }
 
     @property
@@ -371,9 +371,9 @@ class DockerAddon(DockerInterface):
             mounts.append(
                 DockerMount(
                     type=MountType.BIND,
-                    source=self.sys_config.path_extern_homeassistant.as_posix(),
+                    source=self.sys_config.path_extern_muthurcommand.as_posix(),
                     target=addon_mapping[MappingType.CONFIG].path
-                    or PATH_HOMEASSISTANT_CONFIG_LEGACY.as_posix(),
+                    or PATH_MUTHURCOMMAND_CONFIG_LEGACY.as_posix(),
                     read_only=addon_mapping[MappingType.CONFIG].read_only,
                 )
             )
@@ -392,15 +392,15 @@ class DockerAddon(DockerInterface):
                 )
 
             # Map Home Assistant config in new way
-            if MappingType.HOMEASSISTANT_CONFIG in addon_mapping:
+            if MappingType.MUTHURCOMMAND_CONFIG in addon_mapping:
                 mounts.append(
                     DockerMount(
                         type=MountType.BIND,
-                        source=self.sys_config.path_extern_homeassistant.as_posix(),
-                        target=addon_mapping[MappingType.HOMEASSISTANT_CONFIG].path
-                        or PATH_HOMEASSISTANT_CONFIG.as_posix(),
+                        source=self.sys_config.path_extern_muthurcommand.as_posix(),
+                        target=addon_mapping[MappingType.MUTHURCOMMAND_CONFIG].path
+                        or PATH_MUTHURCOMMAND_CONFIG.as_posix(),
                         read_only=addon_mapping[
-                            MappingType.HOMEASSISTANT_CONFIG
+                            MappingType.MUTHURCOMMAND_CONFIG
                         ].read_only,
                     )
                 )
@@ -718,7 +718,7 @@ class DockerAddon(DockerInterface):
                 if docker_config_content:
                     # Create temporary directory for docker config
                     temp_dir = tempfile.TemporaryDirectory(
-                        prefix="hassio_build_", dir=self.sys_config.path_tmp
+                        prefix="mcio_build_", dir=self.sys_config.path_tmp
                     )
                     docker_config_path = Path(temp_dir.name) / "config.json"
                     docker_config_path.write_text(

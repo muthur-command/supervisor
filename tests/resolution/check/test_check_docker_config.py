@@ -87,13 +87,13 @@ async def test_base(coresys: CoreSys):
 async def test_check(docker: DockerAPI, coresys: CoreSys, folder: str):
     """Test check reports issue when containers have incorrect config."""
     docker.containers.get = _make_mock_container_get(
-        ["homeassistant", "hassio_audio", "addon_local_ssh"], folder
+        ["muthurcommand", "mcio_audio", "addon_local_ssh"], folder
     )
     # Use state used in setup()
     await coresys.core.set_state(CoreState.SETUP)
     with patch.object(DockerInterface, "is_running", return_value=True):
         await coresys.plugins.load()
-        await coresys.homeassistant.load()
+        await coresys.muthurcommand.load()
         await coresys.addons.load()
 
     docker_config = CheckDockerConfig(coresys)
@@ -104,7 +104,9 @@ async def test_check(docker: DockerAPI, coresys: CoreSys, folder: str):
     await docker_config.run_check()
 
     assert len(coresys.resolution.issues) == 4
-    assert Issue(IssueType.DOCKER_CONFIG, ContextType.CORE) in coresys.resolution.issues
+    assert (
+        Issue(IssueType.DOCKER_CONFIG, ContextType.MC_BD) in coresys.resolution.issues
+    )
     assert (
         Issue(IssueType.DOCKER_CONFIG, ContextType.ADDON, reference="local_ssh")
         in coresys.resolution.issues
@@ -119,7 +121,7 @@ async def test_check(docker: DockerAPI, coresys: CoreSys, folder: str):
 
     assert len(coresys.resolution.suggestions) == 4
     assert (
-        Suggestion(SuggestionType.EXECUTE_REBUILD, ContextType.CORE)
+        Suggestion(SuggestionType.EXECUTE_REBUILD, ContextType.MC_BD)
         in coresys.resolution.suggestions
     )
     assert (
@@ -145,7 +147,7 @@ async def test_check(docker: DockerAPI, coresys: CoreSys, folder: str):
     docker.containers.get = _make_mock_container_get([])
     with patch.object(DockerInterface, "is_running", return_value=True):
         await coresys.plugins.load()
-        await coresys.homeassistant.load()
+        await coresys.muthurcommand.load()
         await coresys.addons.load()
 
     assert not await docker_config.approve_check()
@@ -176,7 +178,7 @@ async def test_addon_volume_mount_not_flagged(
     await coresys.core.set_state(CoreState.SETUP)
     with patch.object(DockerInterface, "is_running", return_value=True):
         await coresys.plugins.load()
-        await coresys.homeassistant.load()
+        await coresys.muthurcommand.load()
         await coresys.addons.load()
 
     docker_config = CheckDockerConfig(coresys)
@@ -242,7 +244,7 @@ async def test_addon_configured_mount_still_flagged(
     await coresys.core.set_state(CoreState.SETUP)
     with patch.object(DockerInterface, "is_running", return_value=True):
         await coresys.plugins.load()
-        await coresys.homeassistant.load()
+        await coresys.muthurcommand.load()
         await coresys.addons.load()
 
     docker_config = CheckDockerConfig(coresys)
@@ -301,7 +303,7 @@ async def test_addon_custom_target_path_flagged(
     await coresys.core.set_state(CoreState.SETUP)
     with patch.object(DockerInterface, "is_running", return_value=True):
         await coresys.plugins.load()
-        await coresys.homeassistant.load()
+        await coresys.muthurcommand.load()
         await coresys.addons.load()
 
     docker_config = CheckDockerConfig(coresys)

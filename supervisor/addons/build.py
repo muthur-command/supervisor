@@ -111,7 +111,7 @@ class AddonBuild(CoreSysAttributes):
         # Default base image is passed in BUILD_FROM only when build.yaml is used
         # (this is legacy behavior - without build config, Dockerfile should specify it)
         if not build_config[ATTR_BUILD_FROM]:
-            build_config[ATTR_BUILD_FROM] = "ghcr.io/home-assistant/base:latest"
+            build_config[ATTR_BUILD_FROM] = "ghcr.io/muthur-command/base:latest"
 
         return build_config
 

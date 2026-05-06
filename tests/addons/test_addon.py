@@ -31,7 +31,7 @@ from supervisor.exceptions import (
     AddonUnknownError,
     AudioUpdateError,
     DockerRegistryAuthError,
-    HassioError,
+    McioError,
 )
 from supervisor.hardware.helper import HwHelper
 from supervisor.ingress import Ingress
@@ -541,7 +541,7 @@ async def test_backup_with_pre_command_error(
     container_get_side_effect: aiodocker.DockerError | None,
     exec_start_side_effect: aiodocker.DockerError | None,
     exec_inspect_side_effect: aiodocker.DockerError | list[dict[str, Any]] | None,
-    exc_type_raised: type[HassioError],
+    exc_type_raised: type[McioError],
 ) -> None:
     """Test backing up an addon with error running pre command."""
     coresys.docker.containers.get.side_effect = container_get_side_effect

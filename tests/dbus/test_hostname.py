@@ -31,9 +31,9 @@ async def test_dbus_hostname_info(
     assert hostname.kernel == "5.10.33"
     assert (
         hostname.cpe
-        == "cpe:2.3:o:home-assistant:haos:6.0.dev20210504:*:development:*:*:*:odroid-n2:*"
+        == "cpe:2.3:o:muthur-command:mcos:6.0.dev20210504:*:development:*:*:*:odroid-n2:*"
     )
-    assert hostname.operating_system == "Home Assistant OS 6.0.dev20210504"
+    assert hostname.operating_system == "Muthur Command OS 6.0.dev20210504"
 
     hostname_service.emit_properties_changed({"StaticHostname": "test"})
     await hostname_service.ping()

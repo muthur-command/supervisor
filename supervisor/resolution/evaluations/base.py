@@ -25,7 +25,7 @@ class EvaluateBase(ABC, CoreSysAttributes):
             if self.reason not in self.sys_resolution.unsupported:
                 self.sys_resolution.add_unsupported_reason(self.reason)
                 _LOGGER.warning(
-                    "%s (more-info: https://www.home-assistant.io/more-info/unsupported/%s)",
+                    "%s (more-info: https://www.muthur-command.com/more-info/unsupported/%s)",
                     self.on_failure,
                     self.reason,
                 )

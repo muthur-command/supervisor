@@ -10,7 +10,7 @@ from supervisor.store.validate import repositories
     "repo_list,valid",
     [
         (["core", "local"], True),
-        (["https://github.com/hassio-addons/repository"], True),
+        (["https://github.com/muthur-command/addons-repository"], True),
         (["not_a_url"], False),
         (["https://fail.com/duplicate", "https://fail.com/duplicate"], False),
     ],

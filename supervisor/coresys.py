@@ -18,7 +18,7 @@ from pycares import AresError
 
 from .config import CoreConfig
 from .const import (
-    ENV_HOMEASSISTANT_REPOSITORY,
+    ENV_MUTHURCOMMAND_REPOSITORY,
     ENV_SUPERVISOR_DEV,
     ENV_SUPERVISOR_MACHINE,
     MACHINE_ID,
@@ -38,10 +38,11 @@ if TYPE_CHECKING:
     from .discovery import Discovery
     from .docker.manager import DockerAPI
     from .hardware.manager import HardwareManager
-    from .homeassistant.module import HomeAssistant
+    from .muthurcommand.module import MuthurCommand
     from .host.manager import HostManager
     from .ingress import Ingress
     from .jobs import JobManager
+    from .misc.mc_stack import MCStack
     from .misc.scheduler import Scheduler
     from .misc.tasks import Tasks
     from .mounts.manager import MountManager
@@ -80,7 +81,8 @@ class CoreSys:
         self._core: Core | None = None
         self._arch: CpuArchManager | None = None
         self._auth: Auth | None = None
-        self._homeassistant: HomeAssistant | None = None
+        self._muthurcommand: MuthurCommand | None = None
+        self._mc_stack: MCStack | None = None
         self._supervisor: Supervisor | None = None
         self._addons: AddonManager | None = None
         self._api: RestAPI | None = None
@@ -162,8 +164,8 @@ class CoreSys:
         # Set machine type
         if os.environ.get(ENV_SUPERVISOR_MACHINE):
             self.machine = os.environ[ENV_SUPERVISOR_MACHINE]
-        elif os.environ.get(ENV_HOMEASSISTANT_REPOSITORY):
-            self.machine = os.environ[ENV_HOMEASSISTANT_REPOSITORY][14:-14]
+        elif os.environ.get(ENV_MUTHURCOMMAND_REPOSITORY):
+            self.machine = os.environ[ENV_MUTHURCOMMAND_REPOSITORY][14:-14]
             _LOGGER.warning(
                 "Missing SUPERVISOR_MACHINE environment variable. Fallback to deprecated extraction!"
             )
@@ -294,18 +296,32 @@ class CoreSys:
         self._auth = value
 
     @property
-    def homeassistant(self) -> HomeAssistant:
+    def muthurcommand(self) -> MuthurCommand:
         """Return Home Assistant object."""
-        if self._homeassistant is None:
+        if self._muthurcommand is None:
             raise RuntimeError("Home Assistant not set!")
-        return self._homeassistant
+        return self._muthurcommand
 
-    @homeassistant.setter
-    def homeassistant(self, value: HomeAssistant) -> None:
-        """Set a HomeAssistant object."""
-        if self._homeassistant:
-            raise RuntimeError("Home Assistant already set!")
-        self._homeassistant = value
+    @muthurcommand.setter
+    def muthurcommand(self, value: MuthurCommand) -> None:
+        """Set a MuthurCommand object."""
+        if self._muthurcommand:
+            raise RuntimeError("Muthur Command already set!")
+        self._muthurcommand = value
+
+    @property
+    def mc_stack(self) -> MCStack:
+        """Return MC application stack manager."""
+        if self._mc_stack is None:
+            raise RuntimeError("MCStack not set!")
+        return self._mc_stack
+
+    @mc_stack.setter
+    def mc_stack(self, value: MCStack) -> None:
+        """Set MCStack object."""
+        if self._mc_stack:
+            raise RuntimeError("MCStack already set!")
+        self._mc_stack = value
 
     @property
     def supervisor(self) -> Supervisor:
@@ -751,9 +767,14 @@ class CoreSysAttributes:
         return self.coresys.auth
 
     @property
-    def sys_homeassistant(self) -> HomeAssistant:
+    def sys_muthurcommand(self) -> MuthurCommand:
         """Return Home Assistant object."""
-        return self.coresys.homeassistant
+        return self.coresys.muthurcommand
+
+    @property
+    def sys_mc_stack(self) -> MCStack:
+        """Return MC application stack manager."""
+        return self.coresys.mc_stack
 
     @property
     def sys_supervisor(self) -> Supervisor:

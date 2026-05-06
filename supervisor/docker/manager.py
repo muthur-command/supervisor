@@ -32,7 +32,7 @@ from ..const import (
     DNS_SUFFIX,
     DOCKER_NETWORK,
     ENV_SUPERVISOR_CPU_RT,
-    FILE_HASSIO_DOCKER,
+    FILE_MCIO_DOCKER,
     SOCKET_DOCKER,
     BusEvent,
 )
@@ -199,7 +199,7 @@ class DockerConfig(FileConfiguration):
 
     def __init__(self):
         """Initialize the JSON configuration."""
-        super().__init__(FILE_HASSIO_DOCKER, SCHEMA_DOCKER_CONFIG)
+        super().__init__(FILE_MCIO_DOCKER, SCHEMA_DOCKER_CONFIG)
 
     @property
     def enable_ipv6(self) -> bool | None:
@@ -359,6 +359,9 @@ class DockerAPI(CoreSysAttributes):
         command: list[str] | None = None,
         networking_config: dict[str, Any] | None = None,
         working_dir: PurePath | None = None,
+        labels: dict[str, str] | None = None,
+        shm_size: int | None = None,
+        healthcheck: dict[str, Any] | None = None,
     ) -> JSONObject:
         """Map kwargs to create container config.
 
@@ -396,11 +399,21 @@ class DockerAPI(CoreSysAttributes):
             host_config["UtsMode"] = uts_mode
         if ulimits:
             host_config["Ulimits"] = [limit.to_dict() for limit in ulimits]
+        if shm_size is not None:
+            host_config["ShmSize"] = shm_size
 
-        # Full container config
+        # Full container config. ``LABEL_MANAGED`` must always be present so
+        # ``DockerMonitor`` can recognise the container as Supervisor-owned;
+        # extra ``labels`` (e.g. ``io.muthur.stack`` for the MC stack) are
+        # merged on top so callers can opt-in to richer metadata without
+        # losing the managed marker.
+        merged_labels: dict[str, str] = {LABEL_MANAGED: ""}
+        if labels:
+            merged_labels.update(labels)
+
         config: dict[str, Any] = {
             "Image": f"{image}:{tag}",
-            "Labels": {LABEL_MANAGED: ""},
+            "Labels": merged_labels,
             "OpenStdin": stdin_open,
             "StdinOnce": not detach and stdin_open,
             "AttachStdin": not detach and stdin_open,
@@ -423,6 +436,8 @@ class DockerAPI(CoreSysAttributes):
             config["NetworkingConfig"] = networking_config
         if working_dir:
             config["WorkingDir"] = working_dir.as_posix()
+        if healthcheck:
+            config["Healthcheck"] = healthcheck
 
         # Set up networking
         if dns:
@@ -543,7 +558,7 @@ class DockerAPI(CoreSysAttributes):
                     )
                 except DockerError:
                     _LOGGER.warning(
-                        "Can't attach %s to hassio-network!", name or container.id
+                        "Can't attach %s to mcio-network!", name or container.id
                     )
                 else:
                     with suppress(DockerError):
@@ -725,11 +740,11 @@ class DockerAPI(CoreSysAttributes):
         except aiodocker.DockerError as err:
             _LOGGER.warning("Error for networks prune: %s", err)
 
-        _LOGGER.info("Fix stale container on hassio network")
+        _LOGGER.info("Fix stale container on mcio network")
         try:
             await self.prune_networks(DOCKER_NETWORK)
         except aiodocker.DockerError as err:
-            _LOGGER.warning("Error for networks hassio prune: %s", err)
+            _LOGGER.warning("Error for networks mcio prune: %s", err)
 
         _LOGGER.info("Fix stale container on host network")
         try:

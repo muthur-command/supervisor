@@ -181,7 +181,7 @@ async def test_api_set_boot_slot_invalid(api_client: TestClient):
     resp = await api_client.post("/os/boot-slot", json={"boot_slot": "A"})
     assert resp.status == 400
     result = await resp.json()
-    assert "no Home Assistant OS available" in result["message"]
+    assert "no Muthur Command OS host environment available" in result["message"]
 
 
 async def test_api_set_boot_slot_error(

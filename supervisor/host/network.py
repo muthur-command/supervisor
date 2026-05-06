@@ -66,7 +66,7 @@ class NetworkManager(CoreSysAttributes):
             )
 
         self._connectivity = state
-        self.sys_homeassistant.websocket.supervisor_update_event(
+        self.sys_muthurcommand.websocket.supervisor_update_event(
             "network", {ATTR_HOST_INTERNET: state}
         )
         if state and not self.sys_supervisor.connectivity:

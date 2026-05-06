@@ -20,5 +20,5 @@ class Supervised(BoardProxy):
         """Do nothing as there are no properties.
 
         Currently unused, avoid using the Properties interface to avoid a bug in
-        Go D-Bus, see: https://github.com/home-assistant/os-agent/issues/206
+        Go D-Bus, see: https://github.com/muthur-command/os-agent/issues/206
         """

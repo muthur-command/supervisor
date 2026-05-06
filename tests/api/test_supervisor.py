@@ -14,8 +14,8 @@ import pytest
 from supervisor.const import CoreState
 from supervisor.core import Core
 from supervisor.coresys import CoreSys
-from supervisor.exceptions import HassioError, HostNotSupportedError, StoreGitError
-from supervisor.homeassistant.const import WSEvent
+from supervisor.exceptions import McioError, HostNotSupportedError, StoreGitError
+from supervisor.muthurcommand.const import WSEvent
 from supervisor.store.repository import Repository
 from supervisor.supervisor import Supervisor
 from supervisor.updater import Updater
@@ -158,14 +158,14 @@ async def test_api_supervisor_options_diagnostics(
 
 async def test_api_supervisor_logs(advanced_logs_tester):
     """Test supervisor logs."""
-    await advanced_logs_tester("/supervisor", "hassio_supervisor")
+    await advanced_logs_tester("/supervisor", "mcio_supervisor")
 
 
 async def test_api_supervisor_fallback(
     api_client: TestClient, journald_logs: MagicMock, docker_logs: MagicMock
 ):
     """Check that supervisor logs read from container logs if reading from journald gateway fails badly."""
-    journald_logs.side_effect = HassioError("Something bad happened!")
+    journald_logs.side_effect = McioError("Something bad happened!")
 
     with patch("supervisor.api._LOGGER.exception") as logger:
         resp = await api_client.get("/supervisor/logs")
@@ -177,8 +177,8 @@ async def test_api_supervisor_fallback(
     assert resp.content_type == "text/plain"
     content = await resp.read()
     assert content.split(b"\n")[0:2] == [
-        b"\x1b[36m22-10-11 14:04:23 DEBUG (MainThread) [supervisor.utils.dbus] D-Bus call - org.freedesktop.DBus.Properties.call_get_all on /io/hass/os\x1b[0m",
-        b"\x1b[36m22-10-11 14:04:23 DEBUG (MainThread) [supervisor.utils.dbus] D-Bus call - org.freedesktop.DBus.Properties.call_get_all on /io/hass/os/AppArmor\x1b[0m",
+        b"\x1b[36m22-10-11 14:04:23 DEBUG (MainThread) [supervisor.utils.dbus] D-Bus call - org.freedesktop.DBus.Properties.call_get_all on /io/muthurcommand/os\x1b[0m",
+        b"\x1b[36m22-10-11 14:04:23 DEBUG (MainThread) [supervisor.utils.dbus] D-Bus call - org.freedesktop.DBus.Properties.call_get_all on /io/muthurcommand/os/AppArmor\x1b[0m",
     ]
 
     # check fallback also works for the /follow endpoint (no mock reset needed)
@@ -229,7 +229,7 @@ async def test_api_supervisor_fallback_log_capture(
 
     journald_logs.reset_mock()
 
-    journald_logs.side_effect = HassioError("Something bad happened!")
+    journald_logs.side_effect = McioError("Something bad happened!")
 
     with patch("supervisor.api.async_capture_exception") as capture_exception:
         await api_client.get("/supervisor/logs")
@@ -448,6 +448,6 @@ async def test_supervisor_api_stats_failure(
     assert body["error_key"] == "supervisor_unknown_error"
     assert "extra_fields" not in body
     assert (
-        "Could not inspect container 'hassio_supervisor': [500] {'message': 'fail'}"
+        "Could not inspect container 'mcio_supervisor': [500] {'message': 'fail'}"
         in caplog.text
     )

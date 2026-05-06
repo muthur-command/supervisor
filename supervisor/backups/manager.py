@@ -13,8 +13,8 @@ from typing import cast
 from ..addons.addon import Addon
 from ..const import (
     ATTR_DAYS_UNTIL_STALE,
-    FILE_HASSIO_BACKUPS,
-    FOLDER_HOMEASSISTANT,
+    FILE_MCIO_BACKUPS,
+    FOLDER_MUTHURCOMMAND,
     CoreState,
 )
 from ..coresys import CoreSys
@@ -59,7 +59,7 @@ class BackupManager(FileConfiguration, JobGroup):
 
     def __init__(self, coresys: CoreSys):
         """Initialize a backup manager."""
-        super().__init__(FILE_HASSIO_BACKUPS, SCHEMA_BACKUPS_CONFIG)
+        super().__init__(FILE_MCIO_BACKUPS, SCHEMA_BACKUPS_CONFIG)
         super(FileConfiguration, self).__init__(coresys, JOB_GROUP_BACKUP_MANAGER)
         self._backups: dict[str, Backup] = {}
         self._thaw_task: Awaitable[None] | None = None
@@ -504,8 +504,8 @@ class BackupManager(FileConfiguration, JobGroup):
         backup: Backup,
         addon_list: list[Addon],
         folder_list: list[str],
-        homeassistant: bool,
-        homeassistant_exclude_database: bool | None,
+        muthurcommand: bool,
+        muthurcommand_exclude_database: bool | None,
         additional_locations: list[LOCATION_TYPE] | None = None,
     ) -> Backup | None:
         """Create a backup.
@@ -523,13 +523,13 @@ class BackupManager(FileConfiguration, JobGroup):
             # add-on/folder errors are captured inside store_addons/
             # store_folders and do not propagate.
             async with backup.create():
-                # HomeAssistant Folder is for v1
-                if homeassistant:
-                    self._change_stage(BackupJobStage.HOME_ASSISTANT, backup)
-                    await backup.store_homeassistant(
-                        self.sys_homeassistant.backups_exclude_database
-                        if homeassistant_exclude_database is None
-                        else homeassistant_exclude_database
+                # MuthurCommand Folder is for v1
+                if muthurcommand:
+                    self._change_stage(BackupJobStage.MUTHURCOMMAND, backup)
+                    await backup.store_muthurcommand(
+                        self.sys_muthurcommand.backups_exclude_database
+                        if muthurcommand_exclude_database is None
+                        else muthurcommand_exclude_database
                     )
 
                 # Backup add-ons
@@ -592,7 +592,7 @@ class BackupManager(FileConfiguration, JobGroup):
         password: str | None = None,
         compressed: bool = True,
         location: LOCATION_TYPE | type[DEFAULT] = DEFAULT,
-        homeassistant_exclude_database: bool | None = None,
+        muthurcommand_exclude_database: bool | None = None,
         extra: dict | None = None,
         additional_locations: list[LOCATION_TYPE] | None = None,
         validation_complete: asyncio.Event | None = None,
@@ -622,7 +622,7 @@ class BackupManager(FileConfiguration, JobGroup):
             self.sys_addons.installed,
             ALL_FOLDERS,
             True,
-            homeassistant_exclude_database,
+            muthurcommand_exclude_database,
             additional_locations,
         )
         if backup:
@@ -644,10 +644,10 @@ class BackupManager(FileConfiguration, JobGroup):
         addons: list[str] | None = None,
         folders: list[str] | None = None,
         password: str | None = None,
-        homeassistant: bool = False,
+        muthurcommand: bool = False,
         compressed: bool = True,
         location: LOCATION_TYPE | type[DEFAULT] = DEFAULT,
-        homeassistant_exclude_database: bool | None = None,
+        muthurcommand_exclude_database: bool | None = None,
         extra: dict | None = None,
         additional_locations: list[LOCATION_TYPE] | None = None,
         validation_complete: asyncio.Event | None = None,
@@ -666,12 +666,12 @@ class BackupManager(FileConfiguration, JobGroup):
         addons = addons or []
         folders = folders or []
 
-        # HomeAssistant Folder is for v1
-        if FOLDER_HOMEASSISTANT in folders:
-            folders.remove(FOLDER_HOMEASSISTANT)
-            homeassistant = True
+        # MuthurCommand Folder is for v1
+        if FOLDER_MUTHURCOMMAND in folders:
+            folders.remove(FOLDER_MUTHURCOMMAND)
+            muthurcommand = True
 
-        if len(addons) == 0 and len(folders) == 0 and not homeassistant:
+        if len(addons) == 0 and len(folders) == 0 and not muthurcommand:
             _LOGGER.error("Nothing to create backup for")
 
         new_backup = self._create_backup(
@@ -695,8 +695,8 @@ class BackupManager(FileConfiguration, JobGroup):
             new_backup,
             addon_list,
             folders,
-            homeassistant,
-            homeassistant_exclude_database,
+            muthurcommand,
+            muthurcommand_exclude_database,
             additional_locations,
         )
         if backup:
@@ -708,7 +708,7 @@ class BackupManager(FileConfiguration, JobGroup):
         backup: Backup,
         addon_list: list[str],
         folder_list: list[str],
-        homeassistant: bool,
+        muthurcommand: bool,
         replace: bool,
         location: str | None | type[DEFAULT],
     ) -> bool:
@@ -728,9 +728,9 @@ class BackupManager(FileConfiguration, JobGroup):
                     success = await backup.restore_folders(folder_list)
 
                 # Process Home-Assistant
-                if homeassistant:
-                    self._change_stage(RestoreJobStage.HOME_ASSISTANT, backup)
-                    task_hass = await backup.restore_homeassistant()
+                if muthurcommand:
+                    self._change_stage(RestoreJobStage.MUTHURCOMMAND, backup)
+                    task_hass = await backup.restore_muthurcommand()
 
                 # Delete delta add-ons
                 if replace:
@@ -786,19 +786,19 @@ class BackupManager(FileConfiguration, JobGroup):
             return success
         finally:
             # Leave Home Assistant alone if it wasn't part of the restore
-            if homeassistant:
-                self._change_stage(RestoreJobStage.AWAIT_HOME_ASSISTANT_RESTART, backup)
+            if muthurcommand:
+                self._change_stage(RestoreJobStage.AWAIT_MUTHURCOMMAND_RESTART, backup)
 
                 # Do we need start Home Assistant Core?
-                if not await self.sys_homeassistant.core.is_running():
-                    await self.sys_homeassistant.core.start(
+                if not await self.sys_muthurcommand.core.is_running():
+                    await self.sys_muthurcommand.core.start(
                         _job_override__cleanup=False
                     )
 
                 # Check If we can access to API / otherwise restart
-                if not await self.sys_homeassistant.api.check_api_state():
-                    _LOGGER.warning("Need restart HomeAssistant for API")
-                    await self.sys_homeassistant.core.restart(
+                if not await self.sys_muthurcommand.api.check_api_state():
+                    _LOGGER.warning("Need restart MuthurCommand for API")
+                    await self.sys_muthurcommand.core.restart(
                         _job_override__cleanup=False
                     )
 
@@ -872,13 +872,13 @@ class BackupManager(FileConfiguration, JobGroup):
 
         try:
             # Stop Home-Assistant / Add-ons
-            await self.sys_core.shutdown(remove_homeassistant_container=True)
+            await self.sys_core.shutdown(remove_muthurcommand_container=True)
 
             success = await self._do_restore(
                 backup,
                 backup.addon_list,
                 backup.folders,
-                homeassistant=True,
+                muthurcommand=True,
                 replace=True,
                 location=location,
             )
@@ -906,7 +906,7 @@ class BackupManager(FileConfiguration, JobGroup):
         self,
         backup: Backup,
         *,
-        homeassistant: bool = False,
+        muthurcommand: bool = False,
         addons: list[str] | None = None,
         folders: list[str] | None = None,
         password: str | None = None,
@@ -921,13 +921,13 @@ class BackupManager(FileConfiguration, JobGroup):
         folder_list = folders or []
 
         # Version 1
-        if FOLDER_HOMEASSISTANT in folder_list:
-            folder_list.remove(FOLDER_HOMEASSISTANT)
-            homeassistant = True
+        if FOLDER_MUTHURCOMMAND in folder_list:
+            folder_list.remove(FOLDER_MUTHURCOMMAND)
+            muthurcommand = True
 
         await self._validate_backup_location(backup, password, location)
 
-        if backup.homeassistant is None and homeassistant:
+        if backup.muthurcommand is None and muthurcommand:
             raise BackupInvalidError(
                 "No Home Assistant Core data inside the backup", _LOGGER.error
             )
@@ -951,7 +951,7 @@ class BackupManager(FileConfiguration, JobGroup):
                 backup,
                 addon_list,
                 folder_list,
-                homeassistant=homeassistant,
+                muthurcommand=muthurcommand,
                 replace=False,
                 location=location,
             )
@@ -987,8 +987,8 @@ class BackupManager(FileConfiguration, JobGroup):
         )
 
         # Tell Home Assistant to freeze for a backup
-        self._change_stage(BackupJobStage.HOME_ASSISTANT)
-        await self.sys_homeassistant.begin_backup()
+        self._change_stage(BackupJobStage.MUTHURCOMMAND)
+        await self.sys_muthurcommand.begin_backup()
 
         # Run all pre-backup tasks for addons
         self._change_stage(BackupJobStage.ADDONS)
@@ -1011,8 +1011,8 @@ class BackupManager(FileConfiguration, JobGroup):
                     "Timeout waiting for signal to thaw after manual freeze, beginning thaw now"
                 )
 
-            self._change_stage(BackupJobStage.HOME_ASSISTANT)
-            await self.sys_homeassistant.end_backup()
+            self._change_stage(BackupJobStage.MUTHURCOMMAND)
+            await self.sys_muthurcommand.end_backup()
 
             self._change_stage(BackupJobStage.ADDONS)
             addon_start_tasks: list[asyncio.Task] = [

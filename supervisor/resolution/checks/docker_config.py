@@ -79,8 +79,8 @@ class CheckDockerConfig(CheckBase):
         """Check docker config and make issues."""
         new_issues: set[Issue] = set()
 
-        if _check_container(self.sys_homeassistant.core.instance):
-            new_issues.add(Issue(IssueType.DOCKER_CONFIG, ContextType.CORE))
+        if _check_container(self.sys_muthurcommand.core.instance):
+            new_issues.add(Issue(IssueType.DOCKER_CONFIG, ContextType.MC_BD))
 
         for addon in self.sys_addons.installed:
             if _check_container(addon.instance, addon):

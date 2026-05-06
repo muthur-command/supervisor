@@ -4,7 +4,7 @@ from dbus_fast import DBusError, ErrorType
 
 from .base import DBusServiceMock, dbus_method
 
-BUS_NAME = "io.hass.os"
+BUS_NAME = "io.muthurcommand.os"
 
 
 def setup(object_path: str | None = None) -> DBusServiceMock:
@@ -15,11 +15,11 @@ def setup(object_path: str | None = None) -> DBusServiceMock:
 class System(DBusServiceMock):
     """System mock.
 
-    gdbus introspect --system --dest io.hass.os --object-path /io/hass/os/System
+    gdbus introspect --system --dest io.muthurcommand.os --object-path /io/muthurcommand/os/System
     """
 
-    object_path = "/io/hass/os/System"
-    interface = "io.hass.os.System"
+    object_path = "/io/muthurcommand/os/System"
+    interface = "io.muthurcommand.os.System"
     response_schedule_wipe_device: bool | DBusError = True
     response_migrate_docker_storage_driver: None | DBusError = None
 

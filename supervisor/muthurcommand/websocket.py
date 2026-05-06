@@ -23,9 +23,9 @@ from ..const import (
 )
 from ..coresys import CoreSys, CoreSysAttributes
 from ..exceptions import (
-    HomeAssistantAPIError,
-    HomeAssistantWSConnectionError,
-    HomeAssistantWSError,
+    MuthurCommandAPIError,
+    MuthurCommandWSConnectionError,
+    MuthurCommandWSError,
 )
 from ..utils.json import json_dumps
 from .const import CLOSING_STATES, WSEvent, WSType
@@ -59,7 +59,7 @@ class WSClient:
         for future in self._futures.values():
             if not future.done():
                 future.set_exception(
-                    HomeAssistantWSConnectionError("Connection was closed")
+                    MuthurCommandWSConnectionError("Connection was closed")
                 )
 
         if not self._client.closed:
@@ -74,7 +74,7 @@ class WSClient:
         try:
             await self._client.send_json(message, dumps=json_dumps)
         except ConnectionError as err:
-            raise HomeAssistantWSConnectionError(str(err)) from err
+            raise MuthurCommandWSConnectionError(str(err)) from err
 
         try:
             return await self._futures[message["id"]]
@@ -84,12 +84,12 @@ class WSClient:
     async def start_listener(self) -> None:
         """Start listening to the websocket."""
         if not self.connected:
-            raise HomeAssistantWSConnectionError("Not connected when start listening")
+            raise MuthurCommandWSConnectionError("Not connected when start listening")
 
         try:
             while self.connected:
                 await self._receive_json()
-        except HomeAssistantWSError:
+        except MuthurCommandWSError:
             pass
 
         finally:
@@ -101,28 +101,28 @@ class WSClient:
         _LOGGER.debug("Received: %s", msg)
 
         if msg.type == WSMsgType.CLOSE:
-            raise HomeAssistantWSConnectionError("Connection was closed", _LOGGER.debug)
+            raise MuthurCommandWSConnectionError("Connection was closed", _LOGGER.debug)
 
         if msg.type in (
             WSMsgType.CLOSED,
             WSMsgType.CLOSING,
         ):
-            raise HomeAssistantWSConnectionError(
+            raise MuthurCommandWSConnectionError(
                 "Connection is closed", _LOGGER.warning
             )
 
         if msg.type == WSMsgType.ERROR:
-            raise HomeAssistantWSError(f"WebSocket Error: {msg}", _LOGGER.error)
+            raise MuthurCommandWSError(f"WebSocket Error: {msg}", _LOGGER.error)
 
         if msg.type != WSMsgType.TEXT:
-            raise HomeAssistantWSError(
+            raise MuthurCommandWSError(
                 f"Received non-Text message: {msg.type}", _LOGGER.error
             )
 
         try:
             data = msg.json()
         except ValueError as err:
-            raise HomeAssistantWSError(
+            raise MuthurCommandWSError(
                 f"Received invalid JSON - {msg}", _LOGGER.error
             ) from err
 
@@ -135,7 +135,7 @@ class WSClient:
                 return
 
             future.set_exception(
-                HomeAssistantWSError(f"Unsuccessful websocket message - {data}")
+                MuthurCommandWSError(f"Unsuccessful websocket message - {data}")
             )
 
     @classmethod
@@ -146,7 +146,7 @@ class WSClient:
         try:
             client = await session.ws_connect(url, ssl=False)
         except aiohttp.client_exceptions.ClientConnectorError:
-            raise HomeAssistantWSConnectionError("Can't connect") from None
+            raise MuthurCommandWSConnectionError("Can't connect") from None
 
         hello_message = await client.receive_json()
 
@@ -157,12 +157,12 @@ class WSClient:
         auth_ok_message = await client.receive_json()
 
         if auth_ok_message[ATTR_TYPE] != "auth_ok":
-            raise HomeAssistantAPIError("AUTH NOT OK")
+            raise MuthurCommandAPIError("AUTH NOT OK")
 
         return cls(AwesomeVersion(hello_message["ha_version"]), client)
 
 
-class HomeAssistantWebSocket(CoreSysAttributes):
+class MuthurCommandWebSocket(CoreSysAttributes):
     """Home Assistant Websocket API."""
 
     def __init__(self, coresys: CoreSys):
@@ -187,11 +187,11 @@ class HomeAssistantWebSocket(CoreSysAttributes):
                 return self._client
 
             with suppress(asyncio.TimeoutError, aiohttp.ClientError):
-                await self.sys_homeassistant.api.ensure_access_token()
+                await self.sys_muthurcommand.api.ensure_access_token()
             client = await WSClient.connect_with_auth(
                 self.sys_websession,
-                self.sys_homeassistant.ws_url,
-                cast(str, self.sys_homeassistant.api.access_token),
+                self.sys_muthurcommand.ws_url,
+                cast(str, self.sys_muthurcommand.api.access_token),
             )
 
             self.sys_create_task(client.start_listener())
@@ -200,24 +200,35 @@ class HomeAssistantWebSocket(CoreSysAttributes):
     async def _ensure_connected(self) -> None:
         """Ensure WebSocket connection is ready.
 
-        Raises HomeAssistantWSConnectionError if unable to connect.
-        Raises HomeAssistantAuthError if authentication with Core fails.
+        Raises MuthurCommandWSConnectionError if unable to connect.
+        Raises MuthurCommandAuthError if authentication with Core fails.
         """
         if self.sys_core.state in CLOSING_STATES:
-            raise HomeAssistantWSConnectionError(
+            raise MuthurCommandWSConnectionError(
                 "WebSocket not available, system is shutting down"
             )
 
         connected = self._client and self._client.connected
-        # If we are already connected, we can avoid the check_api_state call
-        # since it makes a new socket connection and we already have one.
-        if not connected and not await self.sys_homeassistant.api.check_api_state():
-            raise HomeAssistantWSConnectionError(
+        if connected:
+            # Already connected → allow fire-and-forget messages to fly
+            # even on "unused" MCOS images: a live socket means HA Core is
+            # actually there in this run, regardless of the version JSON.
+            return
+
+        if self.sys_muthurcommand.unused:
+            # Stage 5 of the A1 plan: skip *new* HA WebSocket connections
+            # on MCOS images that don't ship Home Assistant Core. Existing
+            # sessions handled above are not affected.
+            raise MuthurCommandWSConnectionError(
+                "Home Assistant Core is unused on this MCOS image"
+            )
+
+        if not await self.sys_muthurcommand.api.check_api_state():
+            raise MuthurCommandWSConnectionError(
                 "Can't connect to Home Assistant Core WebSocket, the API is not reachable"
             )
 
-        if not self._client or not self._client.connected:
-            self._client = await self._get_ws_client()
+        self._client = await self._get_ws_client()
 
     async def load(self) -> None:
         """Set up queue processor after startup completes."""
@@ -237,7 +248,7 @@ class HomeAssistantWebSocket(CoreSysAttributes):
 
         try:
             await self._ensure_connected()
-        except HomeAssistantWSError as err:
+        except MuthurCommandWSError as err:
             _LOGGER.debug("Can't send WebSocket command: %s", err)
             return
 
@@ -246,7 +257,7 @@ class HomeAssistantWebSocket(CoreSysAttributes):
 
         try:
             await self._client.async_send_command(message)
-        except HomeAssistantWSConnectionError as err:
+        except MuthurCommandWSConnectionError as err:
             _LOGGER.debug("Fire-and-forget WebSocket command failed: %s", err)
             if self._client:
                 await self._client.close()
@@ -255,14 +266,14 @@ class HomeAssistantWebSocket(CoreSysAttributes):
     async def async_send_command(self, message: dict[str, Any]) -> T:
         """Send a command and return the response.
 
-        Raises HomeAssistantWSError on WebSocket connection or communication failure.
+        Raises MuthurCommandWSError on WebSocket connection or communication failure.
         """
         await self._ensure_connected()
         # _ensure_connected guarantees self._client is set
         assert self._client
         try:
             return await self._client.async_send_command(message)
-        except HomeAssistantWSConnectionError:
+        except MuthurCommandWSConnectionError:
             if self._client:
                 await self._client.close()
             self._client = None
@@ -288,7 +299,7 @@ class HomeAssistantWebSocket(CoreSysAttributes):
                     },
                 }
             )
-        except HomeAssistantWSError as err:
+        except MuthurCommandWSError as err:
             _LOGGER.error("Could not send message to Home Assistant due to %s", err)
 
     def supervisor_event_custom(

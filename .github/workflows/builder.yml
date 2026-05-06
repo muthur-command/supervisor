@@ -19,11 +19,11 @@ on:
         required: true
         default: "false"
   pull_request:
-    branches: ["main"]
+    branches: ["mc"]
   release:
     types: ["published"]
   push:
-    branches: ["main"]
+    branches: ["mc"]
     paths:
       - ".github/workflows/builder.yml"
       - "rootfs/**"
@@ -34,10 +34,10 @@ on:
 
 env:
   DEFAULT_PYTHON: "3.14.3"
-  COSIGN_VERSION: "v2.5.3"
+  COSIGN_VERSION: "v3.0.5"
   BUILD_NAME: supervisor
   BUILD_TYPE: supervisor
-  IMAGE_NAME: hassio-supervisor
+  IMAGE_NAME: mcio-supervisor
   ARCHITECTURES: '["amd64", "aarch64"]'
 
 concurrency:
@@ -62,7 +62,7 @@ jobs:
 
       - name: Get version
         id: version
-        uses: home-assistant/actions/helpers/version@master
+        uses: muthur-command/actions/helpers/version@mc
         with:
           type: ${{ env.BUILD_TYPE }}
 
@@ -88,7 +88,7 @@ jobs:
 
       - name: Get build matrix
         id: matrix
-        uses: home-assistant/builder/actions/prepare-multi-arch-matrix@62a1597b84b3461abad9816d9cd92862a2b542c3 # 2026.03.2
+        uses: muthur-command/builder/actions/prepare-multi-arch-matrix@2026.04.2
         with:
           architectures: ${{ env.ARCHITECTURES }}
           image-name: ${{ env.IMAGE_NAME }}
@@ -124,7 +124,7 @@ jobs:
 
       - name: Build and publish wheels
         if: needs.init.outputs.build_wheels == 'true' && needs.init.outputs.publish == 'true'
-        uses: home-assistant/wheels@e5742a69d69f0e274e2689c998900c7d19652c21 # 2025.12.0
+        uses: muthur-command/wheels@2026.04.1
         with:
           wheels-key: ${{ secrets.WHEELS_KEY }}
           abi: ${{ env.WHEELS_ABI }}
@@ -137,7 +137,7 @@ jobs:
 
       - name: Build local wheels
         if: needs.init.outputs.build_wheels == 'true' && needs.init.outputs.publish == 'false'
-        uses: home-assistant/wheels@e5742a69d69f0e274e2689c998900c7d19652c21 # 2025.12.0
+        uses: muthur-command/wheels@2026.04.1
         with:
           wheels-host: ""
           wheels-user: ""
@@ -184,12 +184,12 @@ jobs:
           cosign sign-blob --yes rootfs/supervisor.sha256 --bundle rootfs/supervisor.sha256.sig
 
       - name: Build supervisor
-        uses: home-assistant/builder/actions/build-image@62a1597b84b3461abad9816d9cd92862a2b542c3 # 2026.03.2
+        uses: muthur-command/builder/actions/build-image@2026.04.2
         with:
           arch: ${{ matrix.arch }}
           container-registry-password: ${{ secrets.GITHUB_TOKEN }}
-          cosign-base-identity: 'https://github.com/home-assistant/docker-base/.*'
-          cosign-base-verify: ghcr.io/home-assistant/base-python:3.14-alpine3.22
+          cosign-base-identity: 'https://github.com/muthur-command/docker-base/.*'
+          cosign-base-verify: ghcr.io/muthur-command/base-python:3.14-alpine3.23-2026.04.1
           image: ${{ matrix.image }}
           image-tags: |
             ${{ needs.init.outputs.version }}
@@ -207,7 +207,7 @@ jobs:
       packages: write
     steps:
       - name: Publish multi-arch manifest
-        uses: home-assistant/builder/actions/publish-multi-arch-manifest@62a1597b84b3461abad9816d9cd92862a2b542c3 # 2026.03.2
+        uses: muthur-command/builder/actions/publish-multi-arch-manifest@2026.04.2
         with:
           architectures: ${{ env.ARCHITECTURES }}
           container-registry-password: ${{ secrets.GITHUB_TOKEN }}
@@ -218,7 +218,7 @@ jobs:
 
   version:
     name: Update version
-    if: github.repository_owner == 'home-assistant'
+    if: github.repository_owner == 'muthur-command'
     needs: ["init", "run_supervisor"]
     runs-on: ubuntu-latest
     steps:
@@ -228,7 +228,7 @@ jobs:
 
       - name: Initialize git
         if: needs.init.outputs.publish == 'true'
-        uses: home-assistant/actions/helpers/git-init@master
+        uses: muthur-command/actions/helpers/git-init@mc
         with:
           name: ${{ secrets.GIT_NAME }}
           email: ${{ secrets.GIT_EMAIL }}
@@ -236,221 +236,221 @@ jobs:
 
       - name: Update version file
         if: needs.init.outputs.publish == 'true'
-        uses: home-assistant/actions/helpers/version-push@master
+        uses: muthur-command/actions/helpers/version-push@mc
         with:
           key: ${{ env.BUILD_NAME }}
           version: ${{ needs.init.outputs.version }}
           channel: ${{ needs.init.outputs.channel }}
 
-  run_supervisor:
-    runs-on: ubuntu-latest
-    name: Run the Supervisor
-    needs: ["build", "init"]
-    timeout-minutes: 60
-    steps:
-      - name: Checkout the repository
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+  # run_supervisor:
+  #   runs-on: ubuntu-latest
+  #   name: Run the Supervisor
+  #   needs: ["build", "init"]
+  #   timeout-minutes: 60
+  #   steps:
+  #     - name: Checkout the repository
+  #       uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
 
-      - name: Download local wheels artifact
-        if: needs.init.outputs.build_wheels == 'true' && needs.init.outputs.publish == 'false'
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
-        with:
-          name: wheels-amd64
-          path: wheels
+  #     - name: Download local wheels artifact
+  #       if: needs.init.outputs.build_wheels == 'true' && needs.init.outputs.publish == 'false'
+  #       uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+  #       with:
+  #         name: wheels-amd64
+  #         path: wheels
 
-      # Build the Supervisor for non-publish runs (e.g. PRs)
-      - name: Build the Supervisor
-        if: needs.init.outputs.publish != 'true'
-        uses: home-assistant/builder/actions/build-image@62a1597b84b3461abad9816d9cd92862a2b542c3 # 2026.03.2
-        with:
-          arch: amd64
-          container-registry-password: ${{ secrets.GITHUB_TOKEN }}
-          image: ghcr.io/home-assistant/amd64-hassio-supervisor
-          image-tags: runner
-          load: true
-          version: ${{ needs.init.outputs.version }}
+  #     # Build the Supervisor for non-publish runs (e.g. PRs)
+  #     - name: Build the Supervisor
+  #       if: needs.init.outputs.publish != 'true'
+  #       uses: muthur-command/builder/actions/build-image@2026.04.2
+  #       with:
+  #         arch: amd64
+  #         container-registry-password: ${{ secrets.GITHUB_TOKEN }}
+  #         image: ghcr.io/muthur-command/amd64-mcio-supervisor
+  #         image-tags: runner
+  #         load: true
+  #         version: ${{ needs.init.outputs.version }}
 
-      # Pull the Supervisor for publish runs to test the published image
-      - name: Pull Supervisor
-        if: needs.init.outputs.publish == 'true'
-        run: |
-          docker pull ghcr.io/home-assistant/amd64-hassio-supervisor:${{ needs.init.outputs.version }}
-          docker tag ghcr.io/home-assistant/amd64-hassio-supervisor:${{ needs.init.outputs.version }} ghcr.io/home-assistant/amd64-hassio-supervisor:runner
+  #     # Pull the Supervisor for publish runs to test the published image
+  #     - name: Pull Supervisor
+  #       if: needs.init.outputs.publish == 'true'
+  #       run: |
+  #         docker pull ghcr.io/muthur-command/amd64-mcio-supervisor:${{ needs.init.outputs.version }}
+  #         docker tag ghcr.io/muthur-command/amd64-mcio-supervisor:${{ needs.init.outputs.version }} ghcr.io/muthur-command/amd64-mcio-supervisor:runner
 
-      - name: Create the Supervisor
-        run: |
-          mkdir -p /tmp/supervisor/data
-          docker create --name hassio_supervisor \
-            --privileged \
-            --security-opt seccomp=unconfined \
-            --security-opt apparmor=unconfined \
-            -v /run/docker.sock:/run/docker.sock \
-            -v /run/dbus:/run/dbus \
-            -v /tmp/supervisor/data:/data \
-            -v /etc/machine-id:/etc/machine-id:ro \
-            -e SUPERVISOR_SHARE="/tmp/supervisor/data" \
-            -e SUPERVISOR_NAME=hassio_supervisor \
-            -e SUPERVISOR_DEV=1 \
-            -e SUPERVISOR_MACHINE="qemux86-64" \
-          ghcr.io/home-assistant/amd64-hassio-supervisor:runner
+  #     - name: Create the Supervisor
+  #       run: |
+  #         mkdir -p /tmp/supervisor/data
+  #         docker create --name mcio_supervisor \
+  #           --privileged \
+  #           --security-opt seccomp=unconfined \
+  #           --security-opt apparmor=unconfined \
+  #           -v /run/docker.sock:/run/docker.sock \
+  #           -v /run/dbus:/run/dbus \
+  #           -v /tmp/supervisor/data:/data \
+  #           -v /etc/machine-id:/etc/machine-id:ro \
+  #           -e SUPERVISOR_SHARE="/tmp/supervisor/data" \
+  #           -e SUPERVISOR_NAME=mcio_supervisor \
+  #           -e SUPERVISOR_DEV=1 \
+  #           -e SUPERVISOR_MACHINE="qemux86-64" \
+  #         ghcr.io/muthur-command/amd64-mcio-supervisor:runner
 
-      - name: Start the Supervisor
-        run: docker start hassio_supervisor
+  #     - name: Start the Supervisor
+  #       run: docker start mcio_supervisor
 
-      - &wait_for_supervisor
-        name: Wait for Supervisor to come up
-        run: |
-          until SUPERVISOR=$(docker inspect --format='{{.NetworkSettings.Networks.hassio.IPAddress}}' hassio_supervisor 2>/dev/null) && \
-                [ -n "$SUPERVISOR" ] && [ "$SUPERVISOR" != "<no value>" ]; do
-            echo "Waiting for network configuration..."
-            sleep 1
-          done
-          echo "Waiting for Supervisor API at http://${SUPERVISOR}/supervisor/ping"
-          timeout=300
-          elapsed=0
+  #     - &wait_for_supervisor
+  #       name: Wait for Supervisor to come up
+  #       run: |
+  #         until SUPERVISOR=$(docker inspect --format='{{.NetworkSettings.Networks.mcio.IPAddress}}' mcio_supervisor 2>/dev/null) && \
+  #               [ -n "$SUPERVISOR" ] && [ "$SUPERVISOR" != "<no value>" ]; do
+  #           echo "Waiting for network configuration..."
+  #           sleep 1
+  #         done
+  #         echo "Waiting for Supervisor API at http://${SUPERVISOR}/supervisor/ping"
+  #         timeout=300
+  #         elapsed=0
 
-          while [ $elapsed -lt $timeout ]; do
-            if response=$(curl -sSf "http://${SUPERVISOR}/supervisor/ping" 2>/dev/null); then
-              if echo "$response" | jq -e '.result == "ok"' >/dev/null 2>&1; then
-                echo "Supervisor is up! (took ${elapsed}s)"
-                exit 0
-              fi
-            fi
+  #         while [ $elapsed -lt $timeout ]; do
+  #           if response=$(curl -sSf "http://${SUPERVISOR}/supervisor/ping" 2>/dev/null); then
+  #             if echo "$response" | jq -e '.result == "ok"' >/dev/null 2>&1; then
+  #               echo "Supervisor is up! (took ${elapsed}s)"
+  #               exit 0
+  #             fi
+  #           fi
 
-            if [ $((elapsed % 15)) -eq 0 ]; then
-              echo "Still waiting... (${elapsed}s/${timeout}s)"
-            fi
+  #           if [ $((elapsed % 15)) -eq 0 ]; then
+  #             echo "Still waiting... (${elapsed}s/${timeout}s)"
+  #           fi
 
-            sleep 5
-            elapsed=$((elapsed + 5))
-          done
+  #           sleep 5
+  #           elapsed=$((elapsed + 5))
+  #         done
 
-          echo "ERROR: Supervisor failed to start within ${timeout}s"
-          echo "Last response: $response"
-          echo "Checking supervisor logs..."
-          docker logs --tail 50 hassio_supervisor
-          exit 1
+  #         echo "ERROR: Supervisor failed to start within ${timeout}s"
+  #         echo "Last response: $response"
+  #         echo "Checking supervisor logs..."
+  #         docker logs --tail 50 mcio_supervisor
+  #         exit 1
 
-      # Wait for Core to come up so subsequent steps (backup, addon install) succeed.
-      # On first startup, Supervisor installs Core via the "home_assistant_core_install"
-      # job (which pulls the image and then starts Core). Jobs with cleanup=True are
-      # removed from the jobs list once done, so we poll until it's gone.
-      - name: Wait for Core to be started
-        run: |
-          echo "Waiting for Home Assistant Core to be installed and started..."
-          timeout=300
-          elapsed=0
+  #     # Wait for Core to come up so subsequent steps (backup, addon install) succeed.
+  #     # On first startup, Supervisor installs Core via the "home_assistant_core_install"
+  #     # job (which pulls the image and then starts Core). Jobs with cleanup=True are
+  #     # removed from the jobs list once done, so we poll until it's gone.
+  #     - name: Wait for Core to be started
+  #       run: |
+  #         echo "Waiting for Core (Muthur Command) to be installed and started..."
+  #         timeout=300
+  #         elapsed=0
 
-          while [ $elapsed -lt $timeout ]; do
-            jobs=$(docker exec hassio_cli ha jobs info --no-progress --raw-json | jq -r '.data.jobs[] | select(.name == "home_assistant_core_install" and .done == false) | .name' 2>/dev/null)
-            if [ -z "$jobs" ]; then
-              echo "Home Assistant Core install/start complete (took ${elapsed}s)"
-              exit 0
-            fi
+  #         while [ $elapsed -lt $timeout ]; do
+  #           jobs=$(docker exec mcio_cli ha jobs info --no-progress --raw-json | jq -r '.data.jobs[] | select(.name == "muthur_command_core_install" and .done == false) | .name' 2>/dev/null)
+  #           if [ -z "$jobs" ]; then
+  #             echo "Core install/start complete (took ${elapsed}s)"
+  #             exit 0
+  #           fi
 
-            if [ $((elapsed % 15)) -eq 0 ]; then
-              echo "Core still installing... (${elapsed}s/${timeout}s)"
-            fi
+  #           if [ $((elapsed % 15)) -eq 0 ]; then
+  #             echo "Core still installing... (${elapsed}s/${timeout}s)"
+  #           fi
 
-            sleep 5
-            elapsed=$((elapsed + 5))
-          done
+  #           sleep 5
+  #           elapsed=$((elapsed + 5))
+  #         done
 
-          echo "ERROR: Home Assistant Core failed to install/start within ${timeout}s"
-          docker logs --tail 50 hassio_supervisor
-          exit 1
+  #         echo "ERROR: Core failed to install/start within ${timeout}s"
+  #         docker logs --tail 50 mcio_supervisor
+  #         exit 1
 
-      - name: Check the Supervisor
-        run: |
-          echo "Checking supervisor info"
-          test=$(docker exec hassio_cli ha supervisor info --no-progress --raw-json | jq -r '.result')
-          if [ "$test" != "ok" ]; then
-            exit 1
-          fi
+  #     - name: Check the Supervisor
+  #       run: |
+  #         echo "Checking supervisor info"
+  #         test=$(docker exec mcio_cli ha supervisor info --no-progress --raw-json | jq -r '.result')
+  #         if [ "$test" != "ok" ]; then
+  #           exit 1
+  #         fi
 
-          echo "Checking supervisor network info"
-          test=$(docker exec hassio_cli ha network info --no-progress --raw-json | jq -r '.result')
-          if [ "$test" != "ok" ]; then
-            exit 1
-          fi
+  #         echo "Checking supervisor network info"
+  #         test=$(docker exec mcio_cli ha network info --no-progress --raw-json | jq -r '.result')
+  #         if [ "$test" != "ok" ]; then
+  #           exit 1
+  #         fi
 
-      - name: Check the Store / App
-        run: |
-          echo "Install Core SSH app"
-          test=$(docker exec hassio_cli ha apps install core_ssh --no-progress --raw-json | jq -r '.result')
-          if [ "$test" != "ok" ]; then
-            exit 1
-          fi
+  #     - name: Check the Store / App
+  #       run: |
+  #         echo "Install Core SSH app"
+  #         test=$(docker exec mcio_cli ha apps install core_ssh --no-progress --raw-json | jq -r '.result')
+  #         if [ "$test" != "ok" ]; then
+  #           exit 1
+  #         fi
 
-          # Make sure it actually installed
-          test=$(docker exec hassio_cli ha apps info core_ssh --no-progress --raw-json | jq -r '.data.version')
-          if [[ "$test" == "null" ]]; then
-            exit 1
-          fi
+  #         # Make sure it actually installed
+  #         test=$(docker exec mcio_cli ha apps info core_ssh --no-progress --raw-json | jq -r '.data.version')
+  #         if [[ "$test" == "null" ]]; then
+  #           exit 1
+  #         fi
 
-          echo "Start Core SSH app"
-          test=$(docker exec hassio_cli ha apps start core_ssh --no-progress --raw-json | jq -r '.result')
-          if [ "$test" != "ok" ]; then
-            exit 1
-          fi
+  #         echo "Start Core SSH app"
+  #         test=$(docker exec mcio_cli ha apps start core_ssh --no-progress --raw-json | jq -r '.result')
+  #         if [ "$test" != "ok" ]; then
+  #           exit 1
+  #         fi
 
-          # Make sure its state is started
-          test="$(docker exec hassio_cli ha apps info core_ssh --no-progress --raw-json | jq -r '.data.state')"
-          if [ "$test" != "started" ]; then
-            exit 1
-          fi
+  #         # Make sure its state is started
+  #         test="$(docker exec mcio_cli ha apps info core_ssh --no-progress --raw-json | jq -r '.data.state')"
+  #         if [ "$test" != "started" ]; then
+  #           exit 1
+  #         fi
 
-      - name: Create full backup
-        id: backup
-        run: |
-          test=$(docker exec hassio_cli ha backups new --no-progress --raw-json)
-          if [ "$(echo $test | jq -r '.result')" != "ok" ]; then
-            exit 1
-          fi
-          echo "slug=$(echo $test | jq -r '.data.slug')" >> "$GITHUB_OUTPUT"
+  #     - name: Create full backup
+  #       id: backup
+  #       run: |
+  #         test=$(docker exec mcio_cli ha backups new --no-progress --raw-json)
+  #         if [ "$(echo $test | jq -r '.result')" != "ok" ]; then
+  #           exit 1
+  #         fi
+  #         echo "slug=$(echo $test | jq -r '.data.slug')" >> "$GITHUB_OUTPUT"
 
-      - name: Uninstall SSH app
-        run: |
-          test=$(docker exec hassio_cli ha apps uninstall core_ssh --no-progress --raw-json | jq -r '.result')
-          if [ "$test" != "ok" ]; then
-            exit 1
-          fi
+  #     - name: Uninstall SSH app
+  #       run: |
+  #         test=$(docker exec mcio_cli ha apps uninstall core_ssh --no-progress --raw-json | jq -r '.result')
+  #         if [ "$test" != "ok" ]; then
+  #           exit 1
+  #         fi
 
-      - name: Restart supervisor
-        run: |
-          test=$(docker exec hassio_cli ha supervisor restart --no-progress --raw-json | jq -r '.result')
-          if [ "$test" != "ok" ]; then
-            exit 1
-          fi
+  #     - name: Restart supervisor
+  #       run: |
+  #         test=$(docker exec mcio_cli ha supervisor restart --no-progress --raw-json | jq -r '.result')
+  #         if [ "$test" != "ok" ]; then
+  #           exit 1
+  #         fi
 
-      - *wait_for_supervisor
+  #     - *wait_for_supervisor
 
-      - name: Restore SSH app from backup
-        run: |
-          test=$(docker exec hassio_cli ha backups restore ${{ steps.backup.outputs.slug }} --app core_ssh --no-progress --raw-json | jq -r '.result')
-          if [ "$test" != "ok" ]; then
-            exit 1
-          fi
+  #     - name: Restore SSH app from backup
+  #       run: |
+  #         test=$(docker exec mcio_cli ha backups restore ${{ steps.backup.outputs.slug }} --app core_ssh --no-progress --raw-json | jq -r '.result')
+  #         if [ "$test" != "ok" ]; then
+  #           exit 1
+  #         fi
 
-          # Make sure it actually installed
-          test=$(docker exec hassio_cli ha apps info core_ssh --no-progress --raw-json | jq -r '.data.version')
-          if [[ "$test" == "null" ]]; then
-            exit 1
-          fi
+  #         # Make sure it actually installed
+  #         test=$(docker exec mcio_cli ha apps info core_ssh --no-progress --raw-json | jq -r '.data.version')
+  #         if [[ "$test" == "null" ]]; then
+  #           exit 1
+  #         fi
 
-          # Make sure its state is started
-          test="$(docker exec hassio_cli ha apps info core_ssh --no-progress --raw-json | jq -r '.data.state')"
-          if [ "$test" != "started" ]; then
-            exit 1
-          fi
+  #         # Make sure its state is started
+  #         test="$(docker exec mcio_cli ha apps info core_ssh --no-progress --raw-json | jq -r '.data.state')"
+  #         if [ "$test" != "started" ]; then
+  #           exit 1
+  #         fi
 
-      - name: Restore SSL directory from backup
-        run: |
-          test=$(docker exec hassio_cli ha backups restore ${{ steps.backup.outputs.slug }} --folders ssl --no-progress --raw-json | jq -r '.result')
-          if [ "$test" != "ok" ]; then
-            exit 1
-          fi
+  #     - name: Restore SSL directory from backup
+  #       run: |
+  #         test=$(docker exec mcio_cli ha backups restore ${{ steps.backup.outputs.slug }} --folders ssl --no-progress --raw-json | jq -r '.result')
+  #         if [ "$test" != "ok" ]; then
+  #           exit 1
+  #         fi
 
-      - name: Get supervisor logs on failiure
-        if: ${{ cancelled() || failure() }}
-        run: docker logs hassio_supervisor
+  #     - name: Get supervisor logs on failure
+  #       if: ${{ cancelled() || failure() }}
+  #       run: docker logs mcio_supervisor
