@@ -12,15 +12,24 @@ WORKDIR /usr/src
 RUN \
     set -x \
     && apk add --no-cache \
+        build-base \
+        cargo \
         findutils \
         eudev \
         eudev-libs \
         git \
         libffi \
+        libffi-dev \
         libpulse \
+        linux-headers \
         musl \
+        musl-dev \
         openssl \
+        openssl-dev \
+        python3-dev \
+        rust \
         yaml \
+        yaml-dev \
     \
     && pip3 install uv==0.10.9
 
