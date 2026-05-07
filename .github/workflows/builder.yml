@@ -115,6 +115,8 @@ jobs:
     env:
       WHEELS_ABI: cp314
       WHEELS_TAG: musllinux_1_2
+      WHEELS_HOST: wheels.muthur-command.com
+      WHEELS_PORT: "45576"
       WHEELS_APK_DEPS: "libffi-dev;openssl-dev;yaml-dev"
       WHEELS_SKIP_BINARY: aiohttp
     steps:
@@ -169,11 +171,25 @@ jobs:
             echo "EOF"
           } >> "$GITHUB_OUTPUT"
 
+      - name: Prepare SSH config for wheels host port
+        if: needs.init.outputs.build_wheels == 'true' && needs.init.outputs.publish == 'true'
+        shell: bash
+        run: |
+          mkdir -p .ssh
+          {
+            echo "Host ${{ env.WHEELS_HOST }}"
+            echo "  HostName ${{ env.WHEELS_HOST }}"
+            echo "  Port ${{ env.WHEELS_PORT }}"
+          } > .ssh/config
+          ssh-keyscan -p "${{ env.WHEELS_PORT }}" -H "${{ env.WHEELS_HOST }}" >> .ssh/known_hosts
+          chmod 600 .ssh/config .ssh/known_hosts
+
       - name: Build and publish wheels
         if: needs.init.outputs.build_wheels == 'true' && needs.init.outputs.publish == 'true'
         uses: muthur-command/wheels@2026.04.1
         with:
           wheels-key: ${{ steps.wheels_key.outputs.value }}
+          wheels-host: ${{ env.WHEELS_HOST }}
           abi: ${{ env.WHEELS_ABI }}
           tag: ${{ env.WHEELS_TAG }}
           arch: ${{ matrix.arch }}
