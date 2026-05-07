@@ -180,6 +180,7 @@ jobs:
             echo "  IdentityFile ${{ github.workspace }}/.ssh/wheels_deploy_key"
             echo "  IdentitiesOnly yes"
             echo "  StrictHostKeyChecking yes"
+            echo "  UserKnownHostsFile ${{ github.workspace }}/.ssh/known_hosts"
           } > .ssh/config
           ssh-keyscan -p "${{ env.WHEELS_PORT }}" -H "${{ env.WHEELS_HOST }}" >> .ssh/known_hosts
           chmod 600 .ssh/config .ssh/known_hosts
