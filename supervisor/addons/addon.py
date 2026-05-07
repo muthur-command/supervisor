@@ -86,9 +86,9 @@ from ..exceptions import (
     StoreAddonNotFoundError,
 )
 from ..hardware.data import Device
-from ..muthurcommand.const import WSEvent
 from ..jobs.const import JobConcurrency, JobThrottle
 from ..jobs.decorator import Job
+from ..muthurcommand.const import WSEvent
 from ..resolution.const import ContextType, IssueType, SuggestionType
 from ..resolution.data import Issue
 from ..store.addon import AddonStore

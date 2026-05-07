@@ -23,8 +23,8 @@ from supervisor.const import FOLDER_MUTHURCOMMAND, FOLDER_SHARE, AddonState, Cor
 from supervisor.coresys import CoreSys
 from supervisor.docker.addon import DockerAddon
 from supervisor.docker.const import ContainerState
-from supervisor.docker.muthurcommand import DockerMuthurCommand
 from supervisor.docker.monitor import DockerContainerStateEvent
+from supervisor.docker.muthurcommand import DockerMuthurCommand
 from supervisor.exceptions import (
     BackupError,
     BackupFileNotFoundError,
@@ -33,13 +33,13 @@ from supervisor.exceptions import (
     BackupMountDownError,
     DockerError,
 )
-from supervisor.muthurcommand.api import MuthurCommandAPI
-from supervisor.muthurcommand.const import WSType
-from supervisor.muthurcommand.core import MuthurCommandCore
-from supervisor.muthurcommand.module import MuthurCommand
 from supervisor.jobs import JobSchedulerOptions
 from supervisor.jobs.const import JobCondition
 from supervisor.mounts.mount import Mount
+from supervisor.muthurcommand.api import MuthurCommandAPI
+from supervisor.muthurcommand.const import WSEvent, WSType
+from supervisor.muthurcommand.core import MuthurCommandCore
+from supervisor.muthurcommand.module import MuthurCommand
 from supervisor.resolution.const import UnhealthyReason
 from supervisor.utils.json import read_json_file, write_json_file
 
@@ -1104,9 +1104,9 @@ def _make_backup_message_for_assert(
 ):
     """Make a backup message to use for assert test."""
     return {
-        "type": "supervisor/event",
+        "type": WSType.SUPERVISOR_EVENT,
         "data": {
-            "event": "job",
+            "event": WSEvent.JOB,
             "data": {
                 "name": f"backup_manager_{action}",
                 "reference": reference,
@@ -1162,7 +1162,7 @@ async def test_backup_progress(
             reference=full_backup.slug, stage="addon_repositories"
         ),
         _make_backup_message_for_assert(
-            reference=full_backup.slug, stage="home_assistant"
+            reference=full_backup.slug, stage="muthurcommand"
         ),
         _make_backup_message_for_assert(reference=full_backup.slug, stage="addons"),
         _make_backup_message_for_assert(reference=full_backup.slug, stage="folders"),
@@ -1292,7 +1292,7 @@ async def test_restore_progress(
         _make_backup_message_for_assert(
             action="full_restore",
             reference=full_backup.slug,
-            stage="home_assistant",
+            stage="muthurcommand",
         ),
         _make_backup_message_for_assert(
             action="full_restore",
@@ -1320,12 +1320,12 @@ async def test_restore_progress(
         _make_backup_message_for_assert(
             action="full_restore",
             reference=full_backup.slug,
-            stage="await_home_assistant_restart",
+            stage="await_muthurcommand_restart",
         ),
         _make_backup_message_for_assert(
             action="full_restore",
             reference=full_backup.slug,
-            stage="await_home_assistant_restart",
+            stage="await_muthurcommand_restart",
             done=True,
             progress=100,
         ),
@@ -1471,7 +1471,7 @@ async def test_freeze_thaw(
             ),
             {"type": "backup/start"},
             _make_backup_message_for_assert(
-                action="freeze_all", reference=None, stage="home_assistant"
+                action="freeze_all", reference=None, stage="muthurcommand"
             ),
             _make_backup_message_for_assert(
                 action="freeze_all", reference=None, stage="addons"
@@ -1506,7 +1506,7 @@ async def test_freeze_thaw(
         assert messages == [
             {"type": "backup/end"},
             _make_backup_message_for_assert(
-                action="thaw_all", reference=None, stage="home_assistant"
+                action="thaw_all", reference=None, stage="muthurcommand"
             ),
             _make_backup_message_for_assert(
                 action="thaw_all", reference=None, stage="addons"
@@ -1591,13 +1591,11 @@ async def test_restore_only_reloads_ingress_on_change(
         )
         make_request.assert_not_called()
 
-        # Restore removes ingress - tell Home Assistant
+        # MCOS-only flow does not call the Home Assistant panel API.
         await coresys.backups.do_restore_partial(
             backup_no_ingress, addons=["local_ssh"]
         )
-        make_request.assert_called_once_with(
-            "delete", "api/hassio_push/panel/local_ssh"
-        )
+        make_request.assert_not_called()
 
         # No ingress before or after - not called
         make_request.reset_mock()
@@ -1606,11 +1604,11 @@ async def test_restore_only_reloads_ingress_on_change(
         )
         make_request.assert_not_called()
 
-        # Restore adds ingress - tell Home Assistant
+        # No Home Assistant panel API calls in MCOS-only flow.
         await coresys.backups.do_restore_partial(
             backup_with_ingress, addons=["local_ssh"]
         )
-        make_request.assert_called_once_with("post", "api/hassio_push/panel/local_ssh")
+        make_request.assert_not_called()
 
 
 @pytest.mark.usefixtures("supervisor_internet", "tmp_supervisor_data", "path_extern")

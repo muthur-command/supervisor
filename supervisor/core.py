@@ -18,8 +18,8 @@ from .const import (
 from .coresys import CoreSys, CoreSysAttributes
 from .dbus.const import StopUnitMode, UnitActiveState
 from .exceptions import (
-    MCStackError,
     McioError,
+    MCStackError,
     MuthurCommandCrashError,
     MuthurCommandError,
     SupervisorUpdateError,
@@ -268,9 +268,7 @@ class Core(CoreSysAttributes):
                     _LOGGER.error("MC stack failed to start: %s", err)
                     await async_capture_exception(err)
             elif self.sys_mc_stack.enabled:
-                _LOGGER.info(
-                    "Skipping MC application stack start (boot=False)"
-                )
+                _LOGGER.info("Skipping MC application stack start (boot=False)")
 
             # run MuthurCommand
             if (

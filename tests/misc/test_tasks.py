@@ -13,10 +13,10 @@ from supervisor.addons.addon import Addon
 from supervisor.const import ATTR_VERSION_TIMESTAMP, CoreState
 from supervisor.coresys import CoreSys
 from supervisor.exceptions import MuthurCommandError
+from supervisor.misc.tasks import Tasks
 from supervisor.muthurcommand.api import MuthurCommandAPI
 from supervisor.muthurcommand.const import LANDINGPAGE
 from supervisor.muthurcommand.core import MuthurCommandCore
-from supervisor.misc.tasks import Tasks
 from supervisor.plugins.dns import PluginDns
 from supervisor.supervisor import Supervisor
 

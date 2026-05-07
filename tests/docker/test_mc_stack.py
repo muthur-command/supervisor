@@ -13,10 +13,12 @@ These tests cover the documented stage-3 deliverables:
   ``DockerInterface`` flow and do not delete persistent volumes.
 """
 
+# pylint: disable=protected-access
+
 from __future__ import annotations
 
 from typing import Any
-from unittest.mock import ANY, AsyncMock, MagicMock, patch
+from unittest.mock import ANY, AsyncMock, patch
 
 from awesomeversion import AwesomeVersion
 import pytest
@@ -45,12 +47,11 @@ from supervisor.const import (
 from supervisor.coresys import CoreSys
 from supervisor.docker.const import LABEL_MANAGED, MountType, RestartPolicy
 from supervisor.docker.interface import DockerInterface
-from supervisor.docker.manager import DockerAPI
 from supervisor.docker.mc_backend import DockerMcBackend
 from supervisor.docker.mc_frontend import DockerMcFrontend
 from supervisor.docker.mc_postgres import DockerMcPostgres
 from supervisor.docker.mc_redis import DockerMcRedis
-
+from supervisor.exceptions import DockerJobError, McioError
 
 # --- Fixtures & helpers ----------------------------------------------------
 
@@ -108,9 +109,7 @@ async def test_docker_mc_postgres_run(coresys: CoreSys) -> None:
     assert kwargs["environment"]["POSTGRES_PASSWORD"], "Password must be generated"
     assert kwargs["environment"]["PGDATA"].startswith("/var/lib/postgresql/data")
     assert kwargs["networking_config"] == {
-        "EndpointsConfig": {
-            DOCKER_NETWORK: {"Aliases": ["mc_postgres", "mc-postgres"]}
-        }
+        "EndpointsConfig": {DOCKER_NETWORK: {"Aliases": ["mc_postgres", "mc-postgres"]}}
     }
     assert any(
         m.type == MountType.BIND and m.target == "/var/lib/postgresql/data"
@@ -138,9 +137,7 @@ async def test_docker_mc_redis_run(coresys: CoreSys) -> None:
     assert "redis-server" in kwargs["command"]
     assert "--appendonly" in kwargs["command"]
     assert kwargs["networking_config"] == {
-        "EndpointsConfig": {
-            DOCKER_NETWORK: {"Aliases": ["mc_redis", "mc-redis"]}
-        }
+        "EndpointsConfig": {DOCKER_NETWORK: {"Aliases": ["mc_redis", "mc-redis"]}}
     }
 
 
@@ -184,9 +181,7 @@ async def test_docker_mc_backend_run(coresys: CoreSys) -> None:
     # PostgreSQL password ends up in mc_bd env, must match the secrets store.
     assert env["DATABASE_PASSWORD"] == coresys.mc_stack.secrets.postgres_password
     assert kwargs["networking_config"] == {
-        "EndpointsConfig": {
-            DOCKER_NETWORK: {"Aliases": ["mc_bd", "mc-bd"]}
-        }
+        "EndpointsConfig": {DOCKER_NETWORK: {"Aliases": ["mc_bd", "mc-bd"]}}
     }
 
 
@@ -278,8 +273,6 @@ async def test_mc_stack_run_without_version_raises(
     coresys.updater._data["mc_fd"] = None  # noqa: SLF001
 
     instance, run = _capture_run_kwargs(cls, coresys)
-
-    from supervisor.exceptions import DockerJobError, McioError
 
     with (
         patch.object(cls, "is_running", new=AsyncMock(return_value=False)),

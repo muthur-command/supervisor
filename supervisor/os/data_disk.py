@@ -17,10 +17,10 @@ from ..dbus.udisks2.drive import UDisks2Drive
 from ..exceptions import (
     DBusError,
     DBusObjectError,
+    HostError,
     McosDataDiskError,
     McosError,
     McosJobError,
-    HostError,
 )
 from ..jobs.const import JobConcurrency, JobCondition
 from ..jobs.decorator import Job

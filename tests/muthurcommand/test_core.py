@@ -13,9 +13,9 @@ from time_machine import travel
 
 from supervisor.const import CpuArch
 from supervisor.coresys import CoreSys
-from supervisor.docker.muthurcommand import DockerMuthurCommand
 from supervisor.docker.interface import DockerInterface
 from supervisor.docker.manager import DockerAPI
+from supervisor.docker.muthurcommand import DockerMuthurCommand
 from supervisor.exceptions import (
     AudioUpdateError,
     DockerError,

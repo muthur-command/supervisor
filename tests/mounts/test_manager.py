@@ -278,7 +278,7 @@ async def test_mount_failed_during_load(
     emergency_dir = coresys.config.path_emergency / "media_test"
     assert emergency_dir.is_dir()
     assert os.access(emergency_dir, os.R_OK)
-    assert not os.access(emergency_dir, os.W_OK)
+    assert emergency_dir.stat().st_mode & 0o222 == 0
 
     assert (
         Issue(IssueType.MOUNT_FAILED, ContextType.MOUNT, reference="backup_test")

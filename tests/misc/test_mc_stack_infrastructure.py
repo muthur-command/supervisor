@@ -17,9 +17,11 @@ These cover the parts that were "wired up but not exercised":
 
 from __future__ import annotations
 
+import inspect
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import aiohttp
 from awesomeversion import AwesomeVersion
 import pytest
 
@@ -41,7 +43,6 @@ from supervisor.resolution.const import ContextType, IssueType, SuggestionType
 from supervisor.resolution.fixups.mc_stack_execute_restart import (
     FixupMCStackExecuteRestart,
 )
-
 
 # ---------------------------------------------------------------------------
 # Fixtures
@@ -241,12 +242,8 @@ async def test_watchdog_respects_disable_flag(coresys: CoreSys) -> None:
     backend_check = AsyncMock(return_value=False)
     backend_restart = AsyncMock()
     with (
-        patch.object(
-            DockerMcBackend, "is_running", new=AsyncMock(return_value=True)
-        ),
-        patch.object(
-            coresys.mc_stack, "_check_backend_ready", new=backend_check
-        ),
+        patch.object(DockerMcBackend, "is_running", new=AsyncMock(return_value=True)),
+        patch.object(coresys.mc_stack, "_check_backend_ready", new=backend_check),
         patch.object(DockerMcBackend, "restart", new=backend_restart),
     ):
         await tasks._watchdog_mc_stack()  # noqa: SLF001
@@ -400,7 +397,6 @@ async def test_mc_fd_web_proxy_returns_502_on_upstream_error(
     api_client, coresys: CoreSys
 ) -> None:
     """An aiohttp ClientError is mapped to a 502 Bad Gateway."""
-    import aiohttp
 
     websession = AsyncMock()
     websession.request = MagicMock(side_effect=aiohttp.ClientError("boom"))
@@ -414,9 +410,7 @@ async def test_mc_fd_web_proxy_returns_502_on_upstream_error(
 # ---------------------------------------------------------------------------
 
 
-def test_bootstrap_creates_mc_stack_dirs(
-    tmp_path: Path, coresys: CoreSys
-) -> None:
+def test_bootstrap_creates_mc_stack_dirs(tmp_path: Path, coresys: CoreSys) -> None:
     """``initialize_system`` ensures the MC stack data dirs exist (idempotent).
 
     We only re-run the ``initialize_system`` snippet that owns the MC
@@ -458,8 +452,6 @@ def test_bootstrap_initialize_system_includes_mc_stack_paths(
     Guards against the MC stack folder creation being accidentally removed
     from ``initialize_system`` during a future refactor.
     """
-    import inspect
-
     source = inspect.getsource(bootstrap.initialize_system)
     assert "path_mc_backend" in source
     assert "path_mc_postgres" in source
@@ -554,16 +546,12 @@ async def test_fixup_mc_stack_execute_restart_runs_restart(
         and s.context == ContextType.MC_STACK
     )
 
-    with patch.object(
-        coresys.mc_stack, "restart", new=AsyncMock()
-    ) as restart:
+    with patch.object(coresys.mc_stack, "restart", new=AsyncMock()) as restart:
         await fixup(suggestion)
 
     restart.assert_awaited_once()
     assert not [
-        i
-        for i in coresys.resolution.issues
-        if i.type == IssueType.MC_STACK_DOWN
+        i for i in coresys.resolution.issues if i.type == IssueType.MC_STACK_DOWN
     ]
 
 
@@ -594,11 +582,7 @@ async def test_fixup_mc_stack_execute_restart_propagates_failure(
         await fixup(suggestion)  # ResolutionFixupError is swallowed by base
 
     # Issue should still be present
-    assert [
-        i
-        for i in coresys.resolution.issues
-        if i.type == IssueType.MC_STACK_DOWN
-    ]
+    assert [i for i in coresys.resolution.issues if i.type == IssueType.MC_STACK_DOWN]
 
 
 # ---------------------------------------------------------------------------
@@ -607,9 +591,7 @@ async def test_fixup_mc_stack_execute_restart_propagates_failure(
 
 
 @pytest.mark.usefixtures("stack_versions")
-async def test_mc_stack_options_endpoint_persists(
-    api_client, coresys: CoreSys
-) -> None:
+async def test_mc_stack_options_endpoint_persists(api_client, coresys: CoreSys) -> None:
     """``POST /mc_stack/options`` writes ``boot``/``watchdog`` to the config store."""
     with patch.object(coresys.mc_stack.config, "save_data", new=AsyncMock()) as save:
         resp = await api_client.post(

@@ -322,7 +322,7 @@ jobs:
       - name: Generate partial mypy restore key
         id: generate-mypy-key
         run: |
-          mypy_version=$(cat requirements_test.txt | grep mypy | cut -d '=' -f 3)
+          mypy_version=$(cat requirements_tests.txt | grep mypy | cut -d '=' -f 3)
           echo "version=$mypy_version" >> $GITHUB_OUTPUT
           echo "key=mypy-${{ env.MYPY_CACHE_VERSION }}-$mypy_version-$(date -u '+%Y-%m-%dT%H:%M:%s')" >> $GITHUB_OUTPUT
       - name: Restore Python virtual environment
@@ -365,6 +365,10 @@ jobs:
         id: python
         with:
           python-version: ${{ needs.prepare.outputs.python-version }}
+      - name: Install envsubst dependency for Cosign installer
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends gettext-base
       - name: Install Cosign
         uses: sigstore/cosign-installer@cad07c2e89fa2edd6e2d7bab4c1aa38e53f76003 # v4.1.1
         with:
@@ -406,6 +410,7 @@ jobs:
             -o console_output_style=count \
             tests
       - name: Upload coverage artifact
+        if: ${{ github.actor != 'nektos/act' }}
         uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
         with:
           name: coverage
@@ -415,6 +420,7 @@ jobs:
   coverage:
     name: Process test coverage
     runs-on: ubuntu-latest
+    if: ${{ github.actor != 'nektos/act' }}
     needs: ["pytest", "prepare"]
     steps:
       - name: Check out code from GitHub

@@ -38,7 +38,6 @@ if TYPE_CHECKING:
     from .discovery import Discovery
     from .docker.manager import DockerAPI
     from .hardware.manager import HardwareManager
-    from .muthurcommand.module import MuthurCommand
     from .host.manager import HostManager
     from .ingress import Ingress
     from .jobs import JobManager
@@ -46,6 +45,7 @@ if TYPE_CHECKING:
     from .misc.scheduler import Scheduler
     from .misc.tasks import Tasks
     from .mounts.manager import MountManager
+    from .muthurcommand.module import MuthurCommand
     from .os.manager import OSManager
     from .plugins.manager import PluginManager
     from .resolution.module import ResolutionManager

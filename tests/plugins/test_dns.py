@@ -129,10 +129,6 @@ async def test_reset(coresys: CoreSys):
             HostEntry(
                 ip_address=IPv4Address("172.30.32.1"),
                 names=[
-                    "homeassistant",
-                    "homeassistant.local.mcio",
-                    "home-assistant",
-                    "home-assistant.local.mcio",
                     "muthurcommand",
                     "muthurcommand.local.mcio",
                     "muthur-command",

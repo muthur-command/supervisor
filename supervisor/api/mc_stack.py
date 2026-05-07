@@ -13,14 +13,12 @@ Supervisor port.
 
 from __future__ import annotations
 
-import asyncio
 import logging
 from typing import Any
 
 import aiohttp
 from aiohttp import ClientTimeout, hdrs, web
 from aiohttp.web_exceptions import HTTPBadGateway, HTTPServiceUnavailable
-
 import voluptuous as vol
 
 from ..const import (
@@ -46,8 +44,8 @@ from .utils import api_process, api_validate
 
 SCHEMA_OPTIONS = vol.Schema(
     {
-        vol.Optional(ATTR_BOOT): vol.Boolean(),
-        vol.Optional(ATTR_WATCHDOG): vol.Boolean(),
+        vol.Optional(ATTR_BOOT): bool,
+        vol.Optional(ATTR_WATCHDOG): bool,
     }
 )
 
@@ -220,6 +218,6 @@ class APIMCStack(CoreSysAttributes):
                 async for chunk, _ in upstream.content.iter_chunks():
                     await response.write(chunk)
                 return response
-        except (aiohttp.ClientError, asyncio.TimeoutError) as err:
+        except (TimeoutError, aiohttp.ClientError) as err:
             _LOGGER.warning("mc_fd proxy error to %s: %s", url, err)
             raise HTTPBadGateway() from err

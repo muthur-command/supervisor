@@ -24,9 +24,9 @@ from supervisor.exceptions import (
     DockerNotFound,
     DockerRegistryAuthError,
 )
-from supervisor.muthurcommand.const import WSEvent, WSType
 from supervisor.jobs import ChildJobSyncFilter, JobSchedulerOptions, SupervisorJob
 from supervisor.jobs.decorator import Job
+from supervisor.muthurcommand.const import WSEvent, WSType
 from supervisor.supervisor import Supervisor
 
 from tests.common import AsyncIterator, load_json_fixture

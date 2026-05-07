@@ -9,7 +9,7 @@ from awesomeversion import AwesomeVersion
 
 from ..const import BusEvent
 from ..coresys import CoreSys, CoreSysAttributes
-from ..exceptions import McioError, HostLogError, PulseAudioError
+from ..exceptions import HostLogError, McioError, PulseAudioError
 from ..hardware.const import PolicyGroup
 from ..hardware.data import Device
 from .apparmor import AppArmorControl

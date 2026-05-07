@@ -97,9 +97,7 @@ async def test_stop_calls_components_in_reverse(coresys: CoreSys) -> None:
 async def test_start_component_propagates_failed_container(coresys: CoreSys) -> None:
     """A container that dies before becoming healthy raises a startup error."""
     with (
-        patch.object(
-            DockerMcPostgres, "is_running", new=AsyncMock(return_value=True)
-        ),
+        patch.object(DockerMcPostgres, "is_running", new=AsyncMock(return_value=True)),
         patch.object(
             DockerMcPostgres,
             "current_state",

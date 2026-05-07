@@ -138,9 +138,7 @@ class DockerMcPostgres(DockerInterface, CoreSysAttributes):
             shm_size=_PG_SHM_SIZE,
             oom_score_adj=-200,
         )
-        _LOGGER.info(
-            "Starting MC stack PostgreSQL %s with tag %s", self.image, version
-        )
+        _LOGGER.info("Starting MC stack PostgreSQL %s with tag %s", self.image, version)
 
     async def is_initialize(self) -> bool:
         """Return True if Docker container exists with the configured image."""

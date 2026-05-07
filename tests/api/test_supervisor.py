@@ -14,7 +14,7 @@ import pytest
 from supervisor.const import CoreState
 from supervisor.core import Core
 from supervisor.coresys import CoreSys
-from supervisor.exceptions import McioError, HostNotSupportedError, StoreGitError
+from supervisor.exceptions import HostNotSupportedError, McioError, StoreGitError
 from supervisor.muthurcommand.const import WSEvent
 from supervisor.store.repository import Repository
 from supervisor.supervisor import Supervisor

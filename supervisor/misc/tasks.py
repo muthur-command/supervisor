@@ -20,9 +20,9 @@ from ..exceptions import (
     ObserverError,
     SupervisorUpdateError,
 )
-from ..muthurcommand.const import LANDINGPAGE, WSType
 from ..jobs.const import JobConcurrency
 from ..jobs.decorator import Job, JobCondition
+from ..muthurcommand.const import LANDINGPAGE, WSType
 from ..plugins.const import PLUGIN_UPDATE_CONDITIONS
 from ..utils.dt import utcnow
 from ..utils.sentry import async_capture_exception
@@ -104,9 +104,7 @@ class Tasks(CoreSysAttributes):
         self.sys_scheduler.register_task(
             self._watchdog_addon_application, RUN_WATCHDOG_ADDON_APPLICATON
         )
-        self.sys_scheduler.register_task(
-            self._watchdog_mc_stack, RUN_WATCHDOG_MC_STACK
-        )
+        self.sys_scheduler.register_task(self._watchdog_mc_stack, RUN_WATCHDOG_MC_STACK)
 
         # Cleanup
         self.sys_scheduler.register_task(
@@ -438,7 +436,7 @@ class Tasks(CoreSysAttributes):
             return
 
         # HTTP probe — same code path the start-up health check uses.
-        if await stack._check_backend_ready():  # noqa: SLF001
+        if await stack._check_backend_ready():  # noqa: SLF001  # pylint: disable=protected-access
             if self._cache.get(MC_STACK_WATCHDOG_API_FAILURES):
                 _LOGGER.info("MC stack watchdog: mc_bd recovered")
             self._cache[MC_STACK_WATCHDOG_API_FAILURES] = 0
@@ -467,9 +465,7 @@ class Tasks(CoreSysAttributes):
         except DockerError as err:
             _LOGGER.warning("MC stack watchdog: mc_bd restart failed: %s", err)
         else:
-            _LOGGER.info(
-                "MC stack watchdog: mc_bd restarted; re-probing on next tick"
-            )
+            _LOGGER.info("MC stack watchdog: mc_bd restarted; re-probing on next tick")
             return
 
         # Tier 2: if mc_bd is actually dead, restart the whole stack

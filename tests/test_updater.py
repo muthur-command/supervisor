@@ -8,12 +8,12 @@ from awesomeversion import AwesomeVersion
 import pytest
 
 from supervisor.const import ATTR_MCOS_UNRESTRICTED, BusEvent
-from supervisor.utils.version_image_template import format_version_image_template
 from supervisor.coresys import CoreSys
 from supervisor.dbus.const import ConnectivityState
 from supervisor.exceptions import UpdaterJobError
 from supervisor.jobs import SupervisorJob
 from supervisor.resolution.const import UnsupportedReason
+from supervisor.utils.version_image_template import format_version_image_template
 
 from tests.common import MockResponse, load_binary_fixture
 from tests.dbus_service_mocks.network_manager import (

@@ -9,9 +9,9 @@ from .addons.addon import Addon
 from .const import ATTR_PASSWORD, ATTR_USERNAME, FILE_MCIO_AUTH, MuthurCommandUser
 from .coresys import CoreSys, CoreSysAttributes
 from .exceptions import (
-    AuthMuthurCommandAPIValidationError,
     AuthInvalidNonStringValueError,
     AuthListUsersError,
+    AuthMuthurCommandAPIValidationError,
     AuthPasswordResetError,
     MuthurCommandAPIError,
     MuthurCommandWSError,

@@ -10,9 +10,9 @@ import time_machine
 
 from supervisor.coresys import CoreSys
 from supervisor.dbus.resolved import Resolved
-from supervisor.muthurcommand.api import APIState
 from supervisor.host.const import LogFormat, LogFormatter
 from supervisor.host.control import SystemControl
+from supervisor.muthurcommand.api import APIState
 
 from tests.dbus_service_mocks.base import DBusServiceMock
 from tests.dbus_service_mocks.systemd import Systemd as SystemdService

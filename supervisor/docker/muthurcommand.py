@@ -9,9 +9,9 @@ from awesomeversion import AwesomeVersion
 from ..const import LABEL_MACHINE
 from ..exceptions import DockerJobError
 from ..hardware.const import PolicyGroup
-from ..muthurcommand.const import LANDINGPAGE
 from ..jobs.const import JobConcurrency
 from ..jobs.decorator import Job
+from ..muthurcommand.const import LANDINGPAGE
 from .const import (
     ENV_DUPLICATE_LOG_FILE,
     ENV_TIME,

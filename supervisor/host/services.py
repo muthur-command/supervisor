@@ -7,7 +7,7 @@ import attr
 
 from ..coresys import CoreSysAttributes
 from ..dbus.const import StartUnitMode, StopUnitMode
-from ..exceptions import McioError, HostNotSupportedError, HostServiceError
+from ..exceptions import HostNotSupportedError, HostServiceError, McioError
 
 _LOGGER: logging.Logger = logging.getLogger(__name__)
 

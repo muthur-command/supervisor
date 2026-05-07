@@ -20,23 +20,19 @@ from unittest.mock import AsyncMock, patch
 from awesomeversion import AwesomeVersion
 import pytest
 
+from supervisor.const import CoreState
 from supervisor.coresys import CoreSys
 from supervisor.docker.const import ContainerState
 from supervisor.docker.mc_backend import DockerMcBackend
 from supervisor.exceptions import DockerError, MCStackUpdateError
-from supervisor.misc.mc_stack import (
-    MCStackComponentHealth,
-    MCStackUpdateStrategy,
-)
+from supervisor.misc.filter import filter_data
+from supervisor.misc.mc_stack import MCStackComponentHealth, MCStackUpdateStrategy
 from supervisor.misc.tasks import MC_STACK_WATCHDOG_API_FAILURES, Tasks
 from supervisor.resolution.const import UnsupportedReason
-from supervisor.resolution.evaluations.mc_stack_version import (
-    EvaluateMCStackVersion,
-)
+from supervisor.resolution.evaluations.mc_stack_version import EvaluateMCStackVersion
 from supervisor.resolution.evaluations.muthurcommand_core_version import (
     EvaluateMuthurCommandCoreVersion,
 )
-
 
 # ---------------------------------------------------------------------------
 # Fixtures
@@ -114,7 +110,9 @@ async def test_update_skips_components_with_matching_versions(coresys: CoreSys) 
 
 
 @pytest.mark.usefixtures("stack_versions")
-async def test_update_invokes_components_when_versions_diverge(coresys: CoreSys) -> None:
+async def test_update_invokes_components_when_versions_diverge(
+    coresys: CoreSys,
+) -> None:
     """``update()`` only touches components whose desired version changed."""
     stack = coresys.mc_stack
     # Force "current" versions to diverge from the updater's "latest".
@@ -273,9 +271,7 @@ async def test_mc_stack_watchdog_resets_failure_counter_on_recovery(
     tasks._cache[MC_STACK_WATCHDOG_API_FAILURES] = 1  # noqa: SLF001
 
     with (
-        patch.object(
-            DockerMcBackend, "is_running", new=AsyncMock(return_value=True)
-        ),
+        patch.object(DockerMcBackend, "is_running", new=AsyncMock(return_value=True)),
         patch.object(
             coresys.mc_stack,
             "_check_backend_ready",
@@ -294,20 +290,14 @@ async def test_mc_stack_watchdog_first_tier_restart_only(coresys: CoreSys) -> No
     tasks._cache[MC_STACK_WATCHDOG_API_FAILURES] = 1  # noqa: SLF001  # one miss already
 
     with (
-        patch.object(
-            DockerMcBackend, "is_running", new=AsyncMock(return_value=True)
-        ),
+        patch.object(DockerMcBackend, "is_running", new=AsyncMock(return_value=True)),
         patch.object(
             coresys.mc_stack,
             "_check_backend_ready",
             new=AsyncMock(return_value=False),
         ),
-        patch.object(
-            DockerMcBackend, "restart", new=AsyncMock()
-        ) as backend_restart,
-        patch.object(
-            coresys.mc_stack, "restart", new=AsyncMock()
-        ) as stack_restart,
+        patch.object(DockerMcBackend, "restart", new=AsyncMock()) as backend_restart,
+        patch.object(coresys.mc_stack, "restart", new=AsyncMock()) as stack_restart,
     ):
         await tasks._watchdog_mc_stack()  # noqa: SLF001
 
@@ -324,9 +314,7 @@ async def test_mc_stack_watchdog_escalates_to_stack_when_backend_dead(
     tasks._cache[MC_STACK_WATCHDOG_API_FAILURES] = 1  # noqa: SLF001
 
     with (
-        patch.object(
-            DockerMcBackend, "is_running", new=AsyncMock(return_value=True)
-        ),
+        patch.object(DockerMcBackend, "is_running", new=AsyncMock(return_value=True)),
         patch.object(
             coresys.mc_stack,
             "_check_backend_ready",
@@ -342,9 +330,7 @@ async def test_mc_stack_watchdog_escalates_to_stack_when_backend_dead(
             "current_state",
             new=AsyncMock(return_value=ContainerState.FAILED),
         ),
-        patch.object(
-            coresys.mc_stack, "restart", new=AsyncMock()
-        ) as stack_restart,
+        patch.object(coresys.mc_stack, "restart", new=AsyncMock()) as stack_restart,
     ):
         await tasks._watchdog_mc_stack()  # noqa: SLF001
 
@@ -446,16 +432,11 @@ async def test_root_available_updates_lists_mc_stack(
 @pytest.mark.usefixtures("stack_versions")
 async def test_filter_data_includes_mc_stack_versions(coresys: CoreSys) -> None:
     """Sentry diagnostic context carries the MC stack versions."""
-    from supervisor.const import CoreState
-    from supervisor.misc.filter import filter_data
-
     coresys.config.diagnostics = True
     await coresys.core.set_state(CoreState.RUNNING)
 
     event = {"contexts": {}, "tags": {}}
-    with patch.object(
-        coresys.hardware.disk, "get_disk_free_space", return_value=12345
-    ):
+    with patch.object(coresys.hardware.disk, "get_disk_free_space", return_value=12345):
         out = filter_data(coresys, event, {})
     assert out is not None
     versions = out["contexts"]["versions"]

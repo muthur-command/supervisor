@@ -101,21 +101,36 @@ class EvaluateMCStackVersion(EvaluateBase):
         ]
 
     @staticmethod
+    def _calver_components(
+        current: AwesomeVersion, latest: AwesomeVersion
+    ) -> tuple[int, int, int, int] | None:
+        """Return normalized CalVer (year, month) pairs for current/latest."""
+        if (
+            latest.strategy != AwesomeVersionStrategy.CALVER
+            or current.strategy != AwesomeVersionStrategy.CALVER
+            or latest.year is None
+            or latest.minor is None
+            or current.year is None
+            or current.minor is None
+        ):
+            return None
+        return (
+            int(latest.year),
+            int(latest.minor),
+            int(current.year),
+            int(current.minor),
+        )
+
+    @staticmethod
     def _is_stale(current: AwesomeVersion, latest: AwesomeVersion) -> bool:
         """Return True if ``current`` is more than the cutoff behind ``latest``."""
         try:
             # CalVer (year.month.patch): compare year/month rolled into a
             # single month index so we don't fight December/January.
-            if (
-                latest.strategy == AwesomeVersionStrategy.CALVER
-                and current.strategy == AwesomeVersionStrategy.CALVER
-                and latest.year is not None
-                and latest.minor is not None
-                and current.year is not None
-                and current.minor is not None
-            ):
-                latest_idx = int(latest.year) * 12 + int(latest.minor)
-                current_idx = int(current.year) * 12 + int(current.minor)
+            if calver := EvaluateMCStackVersion._calver_components(current, latest):
+                latest_year, latest_month, current_year, current_month = calver
+                latest_idx = latest_year * 12 + latest_month
+                current_idx = current_year * 12 + current_month
                 return latest_idx - current_idx > _CALVER_CUTOFF_MONTHS
 
             # Otherwise fall back to a simple "current < latest" — that

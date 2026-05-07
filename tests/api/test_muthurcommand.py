@@ -12,8 +12,8 @@ import pytest
 from supervisor.backups.manager import BackupManager
 from supervisor.const import DNS_SUFFIX, CoreState
 from supervisor.coresys import CoreSys
-from supervisor.docker.muthurcommand import DockerMuthurCommand
 from supervisor.docker.interface import DockerInterface
+from supervisor.docker.muthurcommand import DockerMuthurCommand
 from supervisor.muthurcommand.api import APIState, MuthurCommandAPI
 from supervisor.muthurcommand.const import WSEvent
 from supervisor.muthurcommand.core import MuthurCommandCore
@@ -418,7 +418,7 @@ async def test_config_check(
             "Cmd": [
                 "python3",
                 "-m",
-                "homeassistant",
+                    "muthurcommand",
                 "-c",
                 "/config",
                 "--script",

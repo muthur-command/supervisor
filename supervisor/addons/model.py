@@ -29,10 +29,6 @@ from ..const import (
     ATTR_ENVIRONMENT,
     ATTR_FULL_ACCESS,
     ATTR_GPIO,
-    ATTR_MCIO_API,
-    ATTR_MCIO_ROLE,
-    ATTR_MUTHURCOMMAND,
-    ATTR_MUTHURCOMMAND_API,
     ATTR_HOST_DBUS,
     ATTR_HOST_IPC,
     ATTR_HOST_NETWORK,
@@ -48,6 +44,10 @@ from ..const import (
     ATTR_LOCATION,
     ATTR_MACHINE,
     ATTR_MAP,
+    ATTR_MCIO_API,
+    ATTR_MCIO_ROLE,
+    ATTR_MUTHURCOMMAND,
+    ATTR_MUTHURCOMMAND_API,
     ATTR_NAME,
     ATTR_OPTIONS,
     ATTR_PANEL_ADMIN,
@@ -93,8 +93,8 @@ from ..docker.const import Capabilities
 from ..exceptions import (
     AddonNotSupportedArchitectureError,
     AddonNotSupportedError,
-    AddonNotSupportedMuthurCommandVersionError,
     AddonNotSupportedMachineTypeError,
+    AddonNotSupportedMuthurCommandVersionError,
     HassioArchNotFound,
 )
 from ..jobs.const import JOB_GROUP_ADDON

@@ -23,11 +23,11 @@ from supervisor.exceptions import (
     BackupInvalidError,
     MuthurCommandBackupError,
 )
+from supervisor.jobs import SupervisorJob
+from supervisor.mounts.mount import Mount
 from supervisor.muthurcommand.core import MuthurCommandCore
 from supervisor.muthurcommand.module import MuthurCommand
 from supervisor.muthurcommand.websocket import MuthurCommandWebSocket
-from supervisor.jobs import SupervisorJob
-from supervisor.mounts.mount import Mount
 from supervisor.supervisor import Supervisor
 
 from tests.common import get_fixture_path

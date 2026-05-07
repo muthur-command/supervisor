@@ -31,8 +31,8 @@ ATTR_WATCHDOG = "watchdog"
 
 SCHEMA_MC_STACK_CONFIG = vol.Schema(
     {
-        vol.Optional(ATTR_BOOT, default=True): vol.Boolean(),
-        vol.Optional(ATTR_WATCHDOG, default=True): vol.Boolean(),
+        vol.Optional(ATTR_BOOT, default=True): bool,
+        vol.Optional(ATTR_WATCHDOG, default=True): bool,
     },
     extra=vol.REMOVE_EXTRA,
 )

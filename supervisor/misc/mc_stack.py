@@ -103,12 +103,16 @@ class MCStackComponentHealth:
     @property
     def degraded(self) -> bool:
         """Return True if the component is failed / stopped / unhealthy."""
-        return self.state in (
-            ContainerState.FAILED,
-            ContainerState.STOPPED,
-            ContainerState.UNHEALTHY,
-            ContainerState.UNKNOWN,
-        ) or not self.healthy
+        return (
+            self.state
+            in (
+                ContainerState.FAILED,
+                ContainerState.STOPPED,
+                ContainerState.UNHEALTHY,
+                ContainerState.UNKNOWN,
+            )
+            or not self.healthy
+        )
 
 
 class MCStack(CoreSysAttributes):
@@ -224,9 +228,7 @@ class MCStack(CoreSysAttributes):
         Supervisor startup.
         """
         if not self.enabled:
-            _LOGGER.info(
-                "MC stack: not all four images are configured; staying idle"
-            )
+            _LOGGER.info("MC stack: not all four images are configured; staying idle")
             return
 
         try:
@@ -284,9 +286,7 @@ class MCStack(CoreSysAttributes):
         if not self.enabled:
             return {}
 
-        probes: list[
-            tuple[DockerInterface, Callable[[], Awaitable[bool]]]
-        ] = [
+        probes: list[tuple[DockerInterface, Callable[[], Awaitable[bool]]]] = [
             (self.postgres, self._check_postgres_ready),
             (self.redis, self._check_redis_ready),
             (self.backend, self._check_backend_ready),
@@ -321,9 +321,7 @@ class MCStack(CoreSysAttributes):
             return
 
         info = self.version_info
-        plan: list[
-            tuple[DockerInterface, str | None, MCStackUpdateStrategy]
-        ] = [
+        plan: list[tuple[DockerInterface, str | None, MCStackUpdateStrategy]] = [
             (self.postgres, info.postgresql, MCStackUpdateStrategy.TAG_SWAP_RESTART),
             (self.redis, info.redis, MCStackUpdateStrategy.TAG_SWAP_RESTART),
             (self.backend, info.mc_bd, MCStackUpdateStrategy.ROLLING_RECREATE),

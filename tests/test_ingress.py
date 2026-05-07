@@ -5,7 +5,7 @@ import json
 from pathlib import Path
 from unittest.mock import ANY, patch
 
-from supervisor.const import MuthurCommandUser, IngressSessionData
+from supervisor.const import IngressSessionData, MuthurCommandUser
 from supervisor.coresys import CoreSys
 from supervisor.ingress import Ingress
 from supervisor.utils.dt import utc_from_timestamp

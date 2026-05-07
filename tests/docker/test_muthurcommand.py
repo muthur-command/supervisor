@@ -14,8 +14,8 @@ from supervisor.docker.const import (
     MountType,
     PropagationMode,
 )
-from supervisor.docker.muthurcommand import DockerMuthurCommand
 from supervisor.docker.manager import DockerAPI
+from supervisor.docker.muthurcommand import DockerMuthurCommand
 from supervisor.muthurcommand.const import LANDINGPAGE
 
 from . import DEV_MOUNT

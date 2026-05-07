@@ -13,8 +13,8 @@ from supervisor.const import BusEvent, CoreState
 from supervisor.coresys import CoreSys
 from supervisor.exceptions import (
     AudioUpdateError,
-    McioError,
     JobException,
+    McioError,
     PluginJobError,
 )
 from supervisor.host.const import HostFeature

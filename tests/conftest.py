@@ -687,9 +687,7 @@ async def api_client(
     async def _security_middleware(request: web.Request, handler: web.RequestHandler):
         """Make request are from Core or specified add-on."""
         if request_from:
-            request[REQUEST_FROM] = coresys.addons.get(
-                request_from, local_only=True
-            )
+            request[REQUEST_FROM] = coresys.addons.get(request_from, local_only=True)
         else:
             request[REQUEST_FROM] = coresys.muthurcommand
 

@@ -13,11 +13,7 @@ from typing import Final
 
 from awesomeversion import AwesomeVersion
 
-from ..const import (
-    MC_BACKEND_PORT,
-    MC_FRONTEND_DOCKER_NAME,
-    MC_ROLE_FRONTEND,
-)
+from ..const import MC_BACKEND_PORT, MC_FRONTEND_DOCKER_NAME, MC_ROLE_FRONTEND
 from ..coresys import CoreSysAttributes
 from ..exceptions import DockerJobError
 from ..jobs.const import JobConcurrency

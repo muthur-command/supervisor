@@ -1,5 +1,7 @@
 """Tests for the MC stack REST API endpoints."""
 
+# pylint: disable=protected-access
+
 from __future__ import annotations
 
 from unittest.mock import AsyncMock, patch
@@ -45,9 +47,7 @@ async def test_restart_endpoint_dispatches_to_stack(
     api_client: TestClient, coresys: CoreSys
 ) -> None:
     """``POST /mc_stack/restart`` calls into ``MCStack.restart``."""
-    with patch.object(
-        coresys.mc_stack, "restart", new=AsyncMock()
-    ) as mock_restart:
+    with patch.object(coresys.mc_stack, "restart", new=AsyncMock()) as mock_restart:
         resp = await api_client.post("/mc_stack/restart")
     assert resp.status == 200
     mock_restart.assert_awaited_once()
@@ -57,9 +57,7 @@ async def test_update_endpoint_dispatches_to_stack(
     api_client: TestClient, coresys: CoreSys
 ) -> None:
     """``POST /mc_stack/update`` calls into ``MCStack.update``."""
-    with patch.object(
-        coresys.mc_stack, "update", new=AsyncMock()
-    ) as mock_update:
+    with patch.object(coresys.mc_stack, "update", new=AsyncMock()) as mock_update:
         resp = await api_client.post("/mc_stack/update")
     assert resp.status == 200
     mock_update.assert_awaited_once()

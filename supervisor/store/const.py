@@ -3,12 +3,7 @@
 from enum import StrEnum
 from pathlib import Path
 
-from ..const import (
-    REPOSITORY_CORE,
-    REPOSITORY_LOCAL,
-    SUPERVISOR_DATA,
-    URL_MCIO_ADDONS,
-)
+from ..const import REPOSITORY_CORE, REPOSITORY_LOCAL, SUPERVISOR_DATA, URL_MCIO_ADDONS
 
 FILE_MCIO_STORE = Path(SUPERVISOR_DATA, "store.json")
 """Repository type definitions for the store."""
