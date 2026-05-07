@@ -35,7 +35,7 @@ RUN \
         LOCAL_WHEELS=; \
         echo "No local wheels found"; \
     fi && \
-    uv pip install --compile-bytecode --no-cache --no-build \
+    uv pip install --compile-bytecode --no-cache \
         -r requirements.txt \
         ${LOCAL_WHEELS:+--find-links $LOCAL_WHEELS}
 
