@@ -131,11 +131,49 @@ jobs:
             echo "CARGO_NET_GIT_FETCH_WITH_CLI=true"
           ) > .env_file
 
+      - name: Normalize and validate wheels key
+        id: wheels_key
+        if: needs.init.outputs.build_wheels == 'true' && needs.init.outputs.publish == 'true'
+        shell: bash
+        run: |
+          raw_key="$(printf '%s' "${{ secrets.WHEELS_KEY }}" | tr -d '\r')"
+          key_body="$(printf '%s\n' "$raw_key" | sed \
+            -e '/-----BEGIN [A-Z0-9 ]*PRIVATE KEY-----/d' \
+            -e '/-----END [A-Z0-9 ]*PRIVATE KEY-----/d' \
+            -e '/^[[:space:]]*$/d')"
+
+          if [ -z "$key_body" ]; then
+            echo "::error::Secret WHEELS_KEY is empty after normalization."
+            exit 1
+          fi
+
+          tmp_key="$(mktemp)"
+          {
+            echo "-----BEGIN RSA PRIVATE KEY-----"
+            printf '%s\n' "$key_body"
+            echo "-----END RSA PRIVATE KEY-----"
+          } > "$tmp_key"
+          chmod 600 "$tmp_key"
+
+          if ! ssh-keygen -y -f "$tmp_key" >/dev/null 2>&1; then
+            echo "::error::WHEELS_KEY is not compatible with RSA PEM body expected by muthur-command/wheels."
+            echo "::error::Store WHEELS_KEY as RSA private key body (or full RSA PEM that can be normalized)."
+            rm -f "$tmp_key"
+            exit 1
+          fi
+          rm -f "$tmp_key"
+
+          {
+            echo "value<<EOF"
+            printf '%s\n' "$key_body"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
       - name: Build and publish wheels
         if: needs.init.outputs.build_wheels == 'true' && needs.init.outputs.publish == 'true'
         uses: muthur-command/wheels@2026.04.1
         with:
-          wheels-key: ${{ secrets.WHEELS_KEY }}
+          wheels-key: ${{ steps.wheels_key.outputs.value }}
           abi: ${{ env.WHEELS_ABI }}
           tag: ${{ env.WHEELS_TAG }}
           arch: ${{ matrix.arch }}
