@@ -105,14 +105,13 @@ class EvaluateMCStackVersion(EvaluateBase):
         current: AwesomeVersion, latest: AwesomeVersion
     ) -> tuple[int, int, int, int] | None:
         """Return normalized CalVer (year, month) pairs for current/latest."""
-        if (
-            latest.strategy != AwesomeVersionStrategy.CALVER
-            or current.strategy != AwesomeVersionStrategy.CALVER
-            or latest.year is None
-            or latest.minor is None
-            or current.year is None
-            or current.minor is None
-        ):
+        if latest.strategy != AwesomeVersionStrategy.CALVER:
+            return None
+        if current.strategy != AwesomeVersionStrategy.CALVER:
+            return None
+        if latest.year is None or latest.minor is None:
+            return None
+        if current.year is None or current.minor is None:
             return None
         return (
             int(latest.year),

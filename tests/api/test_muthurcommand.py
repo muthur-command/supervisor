@@ -418,7 +418,7 @@ async def test_config_check(
             "Cmd": [
                 "python3",
                 "-m",
-                    "muthurcommand",
+                "muthurcommand",
                 "-c",
                 "/config",
                 "--script",
