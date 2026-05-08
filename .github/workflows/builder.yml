@@ -118,7 +118,7 @@ jobs:
       WHEELS_HOST: wheels.muthur-command.com
       WHEELS_PORT: "45576"
       WHEELS_USER: wheels
-      WHEELS_REMOTE_PATH: /opt/wheels
+      WHEELS_REMOTE_PATH: /opt/1panel/www/sites/wheels.muthur-command.com/index/data
       WHEELS_APK_DEPS: "libffi-dev;openssl-dev;yaml-dev"
       WHEELS_SKIP_BINARY: aiohttp
     steps:
