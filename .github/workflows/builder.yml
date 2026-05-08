@@ -206,6 +206,7 @@ jobs:
         shell: bash
         run: |
           rsync --human-readable --recursive --progress --checksum \
+            --chmod=F664,D664 \
             --rsh "ssh -F .ssh/config" \
             wheels/* \
             "${{ env.WHEELS_USER }}@${{ env.WHEELS_HOST }}:${{ env.WHEELS_REMOTE_PATH }}/"
