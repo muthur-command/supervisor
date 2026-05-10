@@ -95,7 +95,7 @@ def test_system_partition_disk(coresys: CoreSys):
         "block",
         None,
         [],
-        {"MAJOR": "5", "MINOR": "10", "ID_FS_LABEL": "hassos-overlay"},
+        {"MAJOR": "5", "MINOR": "10", "ID_FS_LABEL": "mcos-overlay"},
         [],
     )
 

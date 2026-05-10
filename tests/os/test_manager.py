@@ -101,7 +101,7 @@ async def test_update_fails_if_unhealthy(
 
 
 async def test_board_name_supervised(coresys: CoreSys) -> None:
-    """Test board name is supervised when not on haos."""
+    """Test board name is supervised when not on MCOS."""
     with patch("supervisor.os.manager.CPE.get_product", return_value=["not-mcos"]):
         await coresys.dbus.hostname.connect(coresys.dbus.bus)
         await coresys.os.load()
@@ -122,14 +122,14 @@ async def test_load_slot_status_fresh_install(
                 "boot-status": Variant("s", "good"),
                 "type": Variant("s", "raw"),
                 "bootname": Variant("s", "A"),
-                "device": Variant("s", "/dev/disk/by-partlabel/hassos-kernel0"),
+                "device": Variant("s", "/dev/disk/by-partlabel/mcos-kernel0"),
                 "state": Variant("s", "inactive"),
             },
         ),
         (
             "boot.0",
             {
-                "bundle.compatible": Variant("s", "haos-green"),
+                "bundle.compatible": Variant("s", "mcos-green"),
                 "sha256": Variant(
                     "s",
                     "f0b8a08d9bc49acbb230cf709beb0aa214cbee09969566755dff52fb8b3cc29b",
@@ -138,7 +138,7 @@ async def test_load_slot_status_fresh_install(
                 "size": Variant("t", 16777216),
                 "installed.count": Variant("u", 1),
                 "class": Variant("s", "boot"),
-                "device": Variant("s", "/dev/disk/by-partlabel/hassos-boot"),
+                "device": Variant("s", "/dev/disk/by-partlabel/mcos-boot"),
                 "type": Variant("s", "vfat"),
                 "status": Variant("s", "ok"),
                 "bundle.version": Variant("s", "12.2.dev20240313"),
@@ -152,13 +152,13 @@ async def test_load_slot_status_fresh_install(
                 "parent": Variant("s", "kernel.0"),
                 "type": Variant("s", "raw"),
                 "state": Variant("s", "inactive"),
-                "device": Variant("s", "/dev/disk/by-partlabel/hassos-system0"),
+                "device": Variant("s", "/dev/disk/by-partlabel/mcos-system0"),
             },
         ),
         (
             "spl.0",
             {
-                "bundle.compatible": Variant("s", "haos-green"),
+                "bundle.compatible": Variant("s", "mcos-green"),
                 "sha256": Variant(
                     "s",
                     "97e4f1616250e7f9d2b20d98a972cf3aab03849a8cf50a8630f96a183b64384f",
@@ -167,7 +167,7 @@ async def test_load_slot_status_fresh_install(
                 "size": Variant("t", 16777216),
                 "installed.count": Variant("u", 1),
                 "class": Variant("s", "spl"),
-                "device": Variant("s", "/dev/disk/by-partlabel/hassos-boot"),
+                "device": Variant("s", "/dev/disk/by-partlabel/mcos-boot"),
                 "type": Variant("s", "raw"),
                 "status": Variant("s", "ok"),
                 "bundle.version": Variant("s", "12.2.dev20240313"),
@@ -180,7 +180,7 @@ async def test_load_slot_status_fresh_install(
                 "activated.count": Variant("u", 1),
                 "activated.timestamp": Variant("s", "2024-03-15T17:27:47Z"),
                 "boot-status": Variant("s", "good"),
-                "bundle.compatible": Variant("s", "haos-green"),
+                "bundle.compatible": Variant("s", "mcos-green"),
                 "sha256": Variant(
                     "s",
                     "c327b3c2ac4f56926d0d7c4693fe79c67dc05ed49c4abd020da981bf4faf977f",
@@ -189,7 +189,7 @@ async def test_load_slot_status_fresh_install(
                 "size": Variant("t", 13410304),
                 "installed.count": Variant("u", 1),
                 "class": Variant("s", "kernel"),
-                "device": Variant("s", "/dev/disk/by-partlabel/hassos-kernel1"),
+                "device": Variant("s", "/dev/disk/by-partlabel/mcos-kernel1"),
                 "type": Variant("s", "raw"),
                 "bootname": Variant("s", "B"),
                 "bundle.version": Variant("s", "12.2.dev20240313"),
@@ -200,7 +200,7 @@ async def test_load_slot_status_fresh_install(
         (
             "rootfs.1",
             {
-                "bundle.compatible": Variant("s", "haos-green"),
+                "bundle.compatible": Variant("s", "mcos-green"),
                 "parent": Variant("s", "kernel.1"),
                 "state": Variant("s", "active"),
                 "size": Variant("t", 194560000),
@@ -209,7 +209,7 @@ async def test_load_slot_status_fresh_install(
                     "151dbfff469a7f1252cb8482e7a9439c5164f52c53ed141e377c10e6858208cb",
                 ),
                 "class": Variant("s", "rootfs"),
-                "device": Variant("s", "/dev/disk/by-partlabel/hassos-system1"),
+                "device": Variant("s", "/dev/disk/by-partlabel/mcos-system1"),
                 "type": Variant("s", "raw"),
                 "status": Variant("s", "ok"),
                 "bundle.version": Variant("s", "12.2.dev20240313"),

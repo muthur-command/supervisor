@@ -57,7 +57,7 @@ async def test_fixup(coresys: CoreSys, sda1_filesystem_service: FilesystemServic
     assert sda1_filesystem_service.SetLabel.calls == [
         (
             "/org/freedesktop/UDisks2/block_devices/sda1",
-            "hassos-data-old",
+            "mcos-data-old",
             {"auth.no_user_interaction": Variant("b", True)},
         )
     ]

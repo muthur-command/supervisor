@@ -44,13 +44,13 @@ class HwDisk(CoreSysAttributes):
                 except HardwareNotFound:
                     continue
                 if device.subsystem == UdevSubsystem.DISK:
-                    if device.attributes.get("ID_FS_LABEL", "").startswith("hassos"):
+                    if device.attributes.get("ID_FS_LABEL", "").startswith("mcos"):
                         return True
             return False
 
         # Partition
         if device.minor > 0 and device.attributes.get("ID_FS_LABEL", "").startswith(
-            "hassos"
+            "mcos"
         ):
             return True
 

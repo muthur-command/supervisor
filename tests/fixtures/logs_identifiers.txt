@@ -13,11 +13,11 @@ login
 systemd-hostnamed
 mcos-config
 wpa_supplicant
-hassos-persists
+mcos-persists
 systemd-tmpfiles
 systemd-random-seed
 systemd-growfs
-hassos-expand
+mcos-expand
 systemd-fsck
 dbus-broker
 rngd
@@ -25,7 +25,7 @@ systemd-logind
 ghcr.io/muthur-command/aarch64-mcio-multicast:2022.02.0/mcio_multicast
 ghcr.io/muthur-command/aarch64-mcio-cli:2022.08.dev1602/mcio_cli
 os-agent
-hassos-supervisor
+mcos-supervisor
 docker
 dropbear
 systemd-time-wait-sync

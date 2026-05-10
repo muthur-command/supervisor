@@ -1,4 +1,4 @@
-"""Home Assistant Operating-System DataDisk."""
+"""Muthur Command OS (MCOS) data disk handling."""
 
 import asyncio
 from contextlib import suppress
@@ -223,8 +223,8 @@ class DataDisk(CoreSysAttributes):
                 f"'{new_disk}' not a valid data disk target!", _LOGGER.error
             ) from None
 
-        # If any other partition is named "hassos-data-external" error and ask for its removal
-        # otherwise it will create a race condition at startup
+        # If any other partition is named for external data (see PARTITION_NAME_EXTERNAL_DATA_DISK),
+        # error and ask for its removal — otherwise it will create a race condition at startup.
         if self.disk_used and (
             conflicts := [
                 block
@@ -236,7 +236,7 @@ class DataDisk(CoreSysAttributes):
             ]
         ):
             raise McosDataDiskError(
-                f"Partition(s) {', '.join([conflict.device.as_posix() for conflict in conflicts])} have name 'hassos-data-external' which prevents migration. Remove or rename them first.",
+                f"Partition(s) {', '.join([conflict.device.as_posix() for conflict in conflicts])} have name '{PARTITION_NAME_EXTERNAL_DATA_DISK}' which prevents migration. Remove or rename them first.",
                 _LOGGER.error,
             )
 

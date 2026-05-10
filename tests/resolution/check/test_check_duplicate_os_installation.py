@@ -50,7 +50,7 @@ async def test_check_with_duplicates(coresys: CoreSys):
 
     # Mock resolve_device to return duplicates for first partition, empty for others
     async def mock_resolve_device(spec):
-        if spec.partlabel == "hassos-boot":  # First partition in the list
+        if spec.partlabel == "mcos-boot":  # First partition in the list
             return mock_devices
         return []
 
@@ -70,7 +70,7 @@ async def test_check_with_duplicates(coresys: CoreSys):
 
         # Should only check first partition (returns early)
         mock_resolve.assert_called_once_with(
-            DeviceSpecification(partlabel="hassos-boot")
+            DeviceSpecification(partlabel="mcos-boot")
         )
 
 
@@ -87,7 +87,7 @@ async def test_check_with_mbr_duplicates(coresys: CoreSys):
 
     # Mock resolve_device to return duplicates for first MBR partition UUID, empty for others
     async def mock_resolve_device(spec):
-        if spec.partuuid == "48617373-01":  # hassos-boot MBR UUID
+        if spec.partuuid == "48617373-01":  # mcos-boot MBR UUID
             return mock_devices
         return []
 

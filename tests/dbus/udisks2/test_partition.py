@@ -57,7 +57,7 @@ async def test_partition_table_info(
     await sda1.connect(dbus_session_bus)
     await sdb1.connect(dbus_session_bus)
 
-    assert sda1.name_ == "hassos-data-external"
+    assert sda1.name_ == "mcos-data-external"
     assert sda1.size == 250058113024
     assert sdb1.name_ == ""
     assert sdb1.size == 67108864
@@ -69,7 +69,7 @@ async def test_partition_table_info(
     partition_sda1_service.emit_properties_changed({}, ["Name"])
     await partition_sda1_service.ping()
     await partition_sda1_service.ping()
-    assert sda1.name_ == "hassos-data-external"
+    assert sda1.name_ == "mcos-data-external"
 
     # Prop changes should not sync for this one
     partition_sdb1_service.emit_properties_changed({"Name": "test"})

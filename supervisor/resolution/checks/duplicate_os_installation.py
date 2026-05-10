@@ -12,20 +12,20 @@ _LOGGER: logging.Logger = logging.getLogger(__name__)
 
 # Partition labels to check for duplicates (GPT-based installations)
 HAOS_PARTITIONS = [
-    "hassos-boot",
-    "hassos-kernel0",
-    "hassos-kernel1",
-    "hassos-system0",
-    "hassos-system1",
+    "mcos-boot",
+    "mcos-kernel0",
+    "mcos-kernel1",
+    "mcos-system0",
+    "mcos-system1",
 ]
 
 # Partition UUIDs to check for duplicates (MBR-based installations)
 HAOS_PARTITION_UUIDS = [
-    "48617373-01",  # hassos-boot
-    "48617373-05",  # hassos-kernel0
-    "48617373-06",  # hassos-system0
-    "48617373-07",  # hassos-kernel1
-    "48617373-08",  # hassos-system1
+    "48617373-01",  # mcos-boot
+    "48617373-05",  # mcos-kernel0
+    "48617373-06",  # mcos-system0
+    "48617373-07",  # mcos-kernel1
+    "48617373-08",  # mcos-system1
 ]
 
 

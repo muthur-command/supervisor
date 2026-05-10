@@ -149,8 +149,8 @@ async def test_free_space(coresys: CoreSys):
         assert await test.execute()
 
 
-async def test_haos(coresys: CoreSys):
-    """Test the haos decorator."""
+async def test_mcos_job_condition(coresys: CoreSys):
+    """Test the MCOS Job decorator."""
 
     class TestClass:
         """Test class."""
@@ -159,7 +159,7 @@ async def test_haos(coresys: CoreSys):
             """Initialize the test class."""
             self.coresys = coresys
 
-        @Job(name="test_haos_execute", conditions=[JobCondition.MCOS])
+        @Job(name="test_mcos_execute", conditions=[JobCondition.MCOS])
         async def execute(self):
             """Execute the class method."""
             return True

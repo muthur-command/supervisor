@@ -69,11 +69,11 @@ async def test_get_slot_status(rauc_service: RaucService, dbus_session_bus: Mess
     assert len(slot_status) == 6
     assert slot_status[0][0] == "kernel.0"
     assert slot_status[0][1]["boot-status"] == "good"
-    assert slot_status[0][1]["device"] == "/dev/disk/by-partlabel/hassos-kernel0"
+    assert slot_status[0][1]["device"] == "/dev/disk/by-partlabel/mcos-kernel0"
     assert slot_status[0][1]["bootname"] == "A"
     assert slot_status[4][0] == "kernel.1"
     assert slot_status[4][1]["boot-status"] == "good"
-    assert slot_status[4][1]["device"] == "/dev/disk/by-partlabel/hassos-kernel1"
+    assert slot_status[4][1]["device"] == "/dev/disk/by-partlabel/mcos-kernel1"
     assert slot_status[4][1]["bootname"] == "B"
 
 

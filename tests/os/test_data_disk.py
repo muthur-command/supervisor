@@ -174,7 +174,7 @@ async def test_datadisk_migrate_mark_data_move(
             0,
             0,
             "0FC63DAF-8483-4772-8E79-3D69D8477DE4",
-            "hassos-data-external",
+            "mcos-data-external",
             {"auth.no_user_interaction": Variant("b", True)},
         )
     ]
@@ -219,7 +219,7 @@ async def test_datadisk_migrate_multiple_external_data_disks(
     all_dbus_services: dict[str, DBusServiceMock | dict[str, DBusServiceMock]],
     os_available,
 ):
-    """Test migration stops when another hassos-data-external partition detected."""
+    """Test migration stops when another mcos-data-external partition detected."""
     datadisk_service: DataDiskService = all_dbus_services["agent_datadisk"]
     datadisk_service.ChangeDevice.calls.clear()
     datadisk_service.MarkDataMove.calls.clear()
@@ -233,7 +233,7 @@ async def test_datadisk_migrate_multiple_external_data_disks(
 
     with pytest.raises(
         McosDataDiskError,
-        match=r"Partition\(s\) /dev/sda1 have name 'hassos-data-external' which prevents migration",
+        match=r"Partition\(s\) /dev/sda1 have name 'mcos-data-external' which prevents migration",
     ):
         await coresys.os.datadisk.migrate_disk("Generic-Flash-Disk-61BCDDB6")
 
@@ -275,7 +275,7 @@ async def test_datadisk_migrate_between_external_renames(
 
     assert datadisk_service.MarkDataMove.calls == [()]
     assert sdb1_partition_service.SetName.calls == [
-        ("hassos-data-external-old", {"auth.no_user_interaction": Variant("b", True)})
+        ("mcos-data-external-old", {"auth.no_user_interaction": Variant("b", True)})
     ]
 
 
@@ -339,7 +339,7 @@ async def test_multiple_datadisk_add_remove_signals(
     assert coresys.resolution.issues == []
     assert coresys.resolution.suggestions == []
 
-    sdb1_block.fixture = replace(sdb1_block.fixture, IdLabel="hassos-data")
+    sdb1_block.fixture = replace(sdb1_block.fixture, IdLabel="mcos-data")
     udisks2_service.InterfacesAdded(
         "/org/freedesktop/UDisks2/block_devices/sdb1",
         {
@@ -351,7 +351,7 @@ async def test_multiple_datadisk_add_remove_signals(
                 "IdUsage": Variant("s", ""),
                 "IdType": Variant("s", ""),
                 "IdVersion": Variant("s", ""),
-                "IdLabel": Variant("s", "hassos-data"),
+                "IdLabel": Variant("s", "mcos-data"),
                 "IdUUID": Variant("s", ""),
             }
         },
@@ -391,7 +391,7 @@ async def test_disabled_datadisk_add_remove_signals(
     assert coresys.resolution.issues == []
     assert coresys.resolution.suggestions == []
 
-    sdb1_block.fixture = replace(sdb1_block.fixture, IdLabel="hassos-data-dis")
+    sdb1_block.fixture = replace(sdb1_block.fixture, IdLabel="mcos-data-dis")
     udisks2_service.InterfacesAdded(
         "/org/freedesktop/UDisks2/block_devices/sdb1",
         {
@@ -403,7 +403,7 @@ async def test_disabled_datadisk_add_remove_signals(
                 "IdUsage": Variant("s", ""),
                 "IdType": Variant("s", ""),
                 "IdVersion": Variant("s", ""),
-                "IdLabel": Variant("s", "hassos-data-dis"),
+                "IdLabel": Variant("s", "mcos-data-dis"),
                 "IdUUID": Variant("s", ""),
             }
         },

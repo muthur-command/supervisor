@@ -43,7 +43,7 @@ async def test_check(coresys: CoreSys, sda1_block_service: BlockService):
     assert len(coresys.resolution.issues) == 0
     assert len(coresys.resolution.suggestions) == 0
 
-    sda1_block_service.emit_properties_changed({"IdLabel": "hassos-data-dis"})
+    sda1_block_service.emit_properties_changed({"IdLabel": "mcos-data-dis"})
     await sda1_block_service.ping()
 
     await disabled_data_disk.run_check()
@@ -69,7 +69,7 @@ async def test_approve(coresys: CoreSys, sda1_block_service: BlockService):
     assert not await disabled_data_disk.approve_check(reference="/dev/sda1")
 
     sda1_block_service.fixture = replace(
-        sda1_block_service.fixture, IdLabel="hassos-data-dis"
+        sda1_block_service.fixture, IdLabel="mcos-data-dis"
     )
 
     assert await disabled_data_disk.approve_check(reference="/dev/sda1")

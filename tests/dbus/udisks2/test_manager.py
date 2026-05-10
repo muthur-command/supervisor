@@ -235,7 +235,7 @@ async def test_get_block_device(
     block_device = udisks2.get_block_device(
         "/org/freedesktop/UDisks2/block_devices/sda1"
     )
-    assert block_device.id_label == "hassos-data-old"
+    assert block_device.id_label == "mcos-data-old"
 
     with pytest.raises(DBusObjectError):
         udisks2.get_block_device("non_existent")
@@ -273,7 +273,7 @@ async def test_resolve_device(
 
     devices = await udisks2.resolve_device(DeviceSpecification(path=Path("/dev/sda1")))
     assert len(devices) == 1
-    assert devices[0].id_label == "hassos-data-old"
+    assert devices[0].id_label == "mcos-data-old"
     assert udisks2_manager_service.ResolveDevice.calls == [
         (
             {"path": Variant("s", "/dev/sda1")},

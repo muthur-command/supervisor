@@ -73,7 +73,7 @@ def test_allowed_access(coresys):
         "block",
         None,
         [],
-        {"MAJOR": "5", "MINOR": "10", "ID_FS_LABEL": "hassos-overlay"},
+        {"MAJOR": "5", "MINOR": "10", "ID_FS_LABEL": "mcos-overlay"},
         [],
     )
 

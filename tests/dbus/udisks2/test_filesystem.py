@@ -93,7 +93,7 @@ async def test_mount(
 ):
     """Test mount."""
     filesystem_sda1_service.Mount.calls.clear()
-    assert await sda1.mount(MountOptions(fstype="gpt")) == "/run/media/dev/hassos_data"
+    assert await sda1.mount(MountOptions(fstype="gpt")) == "/run/media/dev/mcos_data"
     assert filesystem_sda1_service.Mount.calls == [
         (
             {

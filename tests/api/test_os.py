@@ -317,7 +317,7 @@ async def test_api_board_supervised_info(
     boards_service.board = "Supervised"
     await coresys.dbus.agent.board.connect(coresys.dbus.bus)
 
-    with patch("supervisor.os.manager.CPE.get_product", return_value=["not-hassos"]):
+    with patch("supervisor.os.manager.CPE.get_product", return_value=["not-mcos"]):
         await coresys.os.load()
 
         assert (await api_client.get("/os/boards/supervised")).status == 200

@@ -109,7 +109,7 @@ async def test_create_partition(
             offset=0,
             size=1000000,
             type_="0FC63DAF-8483-4772-8E79-3D69D8477DE4",
-            name="hassos-data",
+            name="mcos-data",
             options=CreatePartitionOptions(partition_type="primary"),
         )
         == "/org/freedesktop/UDisks2/block_devices/sda1"
@@ -119,7 +119,7 @@ async def test_create_partition(
             0,
             1000000,
             "0FC63DAF-8483-4772-8E79-3D69D8477DE4",
-            "hassos-data",
+            "mcos-data",
             {
                 "partition-type": Variant("s", "primary"),
                 "auth.no_user_interaction": Variant("b", True),

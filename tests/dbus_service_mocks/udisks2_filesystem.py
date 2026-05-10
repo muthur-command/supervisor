@@ -90,7 +90,7 @@ class Filesystem(DBusServiceMock):
     @dbus_method()
     def Mount(self, options: "a{sv}") -> "s":
         """Do Mount method."""
-        return "/run/media/dev/hassos_data"
+        return "/run/media/dev/mcos_data"
 
     @dbus_method()
     def Unmount(self, options: "a{sv}") -> None:

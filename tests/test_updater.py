@@ -224,7 +224,7 @@ async def test_fetch_data_no_update_when_os_unsupported(
     # Store initial versions to compare later
     initial_supervisor_version = coresys.updater.version_supervisor
     initial_muthurcommand_version = coresys.updater.version_muthurcommand
-    initial_hassos_version = coresys.updater.version_mcos
+    initial_mcos_version = coresys.updater.version_mcos
 
     coresys.websession.head = AsyncMock()
 
@@ -240,4 +240,4 @@ async def test_fetch_data_no_update_when_os_unsupported(
     # Verify that versions were not updated
     assert coresys.updater.version_supervisor == initial_supervisor_version
     assert coresys.updater.version_muthurcommand == initial_muthurcommand_version
-    assert coresys.updater.version_mcos == initial_hassos_version
+    assert coresys.updater.version_mcos == initial_mcos_version

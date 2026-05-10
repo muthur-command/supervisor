@@ -79,7 +79,7 @@ async def test_fixup(
     mmcblk1p3_filesystem_service.SetLabel.calls.clear()
     logind_service.Reboot.calls.clear()
     sda1_device.block_service.fixture = replace(
-        sda1_device.block_service.fixture, IdLabel="hassos-data"
+        sda1_device.block_service.fixture, IdLabel="mcos-data"
     )
     system_adopt_data_disk = FixupSystemAdoptDataDisk(coresys)
 
@@ -103,7 +103,7 @@ async def test_fixup(
     assert mmcblk1p3_filesystem_service.SetLabel.calls == [
         (
             "/org/freedesktop/UDisks2/block_devices/mmcblk1p3",
-            "hassos-data-old",
+            "mcos-data-old",
             {"auth.no_user_interaction": Variant("b", True)},
         )
     ]
@@ -157,7 +157,7 @@ async def test_fixup_reboot_failed(
     mmcblk1p3_filesystem_service.SetLabel.calls.clear()
     logind_service.side_effect_reboot = DBusError(ErrorType.SERVICE_ERROR, "error")
     sda1_device.block_service.fixture = replace(
-        sda1_device.block_service.fixture, IdLabel="hassos-data"
+        sda1_device.block_service.fixture, IdLabel="mcos-data"
     )
     system_adopt_data_disk = FixupSystemAdoptDataDisk(coresys)
 
@@ -181,7 +181,7 @@ async def test_fixup_reboot_failed(
     assert mmcblk1p3_filesystem_service.SetLabel.calls == [
         (
             "/org/freedesktop/UDisks2/block_devices/mmcblk1p3",
-            "hassos-data-old",
+            "mcos-data-old",
             {"auth.no_user_interaction": Variant("b", True)},
         )
     ]
@@ -209,7 +209,7 @@ async def test_fixup_disabled_data_disk(
     mmcblk1p3_filesystem_service.SetLabel.calls.clear()
     logind_service.Reboot.calls.clear()
     sda1_device.block_service.fixture = replace(
-        sda1_device.block_service.fixture, IdLabel="hassos-data-dis"
+        sda1_device.block_service.fixture, IdLabel="mcos-data-dis"
     )
     system_adopt_data_disk = FixupSystemAdoptDataDisk(coresys)
 
@@ -233,12 +233,12 @@ async def test_fixup_disabled_data_disk(
     assert mmcblk1p3_filesystem_service.SetLabel.calls == [
         (
             "/org/freedesktop/UDisks2/block_devices/sda1",
-            "hassos-data",
+            "mcos-data",
             {"auth.no_user_interaction": Variant("b", True)},
         ),
         (
             "/org/freedesktop/UDisks2/block_devices/mmcblk1p3",
-            "hassos-data-old",
+            "mcos-data-old",
             {"auth.no_user_interaction": Variant("b", True)},
         ),
     ]

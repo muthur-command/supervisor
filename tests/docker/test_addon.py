@@ -467,7 +467,7 @@ async def test_addon_new_device(
 
 @pytest.mark.usefixtures("path_extern", "tmp_supervisor_data")
 @pytest.mark.parametrize("dev_path", [TEST_DEV_PATH, TEST_SYSFS_PATH])
-async def test_addon_new_device_no_haos(
+async def test_addon_new_device_no_mcos(
     coresys: CoreSys, install_addon_ssh: Addon, docker: DockerAPI, dev_path: str
 ):
     """Test new device that is listed in static devices on non HAOS system with CGroup V2."""
