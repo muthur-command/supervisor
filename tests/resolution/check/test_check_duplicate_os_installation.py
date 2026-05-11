@@ -69,9 +69,7 @@ async def test_check_with_duplicates(coresys: CoreSys):
         assert UnhealthyReason.DUPLICATE_OS_INSTALLATION in coresys.resolution.unhealthy
 
         # Should only check first partition (returns early)
-        mock_resolve.assert_called_once_with(
-            DeviceSpecification(partlabel="mcos-boot")
-        )
+        mock_resolve.assert_called_once_with(DeviceSpecification(partlabel="mcos-boot"))
 
 
 @pytest.mark.usefixtures("os_available")
