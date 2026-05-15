@@ -8,7 +8,7 @@ pytest-asyncio==1.3.0
 pytest-cov==7.1.0
 pytest-timeout==2.4.0
 pytest==9.0.3
-ruff==0.15.12
+ruff==0.15.13
 time-machine==3.2.0
 types-pyyaml==6.0.12.20260510
 urllib3==2.7.0
