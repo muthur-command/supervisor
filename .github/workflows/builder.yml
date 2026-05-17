@@ -201,12 +201,32 @@ jobs:
           env-file: true
           requirements: "requirements.txt"
 
+      - name: Check remote wheels directory permissions
+        if: needs.init.outputs.build_wheels == 'true' && needs.init.outputs.publish == 'true'
+        shell: bash
+        env:
+          WHEELS_REMOTE_PATH: ${{ env.WHEELS_REMOTE_PATH }}
+        run: |
+          if ! ssh -F .ssh/config "${{ env.WHEELS_USER }}@${{ env.WHEELS_HOST }}" \
+            "test -w '${WHEELS_REMOTE_PATH}' && test -r '${WHEELS_REMOTE_PATH}'"; then
+            echo "::error::${{ env.WHEELS_USER }} cannot read/write ${{ env.WHEELS_REMOTE_PATH }}."
+            exit 1
+          fi
+          existing=$(ssh -F .ssh/config "${{ env.WHEELS_USER }}@${{ env.WHEELS_HOST }}" \
+            "find '${WHEELS_REMOTE_PATH}' -name '*.whl' -print -quit 2>/dev/null" || true)
+          if [ -n "$existing" ] && ! ssh -F .ssh/config "${{ env.WHEELS_USER }}@${{ env.WHEELS_HOST }}" \
+            "test -r '$existing'"; then
+            echo "::error::Cannot read existing remote wheel: $existing"
+            echo "::error::On server: chown -R wheels:wheels '${WHEELS_REMOTE_PATH}' or setfacl -R -m u:wheels:rwx (and -d default ACL)."
+            exit 1
+          fi
+
       - name: Upload wheels to remote repository
         if: needs.init.outputs.build_wheels == 'true' && needs.init.outputs.publish == 'true'
         shell: bash
         run: |
-          rsync --human-readable --recursive --progress --checksum \
-            --chmod=F664,D664 \
+          rsync --human-readable --recursive --progress \
+            --chmod=F664,D775 \
             --rsh "ssh -F .ssh/config" \
             wheels/* \
             "${{ env.WHEELS_USER }}@${{ env.WHEELS_HOST }}:${{ env.WHEELS_REMOTE_PATH }}/"
