@@ -1,0 +1,56 @@
+# Daily sync of the Home Assistant upstream default branch to this repo's upstream branch.
+# Note: schedule runs in UTC. For 00:00 Beijing time daily, use cron: '0 16 * * *' (UTC).
+name: Sync Home Assistant upstream
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 0 * * *"
+
+# GITHUB_TOKEN cannot update .github/workflows/* on push; use GIT_TOKEN (PAT with workflow scope).
+permissions:
+  contents: read
+
+concurrency:
+  group: sync-home-assistant-upstream
+  cancel-in-progress: false
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          submodules: false
+          persist-credentials: false
+
+      - name: Configure Git author for sync commits
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Verify GIT_TOKEN is configured
+        env:
+          GIT_TOKEN: ${{ secrets.GIT_TOKEN }}
+        run: |
+          if [ -z "$GIT_TOKEN" ]; then
+            echo "::error::Missing repository secret GIT_TOKEN. Add a PAT with repo + workflow scopes under Settings → Secrets → Actions."
+            exit 1
+          fi
+
+      - name: Configure Git credentials for push
+        env:
+          GIT_TOKEN: ${{ secrets.GIT_TOKEN }}
+        run: |
+          git config --global --unset-all credential.helper || true
+          git remote set-url origin "https://x-access-token:${GIT_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+
+      - name: Sync upstream branch from home-assistant/supervisor
+        env:
+          UPSTREAM_URL: https://github.com/home-assistant/supervisor.git
+          TRACK_BRANCH: main
+        run: |
+          chmod +x scripts/sync-upstream-from-home-assistant.sh
+          ./scripts/sync-upstream-from-home-assistant.sh
