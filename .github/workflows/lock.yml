@@ -14,12 +14,9 @@ jobs:
       issues: write # To lock issues
       pull-requests: write # To lock pull requests
     steps:
-      - uses: dessant/lock-threads@851cffe46851ddd2051ea7147ebdc995113241c3 # v6.0.1
+      - uses: muthur-command/actions/helpers/lock-issues@mc
         with:
-          # Do not pass github-token: JWT exceeds lock-threads v6 max length (100); use runner GITHUB_TOKEN.
           issue-inactive-days: "30"
           exclude-issue-created-before: "2020-10-01T00:00:00Z"
-          issue-lock-reason: ""
           pr-inactive-days: "1"
           exclude-pr-created-before: "2020-11-01T00:00:00Z"
-          pr-lock-reason: ""
