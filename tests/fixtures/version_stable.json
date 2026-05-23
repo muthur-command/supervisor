@@ -80,7 +80,7 @@
     "dns": "ghcr.io/muthur-command/{arch}-mcio-dns",
     "observer": "ghcr.io/muthur-command/{arch}-mcio-observer",
     "multicast": "ghcr.io/muthur-command/{arch}-mcio-multicast",
-    "mc_bd": "ghcr.io/muthur-command/{arch}-mc-bd",
+    "mc_bd": "ghcr.io/muthur-command/{arch}-muthurcommand",
     "mc_fd": "ghcr.io/muthur-command/mc-fd",
     "postgresql": "docker.io/library/postgres",
     "redis": "docker.io/library/redis"
