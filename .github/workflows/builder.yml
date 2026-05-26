@@ -207,17 +207,39 @@ jobs:
         env:
           WHEELS_REMOTE_PATH: ${{ env.WHEELS_REMOTE_PATH }}
         run: |
-          if ! ssh -F .ssh/config "${{ env.WHEELS_USER }}@${{ env.WHEELS_HOST }}" \
+          ssh_target="${{ env.WHEELS_USER }}@${{ env.WHEELS_HOST }}"
+          fix_hint="On server (as root): chown -R wheels:wheels '${WHEELS_REMOTE_PATH}' && chmod -R u+rwX '${WHEELS_REMOTE_PATH}'"
+
+          if ! ssh -F .ssh/config "$ssh_target" \
             "test -w '${WHEELS_REMOTE_PATH}' && test -r '${WHEELS_REMOTE_PATH}'"; then
             echo "::error::${{ env.WHEELS_USER }} cannot read/write ${{ env.WHEELS_REMOTE_PATH }}."
+            echo "::error::${fix_hint}"
             exit 1
           fi
-          existing=$(ssh -F .ssh/config "${{ env.WHEELS_USER }}@${{ env.WHEELS_HOST }}" \
+
+          failed=0
+          for local_dir in wheels/*/; do
+            [ -d "$local_dir" ] || continue
+            subdir="$(basename "$local_dir")"
+            remote_dir="${WHEELS_REMOTE_PATH}/${subdir}"
+            if ! ssh -F .ssh/config "$ssh_target" \
+              "mkdir -p '${remote_dir}' && touch '${remote_dir}/.ci-write-test' && rm -f '${remote_dir}/.ci-write-test'"; then
+              echo "::error::${{ env.WHEELS_USER }} cannot create files in ${remote_dir} (rsync mkstemp will fail here)."
+              failed=1
+            fi
+          done
+          if [ "$failed" -ne 0 ]; then
+            echo "::error::${fix_hint}"
+            echo "::error::If the tree is owned by the alist container user, also set default ACL: setfacl -R -m u:wheels:rwx -d -m u:wheels:rwx '${WHEELS_REMOTE_PATH}'"
+            exit 1
+          fi
+
+          existing=$(ssh -F .ssh/config "$ssh_target" \
             "find '${WHEELS_REMOTE_PATH}' -name '*.whl' -print -quit 2>/dev/null" || true)
-          if [ -n "$existing" ] && ! ssh -F .ssh/config "${{ env.WHEELS_USER }}@${{ env.WHEELS_HOST }}" \
+          if [ -n "$existing" ] && ! ssh -F .ssh/config "$ssh_target" \
             "test -r '$existing'"; then
             echo "::error::Cannot read existing remote wheel: $existing"
-            echo "::error::On server: chown -R wheels:wheels '${WHEELS_REMOTE_PATH}' or setfacl -R -m u:wheels:rwx (and -d default ACL)."
+            echo "::error::${fix_hint}"
             exit 1
           fi
 
