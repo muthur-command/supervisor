@@ -1,6 +1,5 @@
 """Test Internal network manager for Supervisor."""
 
-import logging
 from http import HTTPStatus
 import logging
 from unittest.mock import MagicMock
