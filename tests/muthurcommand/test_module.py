@@ -24,7 +24,10 @@ from supervisor.utils.dt import utcnow
 
 
 async def test_load(
-    coresys: CoreSys, tmp_supervisor_data: Path, ha_ws_client: AsyncMock
+    coresys: CoreSys,
+    tmp_supervisor_data: Path,
+    ha_ws_client: AsyncMock,
+    ha_core_configured: None,
 ):
     """Test muthurcommand module load."""
     with open(

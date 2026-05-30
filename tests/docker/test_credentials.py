@@ -51,7 +51,9 @@ def test_no_credentials(coresys: CoreSys, test_docker_interface: DockerInterface
     coresys.docker.config._data["registries"] = {
         DOCKER_HUB: {"username": "Spongebob Squarepants", "password": "Password1!"}
     }
-    credentials, image = test_docker_interface._get_credentials("ghcr.io/muthur-command")
+    credentials, image = test_docker_interface._get_credentials(
+        "ghcr.io/muthur-command"
+    )
     assert not credentials
     assert image == "ghcr.io/muthur-command"
 
@@ -69,7 +71,9 @@ def test_no_matching_credentials(
     coresys.docker.config._data["registries"] = {
         DOCKER_HUB: {"username": "Spongebob Squarepants", "password": "Password1!"}
     }
-    credentials, image = test_docker_interface._get_credentials("ghcr.io/muthur-command")
+    credentials, image = test_docker_interface._get_credentials(
+        "ghcr.io/muthur-command"
+    )
     assert not credentials
     assert image == "ghcr.io/muthur-command"
 

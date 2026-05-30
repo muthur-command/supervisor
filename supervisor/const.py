@@ -1,10 +1,10 @@
 """Constants file for Supervisor."""
 
-import os
 from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import StrEnum
 from ipaddress import IPv4Network, IPv6Network
+import os
 from pathlib import Path
 from sys import version_info as systemversion
 from typing import Any, NotRequired, Self, TypedDict
@@ -26,6 +26,8 @@ ENV_SUPERVISOR_NAME = "SUPERVISOR_NAME"
 def supervisor_container_name() -> str:
     """Return the Docker container name for this Supervisor instance."""
     return os.environ.get(ENV_SUPERVISOR_NAME, SUPERVISOR_DOCKER_NAME)
+
+
 MC_POSTGRES_DOCKER_NAME: str = f"{DOCKER_PREFIX}_mc_postgres"
 MC_REDIS_DOCKER_NAME: str = f"{DOCKER_PREFIX}_mc_redis"
 MC_BACKEND_DOCKER_NAME: str = f"{DOCKER_PREFIX}_mc_bd"

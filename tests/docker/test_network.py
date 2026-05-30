@@ -1,6 +1,7 @@
 """Test Internal network manager for Supervisor."""
 
 from http import HTTPStatus
+import logging
 from unittest.mock import MagicMock
 
 import aiodocker
@@ -166,8 +167,6 @@ async def test_network_mtu_recreation(docker: DockerAPI):
 
 async def test_network_attach_skips_missing_containers(docker: DockerAPI, caplog):
     """Missing containers during network creation must not emit errors."""
-    import logging
-
     caplog.set_level(logging.DEBUG)
     docker.docker.networks.get.side_effect = aiodocker.DockerError(
         HTTPStatus.NOT_FOUND, {"message": "Network not found"}

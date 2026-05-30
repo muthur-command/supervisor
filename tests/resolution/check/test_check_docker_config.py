@@ -103,10 +103,8 @@ async def test_check(docker: DockerAPI, coresys: CoreSys, folder: str):
     # An issue and suggestion is added per container with a config issue
     await docker_config.run_check()
 
-    assert len(coresys.resolution.issues) == 4
-    assert (
-        Issue(IssueType.DOCKER_CONFIG, ContextType.MC_BD) in coresys.resolution.issues
-    )
+    # Muthur Command Core is unused on the default MCOS test image, so no MC_BD issue.
+    assert len(coresys.resolution.issues) == 3
     assert (
         Issue(IssueType.DOCKER_CONFIG, ContextType.ADDON, reference="local_ssh")
         in coresys.resolution.issues
@@ -119,11 +117,7 @@ async def test_check(docker: DockerAPI, coresys: CoreSys, folder: str):
         Issue(IssueType.DOCKER_CONFIG, ContextType.SYSTEM) in coresys.resolution.issues
     )
 
-    assert len(coresys.resolution.suggestions) == 4
-    assert (
-        Suggestion(SuggestionType.EXECUTE_REBUILD, ContextType.MC_BD)
-        in coresys.resolution.suggestions
-    )
+    assert len(coresys.resolution.suggestions) == 3
     assert (
         Suggestion(
             SuggestionType.EXECUTE_REBUILD, ContextType.PLUGIN, reference="audio"
