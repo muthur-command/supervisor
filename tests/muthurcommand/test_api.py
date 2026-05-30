@@ -1,4 +1,4 @@
-"""Test Home Assistant API."""
+"""Test Muthur Command API."""
 
 from contextlib import asynccontextmanager
 from unittest.mock import MagicMock, patch
@@ -152,7 +152,7 @@ async def test_get_config_returns_none(coresys: CoreSys):
             type(coresys.muthurcommand.api), "make_request", new=mock_make_request
         ),
         pytest.raises(
-            MuthurCommandAPIError, match="No config received from Home Assistant API"
+            MuthurCommandAPIError, match="No config received from Muthur Command API"
         ),
     ):
         await coresys.muthurcommand.api.get_config()
@@ -179,7 +179,7 @@ async def test_get_config_returns_non_dict(coresys: CoreSys):
             type(coresys.muthurcommand.api), "make_request", new=mock_make_request
         ),
         pytest.raises(
-            MuthurCommandAPIError, match="No config received from Home Assistant API"
+            MuthurCommandAPIError, match="No config received from Muthur Command API"
         ),
     ):
         await coresys.muthurcommand.api.get_config()
@@ -201,7 +201,7 @@ async def test_get_config_api_error(coresys: CoreSys):
             type(coresys.muthurcommand.api), "make_request", new=mock_make_request
         ),
         pytest.raises(
-            MuthurCommandAPIError, match="Home Assistant Core API return 500"
+            MuthurCommandAPIError, match="Muthur Command Core API return 500"
         ),
     ):
         await coresys.muthurcommand.api.get_config()

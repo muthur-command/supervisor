@@ -158,12 +158,12 @@ def test_addon_map_folder_defaults(
 def test_addon_map_muthurcommand_folder(
     coresys: CoreSys, addonsdata_system: dict[str, Data]
 ):
-    """Test mounts for addon which maps homeassistant folder."""
+    """Test mounts for addon which maps muthurcommand folder."""
     config = load_json_fixture("addon-config-map-addon_config.json")
     config["map"].append("muthurcommand_config")
     docker_addon = get_docker_addon(coresys, addonsdata_system, config)
 
-    # Home Assistant config folder mounted to /homeassistant, not /config
+    # Muthur Command config folder mounted to /muthurcommand, not /config
     assert (
         DockerMount(
             type=MountType.BIND,
@@ -266,7 +266,7 @@ def test_addon_map_data_folder_with_custom_target(
 def test_addon_ignore_on_config_map(
     coresys: CoreSys, addonsdata_system: dict[str, Data]
 ):
-    """Test mounts for addon don't include addon config or homeassistant when config included."""
+    """Test mounts for addon don't include addon config or muthurcommand when config included."""
     config = load_json_fixture("basic-addon-config.json")
     config["map"].extend(["addon_config", "muthurcommand_config"])
     docker_addon = get_docker_addon(coresys, addonsdata_system, config)
@@ -286,7 +286,7 @@ def test_addon_ignore_on_config_map(
     assert (
         len([mount for mount in docker_addon.mounts if mount.target == "/config"]) == 1
     )
-    # Home Assistant mount omitted since config in map field
+    # Muthur Command mount omitted since config in map field
     assert "/muthurcommand" not in [mount.target for mount in docker_addon.mounts]
 
 

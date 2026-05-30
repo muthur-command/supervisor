@@ -1,4 +1,4 @@
-"""Test Home Assistant proxy."""
+"""Test Muthur Command proxy."""
 
 from __future__ import annotations
 
@@ -130,7 +130,7 @@ async def test_proxy_message(
     ha_ws_server: MockHAServerWebSocket,
     install_addon_ssh: Addon,
 ):
-    """Test proxy a message to and from Home Assistant."""
+    """Test proxy a message to and from Muthur Command."""
     install_addon_ssh.persist[ATTR_ACCESS_TOKEN] = "abc123"
     client: MockHAClientWebSocket = await proxy_ws_client(
         install_addon_ssh.supervisor_token
@@ -152,7 +152,7 @@ async def test_proxy_binary_message(
     ha_ws_server: MockHAServerWebSocket,
     install_addon_ssh: Addon,
 ):
-    """Test proxy a binary message to and from Home Assistant."""
+    """Test proxy a binary message to and from Muthur Command."""
     install_addon_ssh.persist[ATTR_ACCESS_TOKEN] = "abc123"
     client: MockHAClientWebSocket = await proxy_ws_client(
         install_addon_ssh.supervisor_token
@@ -332,7 +332,7 @@ async def test_api_proxy_mcp_headers_forwarded(
     api_client: TestClient,
     install_addon_example: Addon,
 ):
-    """Test that MCP headers are forwarded to Home Assistant."""
+    """Test that MCP headers are forwarded to Muthur Command."""
     install_addon_example.persist[ATTR_ACCESS_TOKEN] = "abc123"
     install_addon_example.data["muthurcommand_api"] = True
 

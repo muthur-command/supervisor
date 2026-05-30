@@ -22,7 +22,7 @@ class EvaluateResolved(EvaluateBase):
     @property
     def on_failure(self) -> str:
         """Return a string that is printed when self.evaluate is True."""
-        return "Systemd-Resolved is required for DNS in Home Assistant."
+        return "Systemd-Resolved is required for DNS in Muthur Command."
 
     @property
     def states(self) -> list[CoreState]:

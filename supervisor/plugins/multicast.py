@@ -1,4 +1,4 @@
-"""Home Assistant multicast plugin.
+"""Muthur Command multicast plugin.
 
 Code: https://github.com/muthur-command/plugin-multicast
 """
@@ -34,7 +34,7 @@ _LOGGER: logging.Logger = logging.getLogger(__name__)
 
 
 class PluginMulticast(PluginBase):
-    """Home Assistant core object for handle it."""
+    """Muthur Command core object for handle it."""
 
     def __init__(self, coresys: CoreSys):
         """Initialize hass object."""

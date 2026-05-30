@@ -1,4 +1,4 @@
-"""Init file for Supervisor Home Assistant RESTful API."""
+"""Init file for Supervisor Muthur Command RESTful API."""
 
 import asyncio
 from collections.abc import Awaitable
@@ -334,7 +334,7 @@ class APIAddons(CoreSysAttributes):
             addon.audio_output = body[ATTR_AUDIO_OUTPUT]
         if ATTR_INGRESS_PANEL in body:
             addon.ingress_panel = body[ATTR_INGRESS_PANEL]
-            await self.sys_ingress.update_hass_panel(addon)
+            await self.sys_ingress.update_core_panel(addon)
         if ATTR_WATCHDOG in body:
             addon.watchdog = body[ATTR_WATCHDOG]
 

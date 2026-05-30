@@ -160,7 +160,7 @@ class APIMCStack(CoreSysAttributes):
 
         Stage 6 acceptance: "Ingress 能打开 mc_fd 登录页" — when the
         operator only has access to the Supervisor port (e.g. through
-        the host's HAOS gateway), this passthrough lets them reach the
+        the host's MCOS gateway), this passthrough lets them reach the
         ``mc_fd`` login page without exposing it on its own host port.
         """
         if not self.sys_mc_stack.enabled:

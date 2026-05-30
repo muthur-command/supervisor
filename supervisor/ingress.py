@@ -184,13 +184,13 @@ class Ingress(FileConfiguration, CoreSysAttributes):
         del self.ports[addon_slug]
         await self.save_data()
 
-    async def update_hass_panel(self, addon: Addon):
-        """Return True if Home Assistant up and running."""
+    async def update_core_panel(self, addon: Addon):
+        """Return True if Muthur Command up and running."""
         if self.sys_muthurcommand.unused:
-            # MCOS variants without HA Core don't expose the legacy panel
+            # MCOS variants without Muthur Command Core don't expose the legacy panel
             # API; ingress addons surface through ``mc_fd`` itself.
             _LOGGER.debug(
-                "Ignoring panel update for %s — Home Assistant Core is unused",
+                "Ignoring panel update for %s — Muthur Command Core is unused",
                 addon.slug,
             )
             return
@@ -202,7 +202,7 @@ class Ingress(FileConfiguration, CoreSysAttributes):
         method = "post" if addon.ingress_panel else "delete"
         try:
             async with self.sys_muthurcommand.api.make_request(
-                method, f"api/hassio_push/panel/{addon.slug}"
+                method, f"api/mcio_push/panel/{addon.slug}"
             ) as resp:
                 if resp.status in (200, 201):
                     _LOGGER.info("Update Ingress as panel for %s", addon.slug)

@@ -1,4 +1,4 @@
-"""Home Assistant control object."""
+"""Muthur Command control object."""
 
 import asyncio
 from ipaddress import IPv4Address
@@ -74,16 +74,16 @@ MUTHURCOMMAND_BACKUP_EXCLUDE = [
     ".cache/*",
 ]
 MUTHURCOMMAND_BACKUP_EXCLUDE_DATABASE = [
-    "home-assistant_v?.db",
-    "home-assistant_v?.db-wal",
+    "muthurcommand_v?.db",
+    "muthurcommand_v?.db-wal",
 ]
 
 
 class MuthurCommand(FileConfiguration, CoreSysAttributes):
-    """Home Assistant core object for handle it."""
+    """Muthur Command core object for handle it."""
 
     def __init__(self, coresys: CoreSys):
-        """Initialize Home Assistant object."""
+        """Initialize Muthur Command object."""
         super().__init__(FILE_MUTHURCOMMAND, SCHEMA_HASS_CONFIG)
         self.coresys: CoreSys = coresys
         self._api: MuthurCommandAPI = MuthurCommandAPI(coresys)
@@ -118,7 +118,7 @@ class MuthurCommand(FileConfiguration, CoreSysAttributes):
 
     @property
     def arch(self) -> str | None:
-        """Return arch of running Home Assistant."""
+        """Return arch of running Muthur Command."""
         return self.core.instance.arch
 
     @property
@@ -128,54 +128,54 @@ class MuthurCommand(FileConfiguration, CoreSysAttributes):
 
     @property
     def ip_address(self) -> IPv4Address:
-        """Return IP of Home Assistant instance."""
+        """Return IP of Muthur Command instance."""
         return self.core.instance.ip_address
 
     @property
     def api_port(self) -> int:
-        """Return network port to Home Assistant instance."""
+        """Return network port to Muthur Command instance."""
         return self._data[ATTR_PORT]
 
     @api_port.setter
     def api_port(self, value: int) -> None:
-        """Set network port for Home Assistant instance."""
+        """Set network port for Muthur Command instance."""
         self._data[ATTR_PORT] = value
 
     @property
     def api_ssl(self) -> bool:
-        """Return if we need ssl to Home Assistant instance."""
+        """Return if we need ssl to Muthur Command instance."""
         return self._data[ATTR_SSL]
 
     @api_ssl.setter
     def api_ssl(self, value: bool):
-        """Set SSL for Home Assistant instance."""
+        """Set SSL for Muthur Command instance."""
         self._data[ATTR_SSL] = value
 
     @property
     def api_url(self) -> str:
-        """Return API url to Home Assistant."""
+        """Return API url to Muthur Command."""
         return (
             f"{'https' if self.api_ssl else 'http'}://{self.ip_address}:{self.api_port}"
         )
 
     @property
     def ws_url(self) -> str:
-        """Return API url to Home Assistant."""
+        """Return API url to Muthur Command."""
         return f"{'wss' if self.api_ssl else 'ws'}://{self.ip_address}:{self.api_port}/api/websocket"
 
     @property
     def watchdog(self) -> bool:
-        """Return True if the watchdog should protect Home Assistant."""
+        """Return True if the watchdog should protect Muthur Command."""
         return self._data[ATTR_WATCHDOG]
 
     @watchdog.setter
     def watchdog(self, value: bool):
-        """Return True if the watchdog should protect Home Assistant."""
+        """Return True if the watchdog should protect Muthur Command."""
         self._data[ATTR_WATCHDOG] = value
 
     @property
     def latest_version(self) -> AwesomeVersion | None:
-        """Return last available version of Home Assistant."""
+        """Return last available version of Muthur Command."""
         return self.sys_updater.version_muthurcommand
 
     @property
@@ -190,18 +190,18 @@ class MuthurCommand(FileConfiguration, CoreSysAttributes):
 
     @property
     def image(self) -> str:
-        """Return image name of the Home Assistant container."""
+        """Return image name of the Muthur Command container."""
         if self._data.get(ATTR_IMAGE):
             return self._data[ATTR_IMAGE]
         return self.default_image
 
     def set_image(self, value: str | None) -> None:
-        """Set image name of Home Assistant container."""
+        """Set image name of Muthur Command container."""
         self._data[ATTR_IMAGE] = value
 
     @property
     def override_image(self) -> bool:
-        """Return if user has overridden the image to use for Home Assistant."""
+        """Return if user has overridden the image to use for Muthur Command."""
         return self._data[ATTR_OVERRIDE_IMAGE]
 
     @override_image.setter
@@ -221,17 +221,17 @@ class MuthurCommand(FileConfiguration, CoreSysAttributes):
 
     @property
     def boot(self) -> bool:
-        """Return True if Home Assistant boot is enabled."""
+        """Return True if Muthur Command boot is enabled."""
         return self._data[ATTR_BOOT]
 
     @boot.setter
     def boot(self, value: bool):
-        """Set Home Assistant boot options."""
+        """Set Muthur Command boot options."""
         self._data[ATTR_BOOT] = value
 
     @property
     def uuid(self) -> UUID:
-        """Return a UUID of this Home Assistant instance."""
+        """Return a UUID of this Muthur Command instance."""
         return self._data[ATTR_UUID]
 
     @property
@@ -246,23 +246,23 @@ class MuthurCommand(FileConfiguration, CoreSysAttributes):
 
     @property
     def refresh_token(self) -> str | None:
-        """Return the refresh token to authenticate with Home Assistant."""
+        """Return the refresh token to authenticate with Muthur Command."""
         return self._data.get(ATTR_REFRESH_TOKEN)
 
     @refresh_token.setter
     def refresh_token(self, value: str | None):
-        """Set Home Assistant refresh_token."""
+        """Set Muthur Command refresh_token."""
         self._data[ATTR_REFRESH_TOKEN] = value
 
     @property
     def path_pulse(self) -> Path:
         """Return path to asound config."""
-        return Path(self.sys_config.path_tmp, "homeassistant_pulse")
+        return Path(self.sys_config.path_tmp, "muthurcommand_pulse")
 
     @property
     def path_extern_pulse(self) -> PurePath:
         """Return path to asound config for Docker."""
-        return PurePath(self.sys_config.path_extern_tmp, "homeassistant_pulse")
+        return PurePath(self.sys_config.path_extern_tmp, "muthurcommand_pulse")
 
     @property
     def audio_output(self) -> str | None:
@@ -286,7 +286,7 @@ class MuthurCommand(FileConfiguration, CoreSysAttributes):
 
     @property
     def need_update(self) -> bool:
-        """Return true if a Home Assistant update is available."""
+        """Return true if a Muthur Command update is available."""
         try:
             return self.version is not None and self.version < self.latest_version
         except (AwesomeVersionException, TypeError):
@@ -294,14 +294,13 @@ class MuthurCommand(FileConfiguration, CoreSysAttributes):
 
     @property
     def unused(self) -> bool:
-        """Return True when this MCOS variant ships no Home Assistant Core.
+        """Return True when this MCOS variant ships no Muthur Command Core.
 
-        The version JSON marks per-machine HA Core slots as ``"unused"``
-        for MCOS images that don't ship the legacy single-container Home
-        Assistant. The Updater reduces that to ``version_muthurcommand =
-        None``; combined with no locally installed version, we treat the
-        Core path as inactive (Stage 5 of the A1 plan: don't watchdog
-        what isn't there, don't proxy WebSocket events to a missing HA).
+        The version JSON marks per-machine Core slots as ``"unused"``
+        for MCOS images that rely on the MC stack instead of the legacy
+        single-container Core. The Updater reduces that to
+        ``version_muthurcommand = None``; combined with no locally
+        installed version, we treat the Core path as inactive.
         """
         return self.version is None and self.latest_version is None
 
@@ -317,16 +316,16 @@ class MuthurCommand(FileConfiguration, CoreSysAttributes):
 
     @property
     def duplicate_log_file(self) -> bool:
-        """Return True if Home Assistant should duplicate logs to file."""
+        """Return True if Muthur Command should duplicate logs to file."""
         return self._data[ATTR_DUPLICATE_LOG_FILE]
 
     @duplicate_log_file.setter
     def duplicate_log_file(self, value: bool) -> None:
-        """Set whether Home Assistant should duplicate logs to file."""
+        """Set whether Muthur Command should duplicate logs to file."""
         self._data[ATTR_DUPLICATE_LOG_FILE] = value
 
     async def load(self) -> None:
-        """Prepare Home Assistant object."""
+        """Prepare Muthur Command object."""
         await asyncio.wait(
             [
                 self.sys_create_task(self.websocket.load()),
@@ -357,14 +356,14 @@ class MuthurCommand(FileConfiguration, CoreSysAttributes):
             await self.sys_run_in_executor(write_pulse_config)
         except OSError as err:
             self.sys_resolution.check_oserror(err)
-            _LOGGER.error("Home Assistant can't write pulse/client.config: %s", err)
+            _LOGGER.error("Muthur Command can't write pulse/client.config: %s", err)
         else:
             _LOGGER.info("Update pulse/client.config: %s", self.path_pulse)
 
     async def _hardware_events(self, device: Device) -> None:
         """Process hardware requests."""
         if self.unused:
-            # No HA Core to forward USB-rescan events to.
+            # No Muthur Command Core to forward USB-rescan events to.
             return
         if (
             not self.sys_hardware.policy.is_match_cgroup(PolicyGroup.UART, device)
@@ -382,7 +381,7 @@ class MuthurCommand(FileConfiguration, CoreSysAttributes):
             )
         except MuthurCommandWSError as err:
             _LOGGER.warning(
-                "Can't get Home Assistant Core configuration: %s. Not sending hardware events to Home Assistant Core.",
+                "Can't get Muthur Command Core configuration: %s. Not sending hardware events to Muthur Command Core.",
                 err,
             )
             return
@@ -392,49 +391,49 @@ class MuthurCommand(FileConfiguration, CoreSysAttributes):
 
         self.sys_muthurcommand.websocket.send_command({ATTR_TYPE: "usb/scan"})
 
-    @Job(name="home_assistant_module_begin_backup")
+    @Job(name="muthurcommand_module_begin_backup")
     async def begin_backup(self) -> None:
-        """Inform Home Assistant a backup is beginning."""
+        """Inform Muthur Command a backup is beginning."""
         try:
             resp: dict[str, Any] | None = await self.websocket.async_send_command(
                 {ATTR_TYPE: WSType.BACKUP_START}
             )
         except MuthurCommandWSError as err:
             raise MuthurCommandBackupError(
-                f"Preparing backup of Home Assistant Core failed. Failed to inform HA Core: {str(err)}.",
+                f"Preparing backup of Muthur Command Core failed. Failed to inform Muthur Command Core: {str(err)}.",
                 _LOGGER.error,
             ) from err
 
         if resp and not resp.get(ATTR_SUCCESS):
             raise MuthurCommandBackupError(
-                f"Preparing backup of Home Assistant Core failed due to: {resp.get(ATTR_ERROR, {}).get(ATTR_MESSAGE, '')}. Check HA Core logs.",
+                f"Preparing backup of Muthur Command Core failed due to: {resp.get(ATTR_ERROR, {}).get(ATTR_MESSAGE, '')}. Check Muthur Command Core logs.",
                 _LOGGER.error,
             )
 
-    @Job(name="home_assistant_module_end_backup")
+    @Job(name="muthurcommand_module_end_backup")
     async def end_backup(self) -> None:
-        """Inform Home Assistant the backup is ending."""
+        """Inform Muthur Command the backup is ending."""
         try:
             resp: dict[str, Any] | None = await self.websocket.async_send_command(
                 {ATTR_TYPE: WSType.BACKUP_END}
             )
         except MuthurCommandWSError as err:
             _LOGGER.warning(
-                "Error resuming normal operations after backup of Home Assistant Core. Failed to inform HA Core: %s.",
+                "Error resuming normal operations after backup of Muthur Command Core. Failed to inform Muthur Command Core: %s.",
                 str(err),
             )
         else:
             if resp and not resp.get(ATTR_SUCCESS):
                 _LOGGER.warning(
-                    "Error resuming normal operations after backup of Home Assistant Core due to: %s. Check HA Core logs.",
+                    "Error resuming normal operations after backup of Muthur Command Core due to: %s. Check Muthur Command Core logs.",
                     resp.get(ATTR_ERROR, {}).get(ATTR_MESSAGE, ""),
                 )
 
-    @Job(name="home_assistant_module_backup")
+    @Job(name="muthurcommand_module_backup")
     async def backup(
         self, tar_file: SecureTarFile, exclude_database: bool = False
     ) -> None:
-        """Backup Home Assistant Core config/directory."""
+        """Backup Muthur Command Core config/directory."""
         excludes = MUTHURCOMMAND_BACKUP_EXCLUDE.copy()
         if exclude_database:
             excludes += MUTHURCOMMAND_BACKUP_EXCLUDE_DATABASE
@@ -457,10 +456,10 @@ class MuthurCommand(FileConfiguration, CoreSysAttributes):
 
                 # Store local configs/state
                 try:
-                    write_json_file(temp_path.joinpath("homeassistant.json"), metadata)
+                    write_json_file(temp_path.joinpath("muthurcommand.json"), metadata)
                 except ConfigurationFileError as err:
                     raise MuthurCommandError(
-                        f"Can't save meta for Home Assistant Core: {err!s}",
+                        f"Can't save meta for Muthur Command Core: {err!s}",
                         _LOGGER.error,
                     ) from err
 
@@ -478,33 +477,33 @@ class MuthurCommand(FileConfiguration, CoreSysAttributes):
                         )
                 except (tarfile.TarError, OSError, AddFileError) as err:
                     raise MuthurCommandBackupError(
-                        f"Can't backup Home Assistant Core config folder: {str(err)}",
+                        f"Can't backup Muthur Command Core config folder: {str(err)}",
                         _LOGGER.error,
                     ) from err
 
         await self.begin_backup()
         try:
-            _LOGGER.info("Backing up Home Assistant Core config folder")
+            _LOGGER.info("Backing up Muthur Command Core config folder")
             await self.sys_run_in_executor(_write_tarfile, self._data)
-            _LOGGER.info("Backup Home Assistant Core config folder done")
+            _LOGGER.info("Backup Muthur Command Core config folder done")
         finally:
             await self.end_backup()
 
-    @Job(name="home_assistant_module_restore")
+    @Job(name="muthurcommand_module_restore")
     async def restore(
         self, tar_file: SecureTarFile, exclude_database: bool | None = False
     ) -> None:
-        """Restore Home Assistant Core config/ directory."""
+        """Restore Muthur Command Core config/ directory."""
 
-        def _restore_home_assistant() -> Any:
+        def _restore_muthurcommand() -> Any:
             """Restores data and reads metadata from backup.
 
-            Returns: Home Assistant metdata
+            Returns: Muthur Command metdata
             """
             with TemporaryDirectory(dir=self.sys_config.path_tmp) as temp:
                 temp_path = Path(temp)
                 temp_data = temp_path.joinpath("data")
-                temp_meta = temp_path.joinpath("homeassistant.json")
+                temp_meta = temp_path.joinpath("muthurcommand.json")
 
                 # extract backup
                 try:
@@ -528,7 +527,7 @@ class MuthurCommand(FileConfiguration, CoreSysAttributes):
                 if not temp_data.exists():
                     temp_data = temp_path
 
-                _LOGGER.info("Restore Home Assistant Core config folder")
+                _LOGGER.info("Restore Muthur Command Core config folder")
                 if exclude_database is True:
                     remove_folder_with_excludes(
                         self.sys_config.path_muthurcommand,
@@ -550,11 +549,11 @@ class MuthurCommand(FileConfiguration, CoreSysAttributes):
                         f"Can't restore origin data: {err}", _LOGGER.error
                     ) from err
 
-                _LOGGER.info("Restore Home Assistant Core config folder done")
+                _LOGGER.info("Restore Muthur Command Core config folder done")
 
                 if not temp_meta.exists():
                     return None
-                _LOGGER.info("Restore Home Assistant Core metadata")
+                _LOGGER.info("Restore Muthur Command Core metadata")
 
                 # Read backup data
                 try:
@@ -564,7 +563,7 @@ class MuthurCommand(FileConfiguration, CoreSysAttributes):
 
                 return data
 
-        data = await self.sys_run_in_executor(_restore_home_assistant)
+        data = await self.sys_run_in_executor(_restore_muthurcommand)
         if data is None:
             return
 
@@ -590,7 +589,7 @@ class MuthurCommand(FileConfiguration, CoreSysAttributes):
                 self._data[attr] = data[attr]
 
     async def list_users(self) -> list[MuthurCommandUser]:
-        """Fetch list of all users from Home Assistant Core via WebSocket.
+        """Fetch list of all users from Muthur Command Core via WebSocket.
 
         Raises MuthurCommandWSError on WebSocket connection/communication failure.
         """

@@ -24,11 +24,11 @@ class FixupCoreExecuteRebuild(FixupBase):
 
         if state == ContainerState.UNKNOWN:
             _LOGGER.info(
-                "Container for Home Assistant does not exist, it will be rebuilt when started next"
+                "Container for Muthur Command does not exist, it will be rebuilt when started next"
             )
         elif state == ContainerState.STOPPED:
             _LOGGER.info(
-                "Home Assistant is stopped, removing its container so it rebuilds when started next"
+                "Muthur Command is stopped, removing its container so it rebuilds when started next"
             )
             await self.sys_muthurcommand.core.instance.stop()
         else:

@@ -1,1 +1,1 @@
-"""Home Assistant Operating-System backend tests."""
+"""Muthur Command OS backend tests."""

@@ -22,7 +22,7 @@ from ..const import (
     DOCKER_NETWORK_DRIVER,
     DOCKER_PREFIX,
     OBSERVER_DOCKER_NAME,
-    SUPERVISOR_DOCKER_NAME,
+    supervisor_container_name,
 )
 from ..exceptions import DockerError
 
@@ -100,8 +100,9 @@ class DockerNetwork:
         # System is considered running if any containers besides Supervisor and Observer are found
         # A reboot is required then, we won't disconnect those containers to remake network
         containers: dict[str, dict[str, Any]] = self.network_meta.get("Containers", {})
+        reserved_names = (OBSERVER_DOCKER_NAME, supervisor_container_name())
         system_running = containers and any(
-            container.get("Name") not in (OBSERVER_DOCKER_NAME, SUPERVISOR_DOCKER_NAME)
+            container.get("Name") not in reserved_names
             for container in containers.values()
         )
         if system_running:
@@ -215,25 +216,44 @@ class DockerNetwork:
 
         await self.reload()
 
-        with suppress(DockerError):
-            await self.attach_container_by_name(
-                SUPERVISOR_DOCKER_NAME, [ATTR_SUPERVISOR], self.supervisor
-            )
-
-        with suppress(DockerError):
-            await self.attach_container_by_name(
-                OBSERVER_DOCKER_NAME, [ATTR_OBSERVER], self.observer
-            )
-
+        await self._attach_if_exists(
+            supervisor_container_name(), [ATTR_SUPERVISOR], self.supervisor
+        )
+        await self._attach_if_exists(
+            OBSERVER_DOCKER_NAME, [ATTR_OBSERVER], self.observer
+        )
         for name, ip in (
             (ATTR_CLI, self.cli),
             (ATTR_DNS, self.dns),
             (ATTR_AUDIO, self.audio),
         ):
-            with suppress(DockerError):
-                await self.attach_container_by_name(
-                    f"{DOCKER_PREFIX}_{name}", [name], ip
+            await self._attach_if_exists(f"{DOCKER_PREFIX}_{name}", [name], ip)
+
+    async def _attach_if_exists(
+        self,
+        name: str,
+        alias: list[str] | None = None,
+        ipv4: IPv4Address | None = None,
+    ) -> bool:
+        """Attach a container when it already exists.
+
+        During cold boot the mcio network is created before plugin containers
+        exist. Missing containers are expected and must not be logged as errors.
+        """
+        try:
+            container = await self.docker.containers.get(name)
+        except aiodocker.DockerError as err:
+            if err.status == HTTPStatus.NOT_FOUND:
+                _LOGGER.debug(
+                    "Container %s not present during network setup, skipping attach",
+                    name,
                 )
+                return False
+            raise DockerError(f"Can't find {name}: {err}", _LOGGER.error) from err
+
+        if container.id not in self.containers:
+            await self.attach_container(container.id, name, alias, ipv4)
+        return True
 
     async def reload(self) -> None:
         """Get and cache metadata for supervisor network."""
@@ -284,13 +304,8 @@ class DockerNetwork:
         self, name: str, alias: list[str] | None = None, ipv4: IPv4Address | None = None
     ) -> None:
         """Attach container to Supervisor network."""
-        try:
-            container = await self.docker.containers.get(name)
-        except aiodocker.DockerError as err:
-            raise DockerError(f"Can't find {name}: {err}", _LOGGER.error) from err
-
-        if container.id not in self.containers:
-            await self.attach_container(container.id, name, alias, ipv4)
+        if not await self._attach_if_exists(name, alias, ipv4):
+            raise DockerError(f"Can't find {name}", _LOGGER.error)
 
     async def detach_default_bridge(
         self, container_id: str, name: str | None = None

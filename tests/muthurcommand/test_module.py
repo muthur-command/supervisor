@@ -1,4 +1,4 @@
-"""Test Homeassistant module."""
+"""Test Muthurcommand module."""
 
 import asyncio
 import errno
@@ -26,7 +26,7 @@ from supervisor.utils.dt import utcnow
 async def test_load(
     coresys: CoreSys, tmp_supervisor_data: Path, ha_ws_client: AsyncMock
 ):
-    """Test homeassistant module load."""
+    """Test muthurcommand module load."""
     with open(
         tmp_supervisor_data / "muthurcommand" / "secrets.yaml", "w", encoding="utf-8"
     ) as secrets:
@@ -95,7 +95,7 @@ async def test_begin_backup_ws_error(coresys: CoreSys):
         patch.object(MuthurCommandWebSocket, "_ensure_connected", return_value=None),
         pytest.raises(
             MuthurCommandBackupError,
-            match="Preparing backup of Home Assistant Core failed. Failed to inform HA Core: Connection was closed.",
+            match="Preparing backup of Muthur Command Core failed. Failed to inform Muthur Command Core: Connection was closed.",
         ),
     ):
         await coresys.muthurcommand.begin_backup()
@@ -111,7 +111,7 @@ async def test_end_backup_ws_error(coresys: CoreSys, caplog: pytest.LogCaptureFi
         await coresys.muthurcommand.end_backup()
 
     assert (
-        "Error resuming normal operations after backup of Home Assistant Core. Failed to inform HA Core: Connection was closed."
+        "Error resuming normal operations after backup of Muthur Command Core. Failed to inform Muthur Command Core: Connection was closed."
         in caplog.text
     )
 
@@ -119,20 +119,20 @@ async def test_end_backup_ws_error(coresys: CoreSys, caplog: pytest.LogCaptureFi
 @pytest.mark.parametrize(
     ("filename", "exclude_db", "expect_excluded", "subfolder"),
     [
-        ("home-assistant.log", False, True, None),
-        ("home-assistant.log.1", False, True, None),
-        ("home-assistant.log.fault", False, True, None),
-        ("home-assistant.log", False, False, "subfolder"),
+        ("muthurcommand.log", False, True, None),
+        ("muthurcommand.log.1", False, True, None),
+        ("muthurcommand.log.fault", False, True, None),
+        ("muthurcommand.log", False, False, "subfolder"),
         ("OZW_Log.txt", False, True, None),
         ("OZW_Log.txt", False, False, "subfolder"),
-        ("home-assistant_v2.db-shm", False, True, None),
-        ("home-assistant_v2.db-shm", False, False, "subfolder"),
-        ("home-assistant_v2.db", False, False, None),
-        ("home-assistant_v2.db", True, True, None),
-        ("home-assistant_v2.db", True, False, "subfolder"),
-        ("home-assistant_v2.db-wal", False, False, None),
-        ("home-assistant_v2.db-wal", True, True, None),
-        ("home-assistant_v2.db-wal", True, False, "subfolder"),
+        ("muthurcommand_v2.db-shm", False, True, None),
+        ("muthurcommand_v2.db-shm", False, False, "subfolder"),
+        ("muthurcommand_v2.db", False, False, None),
+        ("muthurcommand_v2.db", True, True, None),
+        ("muthurcommand_v2.db", True, False, "subfolder"),
+        ("muthurcommand_v2.db-wal", False, False, None),
+        ("muthurcommand_v2.db-wal", True, True, None),
+        ("muthurcommand_v2.db-wal", True, False, "subfolder"),
         ("test.tar", False, True, "backups"),
         ("test.tar", False, False, "subfolder/backups"),
         ("test.tar", False, True, "tmp_backups"),

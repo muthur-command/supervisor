@@ -1,4 +1,4 @@
-"""Home Assistant control object."""
+"""Muthur Command control object."""
 
 import asyncio
 from collections.abc import Awaitable
@@ -57,7 +57,7 @@ STARTUP_API_CHECK_RUNNING_TIMEOUT: Final[timedelta] = timedelta(minutes=15)
 DATABASE_MIGRATION_TIMEOUT: Final[timedelta] = timedelta(
     seconds=SECONDS_BETWEEN_API_CHECKS * 10
 )
-RE_YAML_ERROR = re.compile(r"homeassistant\.util\.yaml")
+RE_YAML_ERROR = re.compile(r"muthurcommand\.util\.yaml")
 
 
 @dataclass
@@ -69,10 +69,10 @@ class ConfigResult:
 
 
 class MuthurCommandCore(JobGroup):
-    """Home Assistant core object for handle it."""
+    """Muthur Command core object for handle it."""
 
     def __init__(self, coresys: CoreSys):
-        """Initialize Home Assistant object."""
+        """Initialize Muthur Command object."""
         super().__init__(coresys, JOB_GROUP_MUTHURCOMMAND_CORE)
         self.instance: DockerMuthurCommand = DockerMuthurCommand(coresys)
         self._error_state: bool = False
@@ -84,7 +84,13 @@ class MuthurCommandCore(JobGroup):
         return self._error_state
 
     async def load(self) -> None:
-        """Prepare Home Assistant object."""
+        """Prepare Muthur Command Core object."""
+        if self.sys_muthurcommand.unused:
+            _LOGGER.info(
+                "Muthur Command Core is not used on this MCOS image; skipping setup"
+            )
+            return
+
         self._watchdog_listener = self.sys_bus.register_event(
             BusEvent.DOCKER_CONTAINER_STATE_CHANGE, self.watchdog_container
         )
@@ -111,7 +117,8 @@ class MuthurCommandCore(JobGroup):
                 self.sys_muthurcommand.set_image(self.sys_muthurcommand.default_image)
         except DockerError:
             _LOGGER.info(
-                "No Home Assistant Docker image %s found.", self.sys_muthurcommand.image
+                "No Muthur Command Core Docker image %s found.",
+                self.sys_muthurcommand.image,
             )
             await self.install_landingpage()
         else:
@@ -129,7 +136,7 @@ class MuthurCommandCore(JobGroup):
                 await self.start()
 
     @Job(
-        name="home_assistant_core_install_landing_page",
+        name="muthurcommand_core_install_landing_page",
         on_condition=MuthurCommandJobError,
         concurrency=JobConcurrency.GROUP_REJECT,
     )
@@ -149,11 +156,11 @@ class MuthurCommandCore(JobGroup):
             await self.sys_muthurcommand.save_data()
             return
 
-        _LOGGER.info("Setting up Home Assistant landingpage")
+        _LOGGER.info("Setting up Muthur Command landingpage")
         while True:
             if not self.sys_updater.image_muthurcommand:
                 _LOGGER.warning(
-                    "Found no information about Home Assistant. Retrying in 30sec"
+                    "Found no version information for Muthur Command Core. Retrying in 30sec"
                 )
                 await asyncio.sleep(30)
                 await self.sys_updater.reload()
@@ -177,13 +184,13 @@ class MuthurCommandCore(JobGroup):
         await self.sys_muthurcommand.save_data()
 
     @Job(
-        name="home_assistant_core_install",
+        name="muthurcommand_core_install",
         on_condition=MuthurCommandJobError,
         concurrency=JobConcurrency.GROUP_REJECT,
     )
     async def install(self) -> None:
-        """Install Home Assistant Core."""
-        _LOGGER.info("Home Assistant setup")
+        """Install Muthur Command Core."""
+        _LOGGER.info("Muthur Command setup")
         stop_progress_log = asyncio.Event()
 
         async def _periodic_progress_log() -> None:
@@ -194,16 +201,16 @@ class MuthurCommandCore(JobGroup):
                 except TimeoutError:
                     if (job := self.instance.active_job) and job.progress:
                         _LOGGER.info(
-                            "Downloading Home Assistant Core image, %d%%",
+                            "Downloading Muthur Command Core image, %d%%",
                             int(job.progress),
                         )
                     else:
-                        _LOGGER.info("Home Assistant Core installation in progress")
+                        _LOGGER.info("Muthur Command Core installation in progress")
 
         progress_task = self.sys_create_task(_periodic_progress_log())
         try:
             while True:
-                # read homeassistant tag and install it
+                # read muthurcommand tag and install it
                 if not self.sys_muthurcommand.latest_version:
                     await self.sys_updater.reload()
 
@@ -223,30 +230,30 @@ class MuthurCommandCore(JobGroup):
                         await async_capture_exception(err)
 
                 _LOGGER.warning(
-                    "Error on Home Assistant installation. Retrying in 30sec"
+                    "Error on Muthur Command installation. Retrying in 30sec"
                 )
                 await asyncio.sleep(30)
         finally:
             stop_progress_log.set()
             await progress_task
 
-        _LOGGER.info("Home Assistant docker now installed")
+        _LOGGER.info("Muthur Command docker now installed")
         self.sys_muthurcommand.set_image(self.sys_updater.image_muthurcommand)
         await self.sys_muthurcommand.save_data()
 
         # finishing
         try:
-            _LOGGER.info("Starting Home Assistant")
+            _LOGGER.info("Starting Muthur Command")
             await self.start()
         except MuthurCommandError:
-            _LOGGER.error("Can't start Home Assistant!")
+            _LOGGER.error("Can't start Muthur Command!")
 
         # Cleanup
         with suppress(DockerError):
             await self.instance.cleanup()
 
     @Job(
-        name="home_assistant_core_update",
+        name="muthurcommand_core_update",
         conditions=[
             JobCondition.FREE_SPACE,
             JobCondition.HEALTHY,
@@ -259,7 +266,7 @@ class MuthurCommandCore(JobGroup):
         # We assume for now the docker image pull is 100% of this task. But from
         # a user perspective that isn't true. Other steps that take time which
         # is not accounted for in progress include: partial backup, image
-        # cleanup, and Home Assistant restart
+        # cleanup, and Muthur Command restart
         child_job_syncs=[
             ChildJobSyncFilter("docker_interface_install", progress_allocation=1.0)
         ],
@@ -274,7 +281,7 @@ class MuthurCommandCore(JobGroup):
         to_version = version or self.sys_muthurcommand.latest_version
         if not to_version:
             raise MuthurCommandUpdateError(
-                "Cannot determine latest version of Home Assistant for update",
+                "Cannot determine latest version of Muthur Command for update",
                 _LOGGER.error,
             )
 
@@ -295,21 +302,21 @@ class MuthurCommandCore(JobGroup):
         if backup:
             await self.sys_backups.do_backup_partial(
                 name=f"core_{self.instance.version}",
-                homeassistant=True,
+                muthurcommand=True,
                 folders=[ATTR_MUTHURCOMMAND],
             )
 
         # process an update
         async def _update(to_version: AwesomeVersion) -> None:
-            """Run Home Assistant update."""
-            _LOGGER.info("Updating Home Assistant to version %s", to_version)
+            """Run Muthur Command update."""
+            _LOGGER.info("Updating Muthur Command to version %s", to_version)
             try:
                 await self.instance.update(
                     to_version, image=self.sys_updater.image_muthurcommand
                 )
             except DockerError as err:
                 raise MuthurCommandUpdateError(
-                    "Updating Home Assistant image failed", _LOGGER.warning
+                    "Updating Muthur Command image failed", _LOGGER.warning
                 ) from err
 
             self.sys_muthurcommand.version = self.instance.version or to_version
@@ -317,14 +324,14 @@ class MuthurCommandCore(JobGroup):
 
             if running:
                 await self.start()
-            _LOGGER.info("Successfully started Home Assistant %s", to_version)
+            _LOGGER.info("Successfully started Muthur Command %s", to_version)
 
             # Successfull - last step
             await self.sys_muthurcommand.save_data()
             with suppress(DockerError):
                 await self.instance.cleanup(old_image=old_image)
 
-        # Update Home Assistant
+        # Update Muthur Command
         with suppress(MuthurCommandError):
             await _update(to_version)
 
@@ -357,15 +364,15 @@ class MuthurCommandCore(JobGroup):
             )
 
             # Make a copy of the current log file if it exists
-            logfile = self.sys_config.path_muthurcommand / "home-assistant.log"
+            logfile = self.sys_config.path_muthurcommand / "muthurcommand.log"
             if await self.sys_run_in_executor(logfile.exists):
                 rollback_log = (
-                    self.sys_config.path_muthurcommand / "home-assistant-rollback.log"
+                    self.sys_config.path_muthurcommand / "muthurcommand-rollback.log"
                 )
 
                 await self.sys_run_in_executor(shutil.copy, logfile, rollback_log)
                 _LOGGER.info(
-                    "A backup of the logfile is stored in /config/home-assistant-rollback.log"
+                    "A backup of the logfile is stored in /config/muthurcommand-rollback.log"
                 )
             await _update(rollback)
         else:
@@ -373,14 +380,14 @@ class MuthurCommandCore(JobGroup):
             raise MuthurCommandUpdateError()
 
     @Job(
-        name="home_assistant_core_start",
+        name="muthurcommand_core_start",
         on_condition=MuthurCommandJobError,
         concurrency=JobConcurrency.GROUP_REJECT,
     )
     async def start(self) -> None:
-        """Run Home Assistant docker."""
+        """Run Muthur Command docker."""
         if await self.instance.is_running():
-            _LOGGER.warning("Home Assistant is already running!")
+            _LOGGER.warning("Muthur Command is already running!")
             return
 
         # Instance/Container exists, simple start
@@ -408,24 +415,24 @@ class MuthurCommandCore(JobGroup):
             await self._block_till_run()
 
     @Job(
-        name="home_assistant_core_stop",
+        name="muthurcommand_core_stop",
         on_condition=MuthurCommandJobError,
         concurrency=JobConcurrency.GROUP_REJECT,
     )
     async def stop(self, *, remove_container: bool = False) -> None:
-        """Stop Home Assistant Docker."""
+        """Stop Muthur Command Docker."""
         try:
             return await self.instance.stop(remove_container=remove_container)
         except DockerError as err:
             raise MuthurCommandError() from err
 
     @Job(
-        name="home_assistant_core_restart",
+        name="muthurcommand_core_restart",
         on_condition=MuthurCommandJobError,
         concurrency=JobConcurrency.GROUP_REJECT,
     )
     async def restart(self, *, safe_mode: bool = False) -> None:
-        """Restart Home Assistant Docker."""
+        """Restart Muthur Command Docker."""
         # Create safe mode marker file if necessary
         if safe_mode:
             _LOGGER.debug("Creating safe mode marker file.")
@@ -441,12 +448,12 @@ class MuthurCommandCore(JobGroup):
         await self._block_till_run()
 
     @Job(
-        name="home_assistant_core_rebuild",
+        name="muthurcommand_core_rebuild",
         on_condition=MuthurCommandJobError,
         concurrency=JobConcurrency.GROUP_REJECT,
     )
     async def rebuild(self, *, safe_mode: bool = False) -> None:
-        """Rebuild Home Assistant Docker container."""
+        """Rebuild Muthur Command Docker container."""
         # Create safe mode marker file if necessary
         if safe_mode:
             _LOGGER.debug("Creating safe mode marker file.")
@@ -459,7 +466,7 @@ class MuthurCommandCore(JobGroup):
         await self.start()
 
     async def stats(self) -> DockerStats:
-        """Return stats of Home Assistant."""
+        """Return stats of Muthur Command."""
         try:
             return await self.instance.stats()
         except DockerError as err:
@@ -485,7 +492,7 @@ class MuthurCommandCore(JobGroup):
         return self.instance.in_progress or self.active_job is not None
 
     async def check_config(self) -> ConfigResult:
-        """Run Home Assistant config check."""
+        """Run Muthur Command config check."""
         try:
             result = await self.instance.execute_command(
                 [
@@ -511,10 +518,10 @@ class MuthurCommandCore(JobGroup):
 
         # Parse output
         if result.exit_code != 0 or RE_YAML_ERROR.search(log):
-            _LOGGER.error("Invalid Home Assistant config found!")
+            _LOGGER.error("Invalid Muthur Command config found!")
             return ConfigResult(False, log)
 
-        _LOGGER.info("Home Assistant config is valid")
+        _LOGGER.info("Muthur Command config is valid")
         return ConfigResult(True, log)
 
     async def _block_till_run(self) -> None:
@@ -522,7 +529,7 @@ class MuthurCommandCore(JobGroup):
         # Skip landingpage
         if self.sys_muthurcommand.version == LANDINGPAGE:
             return
-        _LOGGER.info("Wait until Home Assistant is ready")
+        _LOGGER.info("Wait until Muthur Command is ready")
 
         deadline = datetime.now() + STARTUP_API_RESPONSE_TIMEOUT
         last_state = None
@@ -531,7 +538,7 @@ class MuthurCommandCore(JobGroup):
 
             # 1: Check if Container is is_running
             if not await self.instance.is_running():
-                _LOGGER.error("Home Assistant has crashed!")
+                _LOGGER.error("Muthur Command has crashed!")
                 break
 
             # 2: Check API response
@@ -542,11 +549,11 @@ class MuthurCommandCore(JobGroup):
                     deadline = datetime.now() + STARTUP_API_CHECK_RUNNING_TIMEOUT
 
                 if last_state != state:
-                    _LOGGER.info("Home Assistant Core state changed to %s", state)
+                    _LOGGER.info("Muthur Command Core state changed to %s", state)
                     last_state = state
 
                 if state.core_state == "RUNNING":
-                    _LOGGER.info("Detect a running Home Assistant instance")
+                    _LOGGER.info("Detect a running Muthur Command instance")
                     self._error_state = False
                     return
 
@@ -557,31 +564,31 @@ class MuthurCommandCore(JobGroup):
         self._error_state = True
         if timeout:
             raise MuthurCommandStartupTimeout(
-                "No Home Assistant Core response, assuming a fatal startup error",
+                "No Muthur Command Core response, assuming a fatal startup error",
                 _LOGGER.error,
             )
         raise MuthurCommandCrashError()
 
     @Job(
-        name="home_assistant_core_repair",
+        name="muthurcommand_core_repair",
         conditions=[
             JobCondition.FREE_SPACE,
             JobCondition.INTERNET_HOST,
         ],
     )
     async def repair(self):
-        """Repair local Home Assistant data."""
+        """Repair local Muthur Command data."""
         if await self.instance.exists():
             return
 
-        _LOGGER.info("Repair Home Assistant %s", self.sys_muthurcommand.version)
+        _LOGGER.info("Repair Muthur Command %s", self.sys_muthurcommand.version)
         try:
             await self.instance.install(self.sys_muthurcommand.version)
         except DockerError:
-            _LOGGER.error("Repairing of Home Assistant failed")
+            _LOGGER.error("Repairing of Muthur Command failed")
 
     async def watchdog_container(self, event: DockerContainerStateEvent) -> None:
-        """Process state changes in Home Assistant container and restart if necessary."""
+        """Process state changes in Muthur Command container and restart if necessary."""
         if not (event.name == self.instance.name and self.sys_muthurcommand.watchdog):
             return
 
@@ -593,25 +600,25 @@ class MuthurCommandCore(JobGroup):
         if state in (CoreState.SHUTDOWN, CoreState.STOPPING, CoreState.CLOSE):
             if self._watchdog_listener:
                 _LOGGER.debug(
-                    "Unregistering Home Assistant watchdog due to system shutdown"
+                    "Unregistering Muthur Command watchdog due to system shutdown"
                 )
                 self.sys_bus.remove_listener(self._watchdog_listener)
                 self._watchdog_listener = None
 
     @Job(
-        name="home_assistant_core_restart_after_problem",
+        name="muthurcommand_core_restart_after_problem",
         throttle_period=WATCHDOG_THROTTLE_PERIOD,
         throttle_max_calls=WATCHDOG_THROTTLE_MAX_CALLS,
         throttle=JobThrottle.RATE_LIMIT,
     )
     async def _restart_after_problem(self, state: ContainerState):
-        """Restart unhealthy or failed Home Assistant."""
+        """Restart unhealthy or failed Muthur Command."""
         attempts = 0
         while await self.instance.current_state() == state:
             # Don't interrupt a task in progress or if rollback is handling it
             if not (self.in_progress or self.error_state):
                 _LOGGER.warning(
-                    "Watchdog found Home Assistant %s, restarting...", state
+                    "Watchdog found Muthur Command %s, restarting...", state
                 )
                 if state == ContainerState.FAILED and attempts == 0:
                     try:
@@ -628,14 +635,14 @@ class MuthurCommandCore(JobGroup):
                         await self.restart()
                 except MuthurCommandError as err:
                     attempts = attempts + 1
-                    _LOGGER.error("Watchdog restart of Home Assistant failed!")
+                    _LOGGER.error("Watchdog restart of Muthur Command failed!")
                     await async_capture_exception(err)
                 else:
                     break
 
             if attempts >= WATCHDOG_MAX_ATTEMPTS:
                 _LOGGER.critical(
-                    "Watchdog cannot restart Home Assistant, failed all %s attempts",
+                    "Watchdog cannot restart Muthur Command, failed all %s attempts",
                     attempts,
                 )
                 break

@@ -73,7 +73,7 @@ async def test_fixup_stopped_core(
     (await docker.containers.get("muthurcommand")).delete.assert_called_once_with(
         force=True, v=True
     )
-    assert "Home Assistant is stopped" in caplog.text
+    assert "Muthur Command is stopped" in caplog.text
 
 
 async def test_fixup_unknown_core(
@@ -101,4 +101,4 @@ async def test_fixup_unknown_core(
 
     assert not coresys.resolution.issues
     assert not coresys.resolution.suggestions
-    assert "Container for Home Assistant does not exist" in caplog.text
+    assert "Container for Muthur Command does not exist" in caplog.text

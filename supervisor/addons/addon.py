@@ -430,7 +430,7 @@ class Addon(AddonModel):
 
     @property
     def system_managed(self) -> bool:
-        """Return True if addon is managed by Home Assistant."""
+        """Return True if addon is managed by Muthur Command."""
         return self.persist[ATTR_SYSTEM_MANAGED]
 
     @system_managed.setter
@@ -478,7 +478,7 @@ class Addon(AddonModel):
     def ingress_entry(self) -> str | None:
         """Return ingress external URL."""
         if self.with_ingress:
-            return f"/api/hassio_ingress/{self.ingress_token}"
+            return f"/api/mcio_ingress/{self.ingress_token}"
         return None
 
     @property
@@ -527,7 +527,7 @@ class Addon(AddonModel):
         if not self.with_ingress:
             return None
 
-        url = f"/api/hassio_ingress/{self.ingress_token}/"
+        url = f"/api/mcio_ingress/{self.ingress_token}/"
         if ATTR_INGRESS_ENTRY in self.data:
             return f"{url}{self.data[ATTR_INGRESS_ENTRY]}"
         return url
@@ -801,7 +801,7 @@ class Addon(AddonModel):
         def setup_data():
             if not self.path_data.is_dir():
                 _LOGGER.info(
-                    "Creating Home Assistant app data folder %s", self.path_data
+                    "Creating Muthur Command app data folder %s", self.path_data
                 )
                 self.path_data.mkdir()
 
@@ -878,7 +878,7 @@ class Addon(AddonModel):
         # Cleanup Ingress panel from sidebar
         if self.ingress_panel:
             self.ingress_panel = False
-            await self.sys_ingress.update_hass_panel(self)
+            await self.sys_ingress.update_core_panel(self)
 
         # Cleanup Ingress dynamic port assignment
         need_ingress_token_cleanup = False
@@ -1160,7 +1160,7 @@ class Addon(AddonModel):
                 return
 
             _LOGGER.info(
-                "Creating Home Assistant app config folder %s", self.path_config
+                "Creating Muthur Command app config folder %s", self.path_config
             )
             self.path_config.mkdir()
 

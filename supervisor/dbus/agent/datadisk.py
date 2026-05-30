@@ -4,9 +4,9 @@ from pathlib import Path
 
 from ..const import (
     DBUS_ATTR_CURRENT_DEVICE,
-    DBUS_IFACE_HAOS_DATADISK,
-    DBUS_NAME_HAOS,
-    DBUS_OBJECT_HAOS_DATADISK,
+    DBUS_IFACE_MCOS_DATADISK,
+    DBUS_NAME_MCOS,
+    DBUS_OBJECT_MCOS_DATADISK,
 )
 from ..interface import DBusInterfaceProxy, dbus_property
 from ..utils import dbus_connected
@@ -15,9 +15,9 @@ from ..utils import dbus_connected
 class DataDisk(DBusInterfaceProxy):
     """DataDisk object for OS Agent."""
 
-    bus_name: str = DBUS_NAME_HAOS
-    object_path: str = DBUS_OBJECT_HAOS_DATADISK
-    properties_interface: str = DBUS_IFACE_HAOS_DATADISK
+    bus_name: str = DBUS_NAME_MCOS
+    object_path: str = DBUS_OBJECT_MCOS_DATADISK
+    properties_interface: str = DBUS_IFACE_MCOS_DATADISK
 
     @property
     @dbus_property

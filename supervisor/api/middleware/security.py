@@ -84,7 +84,7 @@ ADDONS_API_BYPASS: Final = re.compile(
     r")$"
 )
 
-# Home Assistant only
+# Muthur Command only
 CORE_ONLY_PATHS: Final = re.compile(
     r"^(?:"
     r"/addons/" + RE_SLUG + "/sys_options"
@@ -240,10 +240,10 @@ class SecurityMiddleware(CoreSysAttributes):
 
         # Home-Assistant
         if supervisor_token == self.sys_muthurcommand.supervisor_token:
-            _LOGGER.debug("%s access from Home Assistant", request.path)
+            _LOGGER.debug("%s access from Muthur Command", request.path)
             request_from = self.sys_muthurcommand
         elif CORE_ONLY_PATHS.match(request.path):
-            _LOGGER.warning("Attempted access to %s from client besides Home Assistant")
+            _LOGGER.warning("Attempted access to %s from client besides Muthur Command")
             raise HTTPForbidden()
 
         # Host

@@ -52,16 +52,16 @@ def unique_addons(addons_list):
 
 
 def v1_muthurcommand(
-    homeassistant_data: dict[str, Any] | None,
+    muthurcommand_data: dict[str, Any] | None,
 ) -> dict[str, Any] | None:
-    """Cleanup homeassistant artefacts from v1."""
-    if not homeassistant_data:
+    """Cleanup legacy Muthur Command Core artefacts from v1."""
+    if not muthurcommand_data:
         return None
 
-    if homeassistant_data.get(ATTR_VERSION) is None:
+    if muthurcommand_data.get(ATTR_VERSION) is None:
         return None
 
-    return homeassistant_data
+    return muthurcommand_data
 
 
 def v1_folderlist(folder_data: list[str]) -> list[str]:

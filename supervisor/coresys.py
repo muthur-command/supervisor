@@ -297,9 +297,9 @@ class CoreSys:
 
     @property
     def muthurcommand(self) -> MuthurCommand:
-        """Return Home Assistant object."""
+        """Return Muthur Command object."""
         if self._muthurcommand is None:
-            raise RuntimeError("Home Assistant not set!")
+            raise RuntimeError("Muthur Command not set!")
         return self._muthurcommand
 
     @muthurcommand.setter
@@ -768,7 +768,7 @@ class CoreSysAttributes:
 
     @property
     def sys_muthurcommand(self) -> MuthurCommand:
-        """Return Home Assistant object."""
+        """Return Muthur Command object."""
         return self.coresys.muthurcommand
 
     @property

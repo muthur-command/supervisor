@@ -23,7 +23,7 @@ def setup(coresys: CoreSys) -> EvaluateBase:
 
 
 class EvaluateMuthurCommandCoreVersion(EvaluateBase):
-    """Evaluate the Home Assistant Core version."""
+    """Evaluate the Muthur Command Core version."""
 
     @property
     def reason(self) -> UnsupportedReason:
@@ -33,7 +33,7 @@ class EvaluateMuthurCommandCoreVersion(EvaluateBase):
     @property
     def on_failure(self) -> str:
         """Return a string that is printed when self.evaluate is True."""
-        return f"Home Assistant Core version '{self.sys_muthurcommand.version}' is more than 2 years old!"
+        return f"Muthur Command Core version '{self.sys_muthurcommand.version}' is more than 2 years old!"
 
     @property
     def states(self) -> list[CoreState]:
@@ -42,7 +42,7 @@ class EvaluateMuthurCommandCoreVersion(EvaluateBase):
 
     async def evaluate(self) -> bool:
         """Run evaluation."""
-        # Stage 6 of the A1 plan: MCOS variants that ship no Home Assistant
+        # Stage 6 of the A1 plan: MCOS variants that ship no Muthur Command
         # Core ("unused" slot in the version JSON) must not be flagged as
         # unsupported just because the legacy Core is missing.
         if self.sys_muthurcommand.unused:
@@ -65,7 +65,7 @@ class EvaluateMuthurCommandCoreVersion(EvaluateBase):
             # unsupported in 4+ years. By using latest known version, updating Core to the
             # last known version makes the system supported again, allowing update refresh.
             #
-            # Home Assistant uses CalVer versioning (2024.1, 2024.2, etc.) with monthly releases.
+            # Muthur Command uses CalVer versioning (2024.1, 2024.2, etc.) with monthly releases.
             # We consider versions more than 2 years behind as unsupported.
             if (
                 latest.strategy != AwesomeVersionStrategy.CALVER
@@ -90,7 +90,7 @@ class EvaluateMuthurCommandCoreVersion(EvaluateBase):
         except (AwesomeVersionException, ValueError, IndexError) as err:
             # This is run regularly, avoid log spam by logging at debug level
             _LOGGER.debug(
-                "Failed to parse Home Assistant version '%s' or latest version '%s': %s",
+                "Failed to parse Muthur Command version '%s' or latest version '%s': %s",
                 current,
                 latest,
                 err,

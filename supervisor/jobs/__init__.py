@@ -275,7 +275,7 @@ class JobManager(FileConfiguration, CoreSysAttributes):
             value = [err.as_dict() for err in value]
         job_data = job.as_dict() | {attribute.name: value}
 
-        # Notify Home Assistant of change if its not internal
+        # Notify Muthur Command of change if its not internal
         if not job.internal:
             self.sys_muthurcommand.websocket.supervisor_event(WSEvent.JOB, job_data)
 

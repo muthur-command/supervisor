@@ -12,9 +12,9 @@ from ...exceptions import DBusInterfaceError, DBusServiceUnkownError
 from ..const import (
     DBUS_ATTR_DIAGNOSTICS,
     DBUS_ATTR_VERSION,
-    DBUS_IFACE_HAOS,
-    DBUS_NAME_HAOS,
-    DBUS_OBJECT_HAOS,
+    DBUS_IFACE_MCOS,
+    DBUS_NAME_MCOS,
+    DBUS_OBJECT_MCOS,
 )
 from ..interface import DBusInterface, DBusInterfaceProxy, dbus_property
 from ..utils import dbus_connected
@@ -31,10 +31,10 @@ _LOGGER: logging.Logger = logging.getLogger(__name__)
 class OSAgent(DBusInterfaceProxy):
     """Handle D-Bus interface for OS-Agent."""
 
-    name: str = DBUS_NAME_HAOS
-    bus_name: str = DBUS_NAME_HAOS
-    object_path: str = DBUS_OBJECT_HAOS
-    properties_interface: str = DBUS_IFACE_HAOS
+    name: str = DBUS_NAME_MCOS
+    bus_name: str = DBUS_NAME_MCOS
+    object_path: str = DBUS_OBJECT_MCOS
+    properties_interface: str = DBUS_IFACE_MCOS
 
     def __init__(self) -> None:
         """Initialize Properties."""

@@ -28,7 +28,7 @@ async def api_system(aiohttp_client, coresys: CoreSys) -> TestClient:
     api = RestAPI(coresys)
     api.webapp = web.Application()
     with patch("supervisor.docker.supervisor.os") as os:
-        os.environ = {"SUPERVISOR_NAME": "mcio_supervisor"}
+        os.environ = {"SUPERVISOR_NAME": "mcos_supervisor"}
         await api.load()
 
     api.webapp.middlewares.append(api.security.block_bad_requests)
@@ -44,7 +44,7 @@ async def api_token_validation(aiohttp_client, coresys: CoreSys) -> TestClient:
     api = RestAPI(coresys)
     api.webapp = web.Application()
     with patch("supervisor.docker.supervisor.os") as os:
-        os.environ = {"SUPERVISOR_NAME": "mcio_supervisor"}
+        os.environ = {"SUPERVISOR_NAME": "mcos_supervisor"}
         await api.start()
 
     api.webapp.middlewares.append(api.security.token_validation)
@@ -221,8 +221,8 @@ async def test_token_validation(
 
 
 @pytest.mark.usefixtures("plugin_tokens")
-async def test_home_assistant_paths(api_token_validation: TestClient, coresys: CoreSys):
-    """Test Home Assistant only paths."""
+async def test_muthurcommand_paths(api_token_validation: TestClient, coresys: CoreSys):
+    """Test Muthur Command only paths."""
     coresys.muthurcommand.supervisor_token = "abc123"
     resp = await api_token_validation.post(
         "/addons/local_test/sys_options", headers={"Authorization": "Bearer abc123"}

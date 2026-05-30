@@ -119,7 +119,7 @@ async def path_extern(monkeypatch: pytest.MonkeyPatch) -> None:
 @pytest.fixture
 async def supervisor_name(monkeypatch: pytest.MonkeyPatch) -> None:
     """Set env for supervisor name."""
-    monkeypatch.setenv("SUPERVISOR_NAME", "mcio_supervisor")
+    monkeypatch.setenv("SUPERVISOR_NAME", "mcos_supervisor")
     yield
 
 
@@ -889,7 +889,7 @@ async def journald_logs(coresys: CoreSys) -> MagicMock:
         patch.object(
             LogsControl,
             "get_identifiers",
-            return_value=["mcio_supervisor", "mcos-config", "kernel"],
+            return_value=["mcos_supervisor", "mcos-config", "kernel"],
         ),
         patch.object(LogsControl, "journald_logs", new=MagicMock()) as logs,
     ):

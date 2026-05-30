@@ -37,7 +37,7 @@ SCHEMA_PASSWORD_RESET = vol.Schema(
 )
 
 REALM_HEADER: dict[str, str] = {
-    WWW_AUTHENTICATE: 'Basic realm="Home Assistant Authentication"'
+    WWW_AUTHENTICATE: 'Basic realm="Muthur Command Authentication"'
 }
 
 
@@ -86,7 +86,7 @@ class APIAuth(CoreSysAttributes):
         addon = request[REQUEST_FROM]
 
         if not isinstance(addon, Addon) or not addon.access_auth_api:
-            raise APIForbidden("Can't use Home Assistant auth!")
+            raise APIForbidden("Can't use Muthur Command auth!")
 
         # BasicAuth
         if AUTHORIZATION in request.headers:
@@ -126,7 +126,7 @@ class APIAuth(CoreSysAttributes):
 
     @api_process
     async def list_users(self, request: web.Request) -> dict[str, list[dict[str, Any]]]:
-        """List users on the Home Assistant instance."""
+        """List users on the Muthur Command instance."""
         return {
             ATTR_USERS: [
                 {

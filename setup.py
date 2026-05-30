@@ -1,4 +1,4 @@
-"""Home Assistant Supervisor setup."""
+"""Muthur Command Supervisor setup."""
 
 from pathlib import Path
 import re

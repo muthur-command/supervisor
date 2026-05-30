@@ -60,14 +60,14 @@ def test_format_verbose():
     """Test verbose formatter."""
     fields = {
         "__REALTIME_TIMESTAMP": "1379403171000000",
-        "_HOSTNAME": "homeassistant",
+        "_HOSTNAME": "mcos",
         "SYSLOG_IDENTIFIER": "python",
         "_PID": "666",
         "MESSAGE": "Hello, world!",
     }
     assert (
         journal_verbose_formatter(fields)
-        == "2013-09-17 07:32:51.000 homeassistant python[666]: Hello, world!"
+        == "2013-09-17 07:32:51.000 mcos python[666]: Hello, world!"
     )
 
 
@@ -75,14 +75,14 @@ def test_format_verbose_newlines():
     """Test verbose formatter with newlines in message."""
     fields = {
         "__REALTIME_TIMESTAMP": "1379403171000000",
-        "_HOSTNAME": "homeassistant",
+        "_HOSTNAME": "mcos",
         "SYSLOG_IDENTIFIER": "python",
         "_PID": "666",
         "MESSAGE": "Hello,\nworld!\n",
     }
     assert (
         journal_verbose_formatter(fields)
-        == "2013-09-17 07:32:51.000 homeassistant python[666]: Hello,\nworld!\n"
+        == "2013-09-17 07:32:51.000 mcos python[666]: Hello,\nworld!\n"
     )
 
 
@@ -90,7 +90,7 @@ def test_format_verbose_colors():
     """Test verbose formatter with ANSI colors in message."""
     fields = {
         "__REALTIME_TIMESTAMP": "1379403171000000",
-        "_HOSTNAME": "homeassistant",
+        "_HOSTNAME": "mcos",
         "SYSLOG_IDENTIFIER": "python",
         "_PID": "666",
         "MESSAGE": "\x1b[32mHello, world!\x1b[0m",
@@ -98,7 +98,7 @@ def test_format_verbose_colors():
 
     assert (
         journal_verbose_formatter(fields)
-        == "2013-09-17 07:32:51.000 homeassistant python[666]: \x1b[32mHello, world!\x1b[0m"
+        == "2013-09-17 07:32:51.000 mcos python[666]: \x1b[32mHello, world!\x1b[0m"
     )
 
 
@@ -115,7 +115,7 @@ async def test_parsing_verbose():
     journal_logs, stream = _journal_logs_mock()
     stream.feed_data(
         b"__REALTIME_TIMESTAMP=1379403171000000\n"
-        b"_HOSTNAME=homeassistant\n"
+        b"_HOSTNAME=mcos\n"
         b"SYSLOG_IDENTIFIER=python\n"
         b"_PID=666\n"
         b"MESSAGE=Hello, world!\n\n"
@@ -123,7 +123,7 @@ async def test_parsing_verbose():
     _, line = await anext(
         journal_logs_reader(journal_logs, log_formatter=LogFormatter.VERBOSE)
     )
-    assert line == "2013-09-17 07:32:51.000 homeassistant python[666]: Hello, world!"
+    assert line == "2013-09-17 07:32:51.000 mcos python[666]: Hello, world!"
 
 
 async def test_parsing_newlines_in_message():
@@ -325,14 +325,14 @@ def test_format_verbose_no_colors():
     """Test verbose formatter strips ANSI color codes when no_colors=True."""
     fields = {
         "__REALTIME_TIMESTAMP": "1379403171000000",
-        "_HOSTNAME": "homeassistant",
+        "_HOSTNAME": "mcos",
         "SYSLOG_IDENTIFIER": "python",
         "_PID": "666",
         "MESSAGE": "\x1b[32mHello, world!\x1b[0m",
     }
     assert (
         journal_verbose_formatter(fields, no_colors=True)
-        == "2013-09-17 07:32:51.000 homeassistant python[666]: Hello, world!"
+        == "2013-09-17 07:32:51.000 mcos python[666]: Hello, world!"
     )
 
 
@@ -341,7 +341,7 @@ async def test_parsing_colored_logs_verbose_no_colors():
     journal_logs, stream = _journal_logs_mock()
     stream.feed_data(
         b"__REALTIME_TIMESTAMP=1379403171000000\n"
-        b"_HOSTNAME=homeassistant\n"
+        b"_HOSTNAME=mcos\n"
         b"SYSLOG_IDENTIFIER=python\n"
         b"_PID=666\n"
         b"MESSAGE\n\x0e\x00\x00\x00\x00\x00\x00\x00\x1b[31mERROR\x1b[0m\n"
@@ -352,7 +352,7 @@ async def test_parsing_colored_logs_verbose_no_colors():
             journal_logs, log_formatter=LogFormatter.VERBOSE, no_colors=True
         )
     )
-    assert line == "2013-09-17 07:32:51.000 homeassistant python[666]: ERROR"
+    assert line == "2013-09-17 07:32:51.000 mcos python[666]: ERROR"
 
 
 async def test_parsing_multiple_color_codes():

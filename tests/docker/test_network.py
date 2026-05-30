@@ -164,6 +164,28 @@ async def test_network_mtu_recreation(docker: DockerAPI):
     )
 
 
+async def test_network_attach_skips_missing_containers(docker: DockerAPI, caplog):
+    """Missing containers during network creation must not emit errors."""
+    import logging
+
+    caplog.set_level(logging.DEBUG)
+    docker.docker.networks.get.side_effect = aiodocker.DockerError(
+        HTTPStatus.NOT_FOUND, {"message": "Network not found"}
+    )
+    docker.docker.networks.create.return_value = mock_network = MagicMock(
+        spec=AiodockerNetwork, id="test123"
+    )
+    mock_network.show.return_value = {"Containers": {}, DOCKER_ENABLEIPV6: True}
+    docker.docker.containers.get.side_effect = aiodocker.DockerError(
+        HTTPStatus.NOT_FOUND, {"message": "No such container"}
+    )
+
+    await DockerNetwork(docker.docker).post_init(None)
+
+    assert not any(record.levelno >= logging.ERROR for record in caplog.records)
+    assert docker.docker.containers.get.call_count >= 1
+
+
 async def test_network_mtu_no_change(docker: DockerAPI):
     """Test that network is not recreated when MTU hasn't changed."""
     docker.docker.networks.get.return_value = mock_network = MagicMock(

@@ -1,4 +1,4 @@
-"""Test Home Assistant container."""
+"""Test Muthur Command container."""
 
 from ipaddress import IPv4Address
 from unittest.mock import ANY, patch
@@ -23,7 +23,7 @@ from . import DEV_MOUNT
 
 @pytest.mark.usefixtures("tmp_supervisor_data", "path_extern")
 async def test_muthurcommand_start(coresys: CoreSys, container: DockerContainer):
-    """Test starting homeassistant."""
+    """Test starting muthurcommand."""
     coresys.muthurcommand.version = AwesomeVersion("2023.8.1")
 
     with (
@@ -47,11 +47,9 @@ async def test_muthurcommand_start(coresys: CoreSys, container: DockerContainer)
         }
         assert run.call_args.kwargs["environment"] == {
             "SUPERVISOR": "172.30.32.2",
-            "HASSIO": "172.30.32.2",
             "TZ": ANY,
             "SUPERVISOR_TOKEN": ANY,
-            "HASSIO_TOKEN": ANY,
-            # no "HA_DUPLICATE_LOG_FILE"
+            # no "MC_DUPLICATE_LOG_FILE"
         }
         assert run.call_args.kwargs["mounts"] == [
             DEV_MOUNT,
@@ -125,7 +123,7 @@ async def test_muthurcommand_start(coresys: CoreSys, container: DockerContainer)
 async def test_muthurcommand_start_with_duplicate_log_file(
     coresys: CoreSys, container: DockerContainer
 ):
-    """Test starting homeassistant with duplicate_log_file enabled."""
+    """Test starting muthurcommand with duplicate_log_file enabled."""
     coresys.muthurcommand.version = AwesomeVersion("2025.12.0")
     coresys.muthurcommand.duplicate_log_file = True
 
@@ -140,8 +138,8 @@ async def test_muthurcommand_start_with_duplicate_log_file(
 
         run.assert_called_once()
         env = run.call_args.kwargs["environment"]
-        assert "HA_DUPLICATE_LOG_FILE" in env
-        assert env["HA_DUPLICATE_LOG_FILE"] == "1"
+        assert "MC_DUPLICATE_LOG_FILE" in env
+        assert env["MC_DUPLICATE_LOG_FILE"] == "1"
 
 
 @pytest.mark.usefixtures("tmp_supervisor_data", "path_extern")
@@ -167,11 +165,9 @@ async def test_landingpage_start(coresys: CoreSys, container: DockerContainer):
         }
         assert run.call_args.kwargs["environment"] == {
             "SUPERVISOR": "172.30.32.2",
-            "HASSIO": "172.30.32.2",
             "TZ": ANY,
             "SUPERVISOR_TOKEN": ANY,
-            "HASSIO_TOKEN": ANY,
-            # no "HA_DUPLICATE_LOG_FILE"
+            # no "MC_DUPLICATE_LOG_FILE"
         }
         assert run.call_args.kwargs["mounts"] == [
             DEV_MOUNT,
@@ -215,10 +211,9 @@ async def test_timeout(coresys: CoreSys, container: DockerContainer):
     container.show.return_value["Config"] = {
         "Env": [
             "SUPERVISOR=172.30.32.2",
-            "HASSIO=172.30.32.2",
             "TZ=America/New_York",
             "SUPERVISOR_TOKEN=abc123",
-            "HASSIO_TOKEN=abc123",
+            "SUPERVISOR_TOKEN=abc123",
             "PATH=/usr/local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
             "LANG=C.UTF-8",
             "S6_BEHAVIOUR_IF_STAGE2_FAILS=2",

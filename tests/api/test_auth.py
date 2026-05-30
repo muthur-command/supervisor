@@ -19,7 +19,7 @@ LIST_USERS_RESPONSE = [
     {
         "id": "a1d90e114a3b4da4a487fe327918dcef",
         "username": None,
-        "name": "Home Assistant Content",
+        "name": "Muthur Command Content",
         "is_owner": False,
         "is_active": True,
         "local_only": False,
@@ -41,7 +41,7 @@ LIST_USERS_RESPONSE = [
     {
         "id": "0b39e9305ba64531a8fee9ed5b86876e",
         "username": None,
-        "name": "Home Assistant Cast",
+        "name": "Muthur Command Cast",
         "is_owner": False,
         "is_active": True,
         "local_only": False,
@@ -58,7 +58,7 @@ LIST_USERS_RESPONSE = [
         "local_only": False,
         "system_generated": False,
         "group_ids": ["system-admin"],
-        "credentials": [{"type": "homeassistant"}],
+        "credentials": [{"type": "muthurcommand"}],
     },
     {
         "id": "7d5fac79097a4eb49aff83cdf20821b0",
@@ -111,7 +111,7 @@ async def test_password_reset(
         ),
         (
             MagicMock(side_effect=MuthurCommandAPIError("fail")),
-            "Can't request password reset on Home Assistant: fail",
+            "Can't request password reset on Muthur Command: fail",
         ),
     ],
 )
@@ -182,10 +182,10 @@ async def test_list_users_ws_error(
     result = await resp.json()
     assert result == {
         "result": "error",
-        "message": "Can't request listing users on Home Assistant. Check Supervisor logs for details",
+        "message": "Can't request listing users on Muthur Command. Check Supervisor logs for details",
         "error_key": "auth_list_users_error",
     }
-    assert "Can't request listing users on Home Assistant: fail" in caplog.text
+    assert "Can't request listing users on Muthur Command: fail" in caplog.text
 
 
 @pytest.mark.parametrize(
@@ -226,7 +226,7 @@ async def test_auth_json_failure_none(
     assert resp.status == 401
     assert (
         resp.headers["WWW-Authenticate"]
-        == 'Basic realm="Home Assistant Authentication"'
+        == 'Basic realm="Muthur Command Authentication"'
     )
     body = await resp.json()
     assert body["message"] == "Username and password must be strings"
@@ -373,7 +373,7 @@ async def test_auth_backend_login_failure(api_client: TestClient):
     body = await resp.json()
     assert (
         body["message"]
-        == "Unable to validate authentication details with Home Assistant. Check Supervisor logs for details"
+        == "Unable to validate authentication details with Muthur Command. Check Supervisor logs for details"
     )
-    assert body["error_key"] == "auth_home_assistant_api_validation_error"
+    assert body["error_key"] == "auth_muthurcommand_api_validation_error"
     assert "extra_fields" not in body

@@ -28,7 +28,7 @@ async def test_load(coresys: CoreSys, systemd_service: SystemdService):
     with patch.object(coresys.host.sound, "update") as sound_update:
         await coresys.host.load()
 
-        assert coresys.dbus.hostname.hostname == "homeassistant-n2"
+        assert coresys.dbus.hostname.hostname == "mcos-n2"
         assert coresys.dbus.systemd.boot_timestamp == 1632236713344227
         assert coresys.dbus.timedate.timezone == "Etc/UTC"
         assert coresys.dbus.agent.diagnostics is True

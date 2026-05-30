@@ -158,7 +158,7 @@ async def test_api_supervisor_options_diagnostics(
 
 async def test_api_supervisor_logs(advanced_logs_tester):
     """Test supervisor logs."""
-    await advanced_logs_tester("/supervisor", "mcio_supervisor")
+    await advanced_logs_tester("/supervisor", "mcos_supervisor")
 
 
 async def test_api_supervisor_fallback(
@@ -321,7 +321,7 @@ async def test_api_supervisor_options_blocking_io(
 async def test_api_progress_updates_supervisor_update(
     api_client: TestClient, coresys: CoreSys, ha_ws_client: AsyncMock
 ):
-    """Test progress updates sent to Home Assistant for updates."""
+    """Test progress updates sent to Muthur Command for updates."""
     coresys.hardware.disk.get_disk_free_space = lambda x: 5000
     coresys.core.set_state(CoreState.RUNNING)
 
@@ -448,6 +448,6 @@ async def test_supervisor_api_stats_failure(
     assert body["error_key"] == "supervisor_unknown_error"
     assert "extra_fields" not in body
     assert (
-        "Could not inspect container 'mcio_supervisor': [500] {'message': 'fail'}"
+        "Could not inspect container 'mcos_supervisor': [500] {'message': 'fail'}"
         in caplog.text
     )

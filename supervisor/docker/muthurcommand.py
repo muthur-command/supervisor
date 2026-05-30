@@ -16,7 +16,6 @@ from .const import (
     ENV_DUPLICATE_LOG_FILE,
     ENV_TIME,
     ENV_TOKEN,
-    ENV_TOKEN_OLD,
     MOUNT_DBUS,
     MOUNT_DEV,
     MOUNT_MACHINE_ID,
@@ -40,11 +39,11 @@ ENV_RESTORE_JOB_ID = "SUPERVISOR_RESTORE_JOB_ID"
 
 
 class DockerMuthurCommand(DockerInterface):
-    """Docker Supervisor wrapper for Home Assistant."""
+    """Docker Supervisor wrapper for Muthur Command."""
 
     @property
     def machine(self) -> str | None:
-        """Return machine of Home Assistant Docker image."""
+        """Return machine of Muthur Command Docker image."""
         if self._meta and LABEL_MACHINE in self._meta["Config"]["Labels"]:
             return self._meta["Config"]["Labels"][LABEL_MACHINE]
         return None
@@ -62,7 +61,7 @@ class DockerMuthurCommand(DockerInterface):
     @property
     def timeout(self) -> int:
         """Return timeout for Docker actions."""
-        # Use S6_SERVICES_GRACETIME to avoid killing Home Assistant Core, see
+        # Use S6_SERVICES_GRACETIME to avoid killing Muthur Command Core, see
         # https://github.com/muthur-command/mc_bd/tree/dev/Dockerfile
         if self.meta_config and "Env" in self.meta_config:
             for env in self.meta_config["Env"]:
@@ -165,7 +164,7 @@ class DockerMuthurCommand(DockerInterface):
         return mounts
 
     @Job(
-        name="docker_home_assistant_run",
+        name="docker_muthurcommand_run",
         on_condition=DockerJobError,
         concurrency=JobConcurrency.GROUP_REJECT,
     )
@@ -173,10 +172,8 @@ class DockerMuthurCommand(DockerInterface):
         """Run Docker image."""
         environment = {
             "SUPERVISOR": str(self.sys_docker.network.supervisor),
-            "HASSIO": str(self.sys_docker.network.supervisor),
             ENV_TIME: self.sys_timezone,
             ENV_TOKEN: self.sys_muthurcommand.supervisor_token,
-            ENV_TOKEN_OLD: self.sys_muthurcommand.supervisor_token,
         }
         if restore_job_id:
             environment[ENV_RESTORE_JOB_ID] = restore_job_id
@@ -202,11 +199,11 @@ class DockerMuthurCommand(DockerInterface):
             oom_score_adj=-300,
         )
         _LOGGER.info(
-            "Starting Home Assistant %s with version %s", self.image, self.version
+            "Starting Muthur Command %s with version %s", self.image, self.version
         )
 
     @Job(
-        name="docker_home_assistant_execute_command",
+        name="docker_muthurcommand_execute_command",
         on_condition=DockerJobError,
         concurrency=JobConcurrency.GROUP_REJECT,
     )

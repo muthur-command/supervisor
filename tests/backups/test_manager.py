@@ -410,7 +410,7 @@ async def test_fail_invalid_partial_backup(
 
 @pytest.mark.usefixtures("install_addon_ssh", "capture_exception")
 async def test_backup_error_muthurcommand(coresys: CoreSys, backup_mock: MagicMock):
-    """Test error collected and file deleted when Home Assistant Core backup fails."""
+    """Test error collected and file deleted when Muthur Command Core backup fails."""
     await coresys.core.set_state(CoreState.RUNNING)
     coresys.hardware.disk.get_disk_free_space = lambda x: 5000
 
@@ -1591,7 +1591,7 @@ async def test_restore_only_reloads_ingress_on_change(
         )
         make_request.assert_not_called()
 
-        # MCOS-only flow does not call the Home Assistant panel API.
+        # MCOS-only flow does not call the Muthur Command panel API.
         await coresys.backups.do_restore_partial(
             backup_no_ingress, addons=["local_ssh"]
         )
@@ -1604,7 +1604,7 @@ async def test_restore_only_reloads_ingress_on_change(
         )
         make_request.assert_not_called()
 
-        # No Home Assistant panel API calls in MCOS-only flow.
+        # No Muthur Command panel API calls in MCOS-only flow.
         await coresys.backups.do_restore_partial(
             backup_with_ingress, addons=["local_ssh"]
         )
@@ -1737,9 +1737,9 @@ async def test_skip_muthurcommand_database(
     coresys.muthurcommand.backups_exclude_database = exclude_db_setting
 
     test_file = coresys.config.path_muthurcommand / "configuration.yaml"
-    test_db = coresys.config.path_muthurcommand / "home-assistant_v2.db"
-    test_db_wal = coresys.config.path_muthurcommand / "home-assistant_v2.db-wal"
-    test_db_shm = coresys.config.path_muthurcommand / "home-assistant_v2.db-shm"
+    test_db = coresys.config.path_muthurcommand / "muthurcommand_v2.db"
+    test_db_wal = coresys.config.path_muthurcommand / "muthurcommand_v2.db-wal"
+    test_db_shm = coresys.config.path_muthurcommand / "muthurcommand_v2.db-shm"
 
     def setup_1():
         test_db.touch()
@@ -1903,7 +1903,7 @@ async def test_core_pre_backup_actions_failed(
 
     assert not await coresys.backups.do_backup_full()
     assert (
-        f"Preparing backup of Home Assistant Core failed due to: {pre_backup_error['message']}"
+        f"Preparing backup of Muthur Command Core failed due to: {pre_backup_error['message']}"
         in caplog.text
     )
 

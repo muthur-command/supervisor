@@ -1,4 +1,4 @@
-"""Manage SSO for Add-ons with Home Assistant user."""
+"""Manage SSO for Add-ons with Muthur Command user."""
 
 import asyncio
 import hashlib
@@ -34,7 +34,7 @@ class BackendAuthRequest(TypedDict):
 
 
 class Auth(FileConfiguration, CoreSysAttributes):
-    """Manage SSO for Add-ons with Home Assistant user."""
+    """Manage SSO for Add-ons with Muthur Command user."""
 
     def __init__(self, coresys: CoreSys) -> None:
         """Initialize updater."""
@@ -94,14 +94,14 @@ class Auth(FileConfiguration, CoreSysAttributes):
 
         # Check API state
         if not await self.sys_muthurcommand.api.check_api_state():
-            _LOGGER.info("Home Assistant not running, checking cache")
+            _LOGGER.info("Muthur Command not running, checking cache")
             return cache_hit is True
 
         # No cache hit
         if cache_hit is None:
             return await self._backend_login(addon, username, password)
 
-        # Home Assistant Core take over 1-2sec to validate it
+        # Muthur Command Core take over 1-2sec to validate it
         # Let's use the cache and update the cache in background
         if username not in self._running:
             self._running[username] = self.sys_create_task(
@@ -115,7 +115,7 @@ class Auth(FileConfiguration, CoreSysAttributes):
         try:
             async with self.sys_muthurcommand.api.make_request(
                 "post",
-                "api/hassio_auth",
+                "api/mcio_auth",
                 json=cast(
                     dict[str, Any],
                     BackendAuthRequest(
@@ -132,7 +132,7 @@ class Auth(FileConfiguration, CoreSysAttributes):
                 await self._dismatch_cache(username, password)
                 return False
         except MuthurCommandAPIError as err:
-            _LOGGER.error("Can't request auth on Home Assistant: %s", err)
+            _LOGGER.error("Can't request auth on Muthur Command: %s", err)
         finally:
             self._running.pop(username, None)
 
@@ -143,7 +143,7 @@ class Auth(FileConfiguration, CoreSysAttributes):
         try:
             async with self.sys_muthurcommand.api.make_request(
                 "post",
-                "api/hassio_auth/password_reset",
+                "api/mcio_auth/password_reset",
                 json={ATTR_USERNAME: username, ATTR_PASSWORD: password},
             ) as req:
                 if req.status == 200:
@@ -152,16 +152,16 @@ class Auth(FileConfiguration, CoreSysAttributes):
 
                 _LOGGER.warning("The user '%s' is not registered", username)
         except MuthurCommandAPIError as err:
-            _LOGGER.error("Can't request password reset on Home Assistant: %s", err)
+            _LOGGER.error("Can't request password reset on Muthur Command: %s", err)
 
         raise AuthPasswordResetError(user=username)
 
     async def list_users(self) -> list[MuthurCommandUser]:
-        """List users on the Home Assistant instance."""
+        """List users on the Muthur Command instance."""
         try:
             return await self.sys_muthurcommand.list_users()
         except MuthurCommandWSError as err:
-            _LOGGER.error("Can't request listing users on Home Assistant: %s", err)
+            _LOGGER.error("Can't request listing users on Muthur Command: %s", err)
             raise AuthListUsersError() from err
 
     @staticmethod

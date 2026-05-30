@@ -720,7 +720,7 @@ class BackupManager(FileConfiguration, JobGroup):
         success = True
 
         try:
-            task_hass: asyncio.Task | None = None
+            task_mc: asyncio.Task | None = None
             async with backup.open(location):
                 # Process folders
                 if folder_list:
@@ -730,7 +730,7 @@ class BackupManager(FileConfiguration, JobGroup):
                 # Process Home-Assistant
                 if muthurcommand:
                     self._change_stage(RestoreJobStage.MUTHURCOMMAND, backup)
-                    task_hass = await backup.restore_muthurcommand()
+                    task_mc = await backup.restore_muthurcommand()
 
                 # Delete delta add-ons
                 if replace:
@@ -755,9 +755,9 @@ class BackupManager(FileConfiguration, JobGroup):
                 ) = await backup.restore_supervisor_config()
                 success = success and mount_success
 
-                # Wait for Home Assistant Core update/downgrade
-                if task_hass:
-                    await task_hass
+                # Wait for Muthur Command Core update/downgrade
+                if task_mc:
+                    await task_mc
         except BackupError:
             raise
         except Exception as err:  # pylint: disable=broad-except
@@ -785,11 +785,11 @@ class BackupManager(FileConfiguration, JobGroup):
 
             return success
         finally:
-            # Leave Home Assistant alone if it wasn't part of the restore
+            # Leave Muthur Command alone if it wasn't part of the restore
             if muthurcommand:
                 self._change_stage(RestoreJobStage.AWAIT_MUTHURCOMMAND_RESTART, backup)
 
-                # Do we need start Home Assistant Core?
+                # Do we need start Muthur Command Core?
                 if not await self.sys_muthurcommand.core.is_running():
                     await self.sys_muthurcommand.core.start(
                         _job_override__cleanup=False
@@ -929,7 +929,7 @@ class BackupManager(FileConfiguration, JobGroup):
 
         if backup.muthurcommand is None and muthurcommand:
             raise BackupInvalidError(
-                "No Home Assistant Core data inside the backup", _LOGGER.error
+                "No Muthur Command Core data inside the backup", _LOGGER.error
             )
 
         if backup.supervisor_version > self.sys_supervisor.version:
@@ -986,7 +986,7 @@ class BackupManager(FileConfiguration, JobGroup):
             self.sys_create_task(self._thaw_all(running_addons, timeout))
         )
 
-        # Tell Home Assistant to freeze for a backup
+        # Tell Muthur Command to freeze for a backup
         self._change_stage(BackupJobStage.MUTHURCOMMAND)
         await self.sys_muthurcommand.begin_backup()
 

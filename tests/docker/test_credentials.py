@@ -17,8 +17,8 @@ from supervisor.docker.utils import get_registry_from_image
         ("nginx:latest", None),
         ("library/nginx", None),
         ("library/nginx:latest", None),
-        ("homeassistant/amd64-supervisor", None),
-        ("homeassistant/amd64-supervisor:1.2.3", None),
+        ("muthur-command/amd64-mcio-supervisor", None),
+        ("muthur-command/amd64-mcio-supervisor:1.2.3", None),
         # Registry with dot
         ("ghcr.io/muthurcommand/amd64-supervisor", "ghcr.io"),
         ("ghcr.io/muthurcommand/amd64-supervisor:latest", "ghcr.io"),
@@ -51,9 +51,9 @@ def test_no_credentials(coresys: CoreSys, test_docker_interface: DockerInterface
     coresys.docker.config._data["registries"] = {
         DOCKER_HUB: {"username": "Spongebob Squarepants", "password": "Password1!"}
     }
-    credentials, image = test_docker_interface._get_credentials("ghcr.io/homeassistant")
+    credentials, image = test_docker_interface._get_credentials("ghcr.io/muthur-command")
     assert not credentials
-    assert image == "ghcr.io/homeassistant"
+    assert image == "ghcr.io/muthur-command"
 
     credentials, image = test_docker_interface._get_credentials(
         "ghcr.io/muthurcommand/amd64-supervisor"
@@ -69,9 +69,9 @@ def test_no_matching_credentials(
     coresys.docker.config._data["registries"] = {
         DOCKER_HUB: {"username": "Spongebob Squarepants", "password": "Password1!"}
     }
-    credentials, image = test_docker_interface._get_credentials("ghcr.io/homeassistant")
+    credentials, image = test_docker_interface._get_credentials("ghcr.io/muthur-command")
     assert not credentials
-    assert image == "ghcr.io/homeassistant"
+    assert image == "ghcr.io/muthur-command"
 
     credentials, image = test_docker_interface._get_credentials(
         "ghcr.io/muthurcommand/amd64-supervisor"
@@ -94,12 +94,12 @@ def test_matching_credentials(coresys: CoreSys, test_docker_interface: DockerInt
     assert image == "ghcr.io/muthurcommand/amd64-supervisor"
 
     credentials, image = test_docker_interface._get_credentials(
-        "homeassistant/amd64-supervisor"
+        "muthur-command/amd64-mcio-supervisor"
     )
     assert credentials["username"] == "Spongebob Squarepants"
     assert credentials["registry"] == DOCKER_HUB
     # Docker Hub images should be prefixed with docker.io/ for correct ServerAddress
-    assert image == f"{DOCKER_HUB}/homeassistant/amd64-supervisor"
+    assert image == f"{DOCKER_HUB}/muthur-command/amd64-mcio-supervisor"
 
 
 def test_legacy_docker_hub_credentials(
@@ -111,11 +111,11 @@ def test_legacy_docker_hub_credentials(
     }
 
     credentials, image = test_docker_interface._get_credentials(
-        "homeassistant/amd64-supervisor"
+        "muthur-command/amd64-mcio-supervisor"
     )
     assert credentials["username"] == "LegacyUser"
     assert credentials["registry"] == DOCKER_HUB_LEGACY
-    assert image == f"{DOCKER_HUB}/homeassistant/amd64-supervisor"
+    assert image == f"{DOCKER_HUB}/muthur-command/amd64-mcio-supervisor"
 
 
 def test_docker_hub_preferred_over_legacy(
@@ -128,9 +128,9 @@ def test_docker_hub_preferred_over_legacy(
     }
 
     credentials, image = test_docker_interface._get_credentials(
-        "homeassistant/amd64-supervisor"
+        "muthur-command/amd64-mcio-supervisor"
     )
     # docker.io should be preferred
     assert credentials["username"] == "NewUser"
     assert credentials["registry"] == DOCKER_HUB
-    assert image == f"{DOCKER_HUB}/homeassistant/amd64-supervisor"
+    assert image == f"{DOCKER_HUB}/muthur-command/amd64-mcio-supervisor"

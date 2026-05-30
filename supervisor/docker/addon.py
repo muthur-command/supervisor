@@ -46,7 +46,6 @@ from .const import (
     ADDON_BUILDER_IMAGE,
     ENV_TIME,
     ENV_TOKEN,
-    ENV_TOKEN_OLD,
     MOUNT_DBUS,
     MOUNT_DEV,
     MOUNT_DOCKER,
@@ -80,10 +79,10 @@ NO_ADDDRESS = IPv4Address("0.0.0.0")
 
 
 class DockerAddon(DockerInterface):
-    """Docker Supervisor wrapper for Home Assistant."""
+    """Docker Supervisor wrapper for Muthur Command."""
 
     def __init__(self, coresys: CoreSys, addon: Addon):
-        """Initialize Docker Home Assistant wrapper."""
+        """Initialize Docker Muthur Command wrapper."""
         self.addon: Addon = addon
         super().__init__(coresys)
 
@@ -154,7 +153,6 @@ class DockerAddon(DockerInterface):
             **addon_env,
             ENV_TIME: self.sys_timezone,
             ENV_TOKEN: self.addon.supervisor_token,
-            ENV_TOKEN_OLD: self.addon.supervisor_token,
         }
 
     @property
@@ -391,7 +389,7 @@ class DockerAddon(DockerInterface):
                     )
                 )
 
-            # Map Home Assistant config in new way
+            # Map Muthur Command config in new way
             if MappingType.MUTHURCOMMAND_CONFIG in addon_mapping:
                 mounts.append(
                     DockerMount(

@@ -142,7 +142,7 @@ async def test_reload_fails_if_out_of_date(coresys: CoreSys):
         ),
         (
             {"muthurcommand": AwesomeVersion("2023.1.1")},
-            "App local_ssh not supported on this system, requires Home Assistant version 2023.1.1 or greater",
+            "App local_ssh not supported on this system, requires Muthur Command version 2023.1.1 or greater",
         ),
     ],
 )
@@ -201,7 +201,7 @@ async def test_update_unavailable_addon(
         ),
         (
             {"muthurcommand": AwesomeVersion("2023.1.1")},
-            "App local_ssh not supported on this system, requires Home Assistant version 2023.1.1 or greater",
+            "App local_ssh not supported on this system, requires Muthur Command version 2023.1.1 or greater",
         ),
     ],
 )

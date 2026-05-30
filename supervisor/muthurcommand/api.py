@@ -1,4 +1,4 @@
-"""Home Assistant control object."""
+"""Muthur Command control object."""
 
 import asyncio
 from collections.abc import AsyncIterator
@@ -32,10 +32,10 @@ class APIState:
 
 
 class MuthurCommandAPI(CoreSysAttributes):
-    """Home Assistant core object for handle it."""
+    """Muthur Command core object for handle it."""
 
     def __init__(self, coresys: CoreSys):
-        """Initialize Home Assistant object."""
+        """Initialize Muthur Command object."""
         self.coresys: CoreSys = coresys
 
         # We don't persist access tokens. Instead we fetch new ones when needed
@@ -81,10 +81,10 @@ class MuthurCommandAPI(CoreSysAttributes):
             ) as resp:
                 if resp.status != 200:
                     raise MuthurCommandAuthError(
-                        "Can't update Home Assistant access token!", _LOGGER.error
+                        "Can't update Muthur Command access token!", _LOGGER.error
                     )
 
-                _LOGGER.info("Updated Home Assistant API token")
+                _LOGGER.info("Updated Muthur Command API token")
                 tokens = await resp.json()
                 self.access_token = tokens["access_token"]
                 self._access_token_expires = datetime.now(tz=UTC) + timedelta(
@@ -103,7 +103,7 @@ class MuthurCommandAPI(CoreSysAttributes):
         params: MultiMapping[str] | None = None,
         headers: dict[str, str] | None = None,
     ) -> AsyncIterator[aiohttp.ClientResponse]:
-        """Async context manager to make authenticated requests to Home Assistant API.
+        """Async context manager to make authenticated requests to Muthur Command API.
 
         This context manager handles authentication token management automatically,
         including token refresh on 401 responses. It yields the HTTP response
@@ -117,7 +117,7 @@ class MuthurCommandAPI(CoreSysAttributes):
 
         Args:
             method: HTTP method (get, post, etc.)
-            path: API path relative to Home Assistant base URL
+            path: API path relative to Muthur Command base URL
             json: JSON data to send in request body
             content_type: Override content-type header
             data: Raw data to send in request body
@@ -169,25 +169,25 @@ class MuthurCommandAPI(CoreSysAttributes):
                 raise MuthurCommandAPIError(str(err)) from err
 
     async def _get_json(self, path: str) -> dict[str, Any]:
-        """Return Home Assistant get API."""
+        """Return Muthur Command get API."""
         async with self.make_request("get", path) as resp:
             if resp.status in (200, 201):
                 return await resp.json()
-            raise MuthurCommandAPIError(f"Home Assistant Core API return {resp.status}")
+            raise MuthurCommandAPIError(f"Muthur Command Core API return {resp.status}")
 
     async def get_config(self) -> dict[str, Any]:
-        """Return Home Assistant config."""
+        """Return Muthur Command config."""
         config = await self._get_json("api/config")
         if config is None or not isinstance(config, dict):
-            raise MuthurCommandAPIError("No config received from Home Assistant API")
+            raise MuthurCommandAPIError("No config received from Muthur Command API")
         return config
 
     async def get_core_state(self) -> dict[str, Any]:
-        """Return Home Assistant core state."""
+        """Return Muthur Command core state."""
         return await self._get_json("api/core/state")
 
     async def get_api_state(self) -> APIState | None:
-        """Return state of Home Assistant Core or None."""
+        """Return state of Muthur Command Core or None."""
         # Skip check on landingpage
         if (
             self.sys_muthurcommand.version is None
@@ -209,18 +209,18 @@ class MuthurCommandAPI(CoreSysAttributes):
             # Older versions of home assistant does not expose the state
             if data:
                 state = data.get("state", "RUNNING")
-                # Recorder state was added in HA Core 2024.8
+                # Recorder state was added in Muthur Command Core 2024.8
                 recorder_state = data.get("recorder_state", {})
                 migrating = recorder_state.get("migration_in_progress", False)
                 live_migration = recorder_state.get("migration_is_live", False)
                 return APIState(state, migrating and not live_migration)
         except MuthurCommandAPIError as err:
-            _LOGGER.debug("Can't connect to Home Assistant API: %s", err)
+            _LOGGER.debug("Can't connect to Muthur Command API: %s", err)
 
         return None
 
     async def check_api_state(self) -> bool:
-        """Return Home Assistant Core state if up."""
+        """Return Muthur Command Core state if up."""
         if state := await self.get_api_state():
             return state.core_state == "RUNNING" or state.offline_db_migration
         return False
@@ -228,7 +228,7 @@ class MuthurCommandAPI(CoreSysAttributes):
     async def check_frontend_available(self) -> bool:
         """Check if the frontend is accessible by fetching the root path.
 
-        Caller should make sure that Home Assistant Core is running before
+        Caller should make sure that Muthur Command Core is running before
         calling this method.
 
         Returns:

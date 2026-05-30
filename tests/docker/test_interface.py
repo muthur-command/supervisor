@@ -80,7 +80,7 @@ async def test_docker_image_default_platform(
 @pytest.mark.parametrize(
     "image,registry_key",
     [
-        ("homeassistant/amd64-supervisor", DOCKER_HUB),
+        ("muthur-command/amd64-mcio-supervisor", DOCKER_HUB),
         ("ghcr.io/muthur-command/amd64-mcio-supervisor", "ghcr.io"),
     ],
 )
@@ -135,7 +135,7 @@ async def test_pull_401_with_credentials_raises_auth_error(
     test_docker_interface: DockerInterface,
 ):
     """Test that a 401 during pull with credentials raises DockerRegistryAuthError."""
-    image = "homeassistant/amd64-supervisor"
+    image = "muthur-command/amd64-mcio-supervisor"
 
     # Configure registry credentials
     coresys.docker.config._data["registries"] = {  # pylint: disable=protected-access
@@ -164,7 +164,7 @@ async def test_pull_401_without_credentials_raises_docker_error(
     test_docker_interface: DockerInterface,
 ):
     """Test that a 401 during pull without credentials raises generic DockerError."""
-    image = "homeassistant/amd64-supervisor"
+    image = "muthur-command/amd64-mcio-supervisor"
 
     # No registry credentials configured
 
@@ -369,7 +369,7 @@ async def test_install_fires_progress_events(
     # This is from a sample pull. Filtered log to just one per unique status for test
     logs = [
         {
-            "status": "Pulling from muthur-command/odroid-n2-homeassistant",
+            "status": "Pulling from muthur-command/odroid-n2-muthurcommand",
             "id": "2025.7.2",
         },
         {"status": "Already exists", "progressDetail": {}, "id": "6e771e15690e"},
@@ -430,7 +430,7 @@ async def test_install_fires_progress_events(
     assert events == [
         PullLogEntry(
             job_id=ANY,
-            status="Pulling from muthur-command/odroid-n2-homeassistant",
+            status="Pulling from muthur-command/odroid-n2-muthurcommand",
             id="2025.7.2",
         ),
         PullLogEntry(
@@ -506,7 +506,7 @@ async def test_install_progress_rounding_does_not_cause_misses(
     # value and what it was rounded to. It should not raise an out of order exception
     logs = [
         {
-            "status": "Pulling from muthur-command/odroid-n2-homeassistant",
+            "status": "Pulling from muthur-command/odroid-n2-muthurcommand",
             "id": "2025.7.1",
         },
         {"status": "Pulling fs layer", "progressDetail": {}, "id": "1e214cd6d7d0"},
@@ -598,7 +598,7 @@ async def test_install_raises_on_pull_error(
 
     logs = [
         {
-            "status": "Pulling from muthur-command/odroid-n2-homeassistant",
+            "status": "Pulling from muthur-command/odroid-n2-muthurcommand",
             "id": "2025.7.2",
         },
         {"status": "Pulling fs layer", "progressDetail": {}, "id": "1578b14a573c"},
@@ -796,7 +796,7 @@ async def test_missing_total_handled_gracefully(
     # Progress details with missing 'total' fields observed in real-world pulls
     logs = [
         {
-            "status": "Pulling from muthur-command/odroid-n2-homeassistant",
+            "status": "Pulling from muthur-command/odroid-n2-muthurcommand",
             "id": "2025.7.1",
         },
         {"status": "Pulling fs layer", "progressDetail": {}, "id": "1e214cd6d7d0"},

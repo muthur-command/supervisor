@@ -1,4 +1,4 @@
-"""Home Assistant cli plugin.
+"""Muthur Command cli plugin.
 
 Code: https://github.com/muthur-command/plugin-cli
 """

@@ -43,7 +43,7 @@ def _check_container(container: DockerInterface, addon=None) -> bool:
 
         return False
 
-    # For Home Assistant Core and plugins, check default /media and /share paths
+    # For Muthur Command Core and plugins, check default /media and /share paths
     return any(
         mount.get("Propagation") != PropagationMode.RSLAVE
         for mount in container.meta_mounts

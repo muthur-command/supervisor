@@ -48,7 +48,7 @@ RUN_RELOAD_UPDATER = 86400  # 24h
 RUN_RELOAD_INGRESS = 930
 RUN_RELOAD_MOUNTS = 900
 
-RUN_WATCHDOG_HOMEASSISTANT_API = 120
+RUN_WATCHDOG_MUTHURCOMMAND_API = 120
 
 RUN_WATCHDOG_ADDON_APPLICATON = 120
 RUN_WATCHDOG_OBSERVER_APPLICATION = 180
@@ -96,7 +96,7 @@ class Tasks(CoreSysAttributes):
 
         # Watchdog
         self.sys_scheduler.register_task(
-            self._watchdog_muthurcommand_api, RUN_WATCHDOG_HOMEASSISTANT_API
+            self._watchdog_muthurcommand_api, RUN_WATCHDOG_MUTHURCOMMAND_API
         )
         self.sys_scheduler.register_task(
             self._watchdog_observer_application, RUN_WATCHDOG_OBSERVER_APPLICATION
@@ -150,24 +150,24 @@ class Tasks(CoreSysAttributes):
                 continue
 
             _LOGGER.info("App auto update process %s", addon.slug)
-            # Call Home Assistant Core to update add-on to make sure that backups
-            # get created through the Home Assistant Core API (categorized correctly).
-            # Ultimately auto updates should be handled by Home Assistant Core itself
+            # Call Muthur Command Core to update add-on to make sure that backups
+            # get created through the Muthur Command Core API (categorized correctly).
+            # Ultimately auto updates should be handled by Muthur Command Core itself
             # through a update entity feature.
             message = {
-                ATTR_TYPE: WSType.HASSIO_UPDATE_ADDON,
+                ATTR_TYPE: WSType.MCIO_UPDATE_ADDON,
                 "addon": addon.slug,
                 "backup": True,
             }
             _LOGGER.debug(
-                "Sending update app WebSocket command to Home Assistant Core: %s",
+                "Sending update app WebSocket command to Muthur Command Core: %s",
                 message,
             )
             try:
                 await self.sys_muthurcommand.websocket.async_send_command(message)
             except MuthurCommandWSError as err:
                 _LOGGER.warning(
-                    "Could not send app update command to Home Assistant Core: %s",
+                    "Could not send app update command to Muthur Command Core: %s",
                     err,
                 )
 
@@ -178,15 +178,15 @@ class Tasks(CoreSysAttributes):
         a delay in our system.
         """
         if self.sys_muthurcommand.unused:
-            # MCOS variant doesn't ship Home Assistant Core — Stage 5 of
+            # MCOS variant doesn't ship Muthur Command Core — Stage 5 of
             # the A1 plan tells us the MC stack watchdog (mc_bd HTTP probe)
             # is the source of truth instead.
             return
         if not self.sys_muthurcommand.watchdog:
-            # Watchdog is not enabled for Home Assistant
+            # Watchdog is not enabled for Muthur Command
             return
         if self.sys_muthurcommand.error_state:
-            # Home Assistant is in an error state, this is handled by the rollback feature
+            # Muthur Command is in an error state, this is handled by the rollback feature
             return
         if self.sys_muthurcommand.version == LANDINGPAGE:
             # Skip watchdog for landingpage
@@ -195,10 +195,10 @@ class Tasks(CoreSysAttributes):
             # The home assistant container is not running
             return
         if self.sys_muthurcommand.core.in_progress:
-            # Home Assistant has a task in progress
+            # Muthur Command has a task in progress
             return
         if await self.sys_muthurcommand.api.check_api_state():
-            # Home Assistant is running properly
+            # Muthur Command is running properly
             self._cache[HASS_WATCHDOG_REANIMATE_FAILURES] = 0
             self._cache[HASS_WATCHDOG_API_FAILURES] = 0
             return
@@ -210,7 +210,7 @@ class Tasks(CoreSysAttributes):
         api_fails += 1
         if api_fails < HASS_WATCHDOG_MAX_API_ATTEMPTS:
             self._cache[HASS_WATCHDOG_API_FAILURES] = api_fails
-            _LOGGER.warning("Watchdog missed an Home Assistant Core API response.")
+            _LOGGER.warning("Watchdog missed a Muthur Command Core API response.")
             return
 
         # After 5 reanimation attempts switch to safe mode. If that fails, give up
@@ -220,12 +220,12 @@ class Tasks(CoreSysAttributes):
 
         if safe_mode := reanimate_fails == HASS_WATCHDOG_MAX_REANIMATE_ATTEMPTS:
             _LOGGER.critical(
-                "Watchdog cannot reanimate Home Assistant Core, failed all %s attempts. Restarting into safe mode",
+                "Watchdog cannot reanimate Muthur Command Core, failed all %s attempts. Restarting into safe mode",
                 reanimate_fails,
             )
         else:
             _LOGGER.error(
-                "Watchdog missed %s Home Assistant Core API responses in a row. Restarting Home Assistant Core!",
+                "Watchdog missed %s Muthur Command Core API responses in a row. Restarting Muthur Command Core!",
                 HASS_WATCHDOG_MAX_API_ATTEMPTS,
             )
 
@@ -240,10 +240,10 @@ class Tasks(CoreSysAttributes):
 
             if safe_mode:
                 _LOGGER.critical(
-                    "Safe mode restart failed. Watchdog cannot bring Home Assistant online."
+                    "Safe mode restart failed. Watchdog cannot bring Muthur Command online."
                 )
             else:
-                _LOGGER.error("Home Assistant watchdog reanimation failed!")
+                _LOGGER.error("Muthur Command watchdog reanimation failed!")
 
             self._cache[HASS_WATCHDOG_REANIMATE_FAILURES] = reanimate_fails + 1
         else:
@@ -371,7 +371,7 @@ class Tasks(CoreSysAttributes):
 
     @Job(name="tasks_reload_updater")
     async def _reload_updater(self) -> None:
-        """Check for new versions of Home Assistant, Supervisor, OS, etc."""
+        """Check for new versions of Muthur Command, Supervisor, OS, etc."""
         await self.sys_updater.reload()
 
         # If there's a new version of supervisor, update immediately

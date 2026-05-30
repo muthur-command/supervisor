@@ -66,7 +66,7 @@ class APIRoot(CoreSysAttributes):
             ATTR_LOGGING: self.sys_config.logging,
             ATTR_TIMEZONE: self.sys_timezone,
             # MC application stack version snapshot (Stage 6 of A1 plan).
-            # ``enabled`` lets clients hide the legacy HA Core panels when
+            # ``enabled`` lets clients hide the legacy Muthur Command Core panels when
             # the MC stack is the user-facing entry point.
             ATTR_MC_STACK: {
                 ATTR_ENABLED: self.sys_mc_stack.enabled,

@@ -84,7 +84,7 @@ async def test_update_job(coresys: CoreSys):
 
 
 async def test_notify_on_change(coresys: CoreSys, ha_ws_client: AsyncMock):
-    """Test jobs notify Home Assistant on changes."""
+    """Test jobs notify Muthur Command on changes."""
     job = coresys.jobs.new_job(TEST_JOB)
 
     job.progress = 50

@@ -357,7 +357,7 @@ def test_valid_slug():
     config["slug"] = "uptime-kuma"
     assert vd.SCHEMA_ADDON_CONFIG(config)
 
-    config["slug"] = "hassio_google_drive_backup"
+    config["slug"] = "mcio_google_drive_backup"
     assert vd.SCHEMA_ADDON_CONFIG(config)
 
     config["slug"] = "paradox_alarm_interface_3.x"

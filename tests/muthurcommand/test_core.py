@@ -1,4 +1,4 @@
-"""Test Home Assistant core."""
+"""Test Muthur Command core."""
 
 import asyncio
 from datetime import datetime, timedelta
@@ -34,7 +34,7 @@ from tests.common import AsyncIterator
 
 
 async def test_update_fails_if_out_of_date(coresys: CoreSys):
-    """Test update of Home Assistant fails when supervisor or plugin is out of date."""
+    """Test update of Muthur Command fails when supervisor or plugin is out of date."""
     coresys.hardware.disk.get_disk_free_space = lambda x: 5000
 
     with (
@@ -158,7 +158,7 @@ async def test_install_docker_ratelimit_error(
         await coresys.muthurcommand.core.install()
         sleep.assert_awaited_once_with(30)
 
-    assert "Error on Home Assistant installation. Retrying in 30sec" in caplog.text
+    assert "Error on Muthur Command installation. Retrying in 30sec" in caplog.text
     capture_exception.assert_not_called()
     assert (
         Issue(IssueType.DOCKER_RATELIMIT, ContextType.SYSTEM)
@@ -202,7 +202,7 @@ async def test_install_other_error(
         await coresys.muthurcommand.core.install()
         sleep.assert_awaited_once_with(30)
 
-    assert "Error on Home Assistant installation. Retrying in 30sec" in caplog.text
+    assert "Error on Muthur Command installation. Retrying in 30sec" in caplog.text
     capture_exception.assert_called_once_with(err)
     assert "Unhandled exception:" not in caplog.text
 
@@ -210,8 +210,8 @@ async def test_install_other_error(
 @pytest.mark.parametrize(
     ("active_job", "expected_log"),
     [
-        (None, "Home Assistant Core installation in progress"),
-        (MagicMock(progress=45.0), "Downloading Home Assistant Core image, 45%"),
+        (None, "Muthur Command Core installation in progress"),
+        (MagicMock(progress=45.0), "Downloading Muthur Command Core image, 45%"),
     ],
 )
 async def test_install_logs_progress_periodically(
@@ -279,7 +279,7 @@ async def test_start(
     image_exc: aiodocker.DockerError | None,
     delete_calls: list[call],
 ):
-    """Test starting Home Assistant."""
+    """Test starting Muthur Command."""
     coresys.docker.images.inspect.return_value = {"Id": "123"}
     coresys.docker.images.inspect.side_effect = image_exc
     container.id = "123"
@@ -312,7 +312,7 @@ async def test_start(
 
 @pytest.mark.usefixtures("path_extern")
 async def test_start_existing_container(coresys: CoreSys, container: DockerContainer):
-    """Test starting Home Assistant when container exists and is viable."""
+    """Test starting Muthur Command when container exists and is viable."""
     coresys.docker.images.inspect.return_value = {"Id": "123"}
     container.show.return_value["Image"] = "123"
     container.show.return_value["State"]["Status"] = "exited"
@@ -337,7 +337,7 @@ async def test_start_existing_container(coresys: CoreSys, container: DockerConta
 
 @pytest.mark.parametrize("exists", [True, False])
 async def test_stop(coresys: CoreSys, container: DockerContainer, exists: bool):
-    """Test stoppping Home Assistant."""
+    """Test stoppping Muthur Command."""
     if exists:
         container.show.return_value["State"]["Status"] = "running"
         container.show.return_value["State"]["Running"] = True
@@ -356,7 +356,7 @@ async def test_stop(coresys: CoreSys, container: DockerContainer, exists: bool):
 
 
 async def test_restart(coresys: CoreSys, container: DockerContainer):
-    """Test restarting Home Assistant."""
+    """Test restarting Muthur Command."""
     with patch.object(MuthurCommandCore, "_block_till_run") as block_till_run:
         await coresys.muthurcommand.core.restart()
         block_till_run.assert_called_once()
@@ -443,7 +443,7 @@ async def test_api_check_timeout(
 
     assert coresys.muthurcommand.api.get_api_state.call_count == 10
     assert (
-        "No Home Assistant Core response, assuming a fatal startup error" in caplog.text
+        "No Muthur Command Core response, assuming a fatal startup error" in caplog.text
     )
 
 
@@ -472,7 +472,7 @@ async def test_api_check_success(
             await coresys.muthurcommand.core.start()
 
     assert coresys.muthurcommand.api.get_api_state.call_count == 1
-    assert "Detect a running Home Assistant instance" in caplog.text
+    assert "Detect a running Muthur Command instance" in caplog.text
 
 
 async def test_api_check_database_migration(
@@ -510,7 +510,7 @@ async def test_api_check_database_migration(
             await coresys.muthurcommand.core.start()
 
     assert coresys.muthurcommand.api.get_api_state.call_count == 51
-    assert "Detect a running Home Assistant instance" in caplog.text
+    assert "Detect a running Muthur Command instance" in caplog.text
 
 
 async def test_core_loads_wrong_image_for_machine(

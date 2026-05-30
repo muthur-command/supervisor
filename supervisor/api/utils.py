@@ -87,7 +87,7 @@ def api_process(method):
 
 
 def require_muthurcommand(method):
-    """Ensure that the request comes from Home Assistant."""
+    """Ensure that the request comes from Muthur Command."""
 
     async def wrap_api(api: CoreSysAttributes, *args, **kwargs) -> Any:
         """Return API information."""

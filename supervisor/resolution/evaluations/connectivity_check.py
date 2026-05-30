@@ -22,7 +22,7 @@ class EvaluateConnectivityCheck(EvaluateBase):
     @property
     def on_failure(self) -> str:
         """Return a string that is printed when system fails this evaluation."""
-        return "Connectivity checks are required for Home Assistant."
+        return "Connectivity checks are required for Muthur Command."
 
     @property
     def states(self) -> list[CoreState]:

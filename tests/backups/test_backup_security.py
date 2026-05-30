@@ -161,7 +161,7 @@ async def test_backup_open_rejects_path_traversal(coresys: CoreSys, tmp_path: Pa
 async def test_muthurcommand_restore_rejects_path_traversal(
     coresys: CoreSys, tmp_supervisor_data: Path
 ):
-    """Test that Home Assistant restore raises BackupInvalidError for path traversal."""
+    """Test that Muthur Command restore raises BackupInvalidError for path traversal."""
     tar_path = tmp_supervisor_data / "muthurcommand.tar.gz"
     traversal_info = tarfile.TarInfo(name="../../etc/passwd")
     traversal_info.size = 9

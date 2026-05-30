@@ -288,7 +288,7 @@ class AddonManager(CoreSysAttributes):
         if backup:
             await self.sys_backups.do_backup_partial(
                 name=f"addon_{addon.slug}_{addon.version}",
-                homeassistant=False,
+                muthurcommand=False,
                 addons=[addon.slug],
             )
 
@@ -372,7 +372,7 @@ class AddonManager(CoreSysAttributes):
         # Update ingress
         if had_ingress != addon.ingress_panel:
             await self.sys_ingress.reload()
-            await self.sys_ingress.update_hass_panel(addon)
+            await self.sys_ingress.update_core_panel(addon)
 
         return wait_for_start
 

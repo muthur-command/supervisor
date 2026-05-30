@@ -1,4 +1,4 @@
-"""Home Assistant observer plugin.
+"""Muthur Command observer plugin.
 
 Code: https://github.com/muthur-command/plugin-observer
 """

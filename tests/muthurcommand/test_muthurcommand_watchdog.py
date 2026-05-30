@@ -1,4 +1,4 @@
-"""Test Home Assistant watchdog."""
+"""Test Muthur Command watchdog."""
 
 import asyncio
 from unittest.mock import AsyncMock, PropertyMock, patch
@@ -13,8 +13,8 @@ from supervisor.docker.monitor import DockerContainerStateEvent
 from supervisor.exceptions import MuthurCommandError
 
 
-async def test_home_assistant_watchdog(coresys: CoreSys) -> None:
-    """Test homeassistant watchdog works correctly."""
+async def test_muthurcommand_watchdog(coresys: CoreSys) -> None:
+    """Test muthurcommand watchdog works correctly."""
     coresys.muthurcommand.version = AwesomeVersion("2022.7.3")
     with (
         patch(
@@ -108,7 +108,7 @@ async def test_home_assistant_watchdog(coresys: CoreSys) -> None:
         start.assert_not_called()
 
 
-async def test_home_assistant_watchdog_rebuild_on_failure(coresys: CoreSys) -> None:
+async def test_muthurcommand_watchdog_rebuild_on_failure(coresys: CoreSys) -> None:
     """Test home assistant watchdog rebuilds if start fails."""
     coresys.muthurcommand.version = AwesomeVersion("2022.7.3")
     with (
@@ -147,7 +147,7 @@ async def test_home_assistant_watchdog_rebuild_on_failure(coresys: CoreSys) -> N
         rebuild.assert_called_once()
 
 
-async def test_home_assistant_watchdog_skip_on_load(
+async def test_muthurcommand_watchdog_skip_on_load(
     coresys: CoreSys, container: DockerContainer
 ) -> None:
     """Test home assistant watchdog skips a crash event on load."""
@@ -177,7 +177,7 @@ async def test_home_assistant_watchdog_skip_on_load(
         start.assert_not_called()
 
 
-async def test_home_assistant_watchdog_unregisters_on_shutdown(
+async def test_muthurcommand_watchdog_unregisters_on_shutdown(
     coresys: CoreSys,
 ) -> None:
     """Test home assistant watchdog unregisters when entering shutdown states."""

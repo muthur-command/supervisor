@@ -29,7 +29,7 @@ _LOGGER: logging.Logger = logging.getLogger(__name__)
 _APP_COMPONENT_KEYS = ("mc_bd", "mc_fd")
 
 # CalVer cutoff: warn when current is more than this many months behind
-# the latest known version. Mirrors the HA Core evaluator's 2-year
+# the latest known version. Mirrors the Muthur Command Core evaluator's 2-year
 # heuristic but tightened to 12 months because the MC stack moves faster.
 _CALVER_CUTOFF_MONTHS = 12
 

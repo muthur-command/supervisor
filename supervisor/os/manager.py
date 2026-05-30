@@ -84,7 +84,7 @@ class OSManager(CoreSysAttributes):
     """OS interface inside supervisor."""
 
     def __init__(self, coresys: CoreSys):
-        """Initialize HassOS handler."""
+        """Initialize MCOS handler."""
         self.coresys: CoreSys = coresys
         self._datadisk: DataDisk = DataDisk(coresys)
         self._available: bool = False
@@ -95,27 +95,27 @@ class OSManager(CoreSysAttributes):
 
     @property
     def available(self) -> bool:
-        """Return True, if HassOS on host."""
+        """Return True, if MCOS on host."""
         return self._available
 
     @property
     def version(self) -> AwesomeVersion | None:
-        """Return version of HassOS."""
+        """Return version of MCOS."""
         return self._version
 
     @property
     def latest_version(self) -> AwesomeVersion | None:
-        """Return version of HassOS."""
+        """Return version of MCOS."""
         return self.sys_updater.version_mcos
 
     @property
     def latest_version_unrestricted(self) -> AwesomeVersion | None:
-        """Return current latest version of HassOS for board ignoring upgrade restrictions."""
+        """Return current latest version of MCOS for board ignoring upgrade restrictions."""
         return self.sys_updater.version_mcos_unrestricted
 
     @property
     def need_update(self) -> bool:
-        """Return true if a HassOS update is available."""
+        """Return true if a MCOS update is available."""
         try:
             return (
                 self.version is not None
@@ -220,7 +220,7 @@ class OSManager(CoreSysAttributes):
         }
 
     async def load(self) -> None:
-        """Load HassOS data."""
+        """Load MCOS data."""
         try:
             if not self.sys_host.info.cpe:
                 raise NotImplementedError()
@@ -274,7 +274,7 @@ class OSManager(CoreSysAttributes):
         concurrency=JobConcurrency.REJECT,
     )
     async def update(self, version: AwesomeVersion | None = None) -> None:
-        """Update HassOS system."""
+        """Update MCOS system."""
         version = version or self.latest_version
 
         # Check installed version

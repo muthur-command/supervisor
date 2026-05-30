@@ -17,7 +17,7 @@ async def test_set_hostname(
     hostname_service: HostnameService = all_dbus_services["hostname"]
     hostname_service.SetStaticHostname.calls.clear()
 
-    assert coresys.dbus.hostname.hostname == "homeassistant-n2"
+    assert coresys.dbus.hostname.hostname == "mcos-n2"
 
     await coresys.host.control.set_hostname("test")
     assert hostname_service.SetStaticHostname.calls == [("test", False)]

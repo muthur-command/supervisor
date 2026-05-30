@@ -26,12 +26,12 @@ class Hostname(DBusServiceMock):
     @dbus_property(access=PropertyAccess.READ)
     def Hostname(self) -> "s":
         """Get Hostname."""
-        return "homeassistant-n2"
+        return "mcos-n2"
 
     @dbus_property(access=PropertyAccess.READ)
     def StaticHostname(self) -> "s":
         """Get StaticHostname."""
-        return "homeassistant-n2"
+        return "mcos-n2"
 
     @dbus_property(access=PropertyAccess.READ)
     def PrettyHostname(self) -> "s":
@@ -136,7 +136,7 @@ class Hostname(DBusServiceMock):
                 "Hostname": "odroid-dev",
                 "StaticHostname": "odroid-dev",
                 "PrettyHostname": None,
-                "DefaultHostname": "homeassistant",
+                "DefaultHostname": "mcos",
                 "HostnameSource": "static",
                 "IconName": "computer-embedded",
                 "Chassis": "embedded",

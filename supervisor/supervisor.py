@@ -1,4 +1,4 @@
-"""Home Assistant control object."""
+"""Muthur Command control object."""
 
 from collections.abc import Awaitable
 from contextlib import suppress
@@ -99,7 +99,7 @@ class Supervisor(CoreSysAttributes):
 
     @property
     def version(self) -> AwesomeVersion:
-        """Return version of running Home Assistant."""
+        """Return version of running Muthur Command."""
         return AwesomeVersion(SUPERVISOR_VERSION)
 
     @property

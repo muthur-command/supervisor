@@ -1,7 +1,7 @@
 name: Samba share
 version: 9.5.1
 slug: samba
-description: Expose Home Assistant folders with SMB/CIFS
+description: Expose Muthur Command folders with SMB/CIFS
 url: "https://github.com/muthur-command/addons/tree/master/samba"
 arch:
   - aarch64
@@ -19,7 +19,7 @@ map:
   - "media:rw"
 options:
   workgroup: WORKGROUP
-  username: homeassistant
+  username: muthurcommand
   password: null
   allow_hosts:
     - 10.0.0.0/8

@@ -720,13 +720,13 @@ async def test_api_store_addons_addon_availability_muthurcommand_version_too_old
     api_method: str,
     installed: bool,
 ):
-    """Test availability errors for /store/addons/{addon}/* REST APIs - Home Assistant version too old."""
+    """Test availability errors for /store/addons/{addon}/* REST APIs - Muthur Command version too old."""
     coresys.hardware.disk.get_disk_free_space = lambda x: 5000
-    # Create an addon that requires newer Home Assistant version
+    # Create an addon that requires newer Muthur Command version
     addon_obj = AddonStore(coresys, "test_version_addon")
     coresys.addons.store[addon_obj.slug] = addon_obj
 
-    # Set addon config with minimum Home Assistant version requirement
+    # Set addon config with minimum Muthur Command version requirement
     addon_config = {
         "advanced": False,
         "arch": ["amd64"],
@@ -743,7 +743,7 @@ async def test_api_store_addons_addon_availability_muthurcommand_version_too_old
         coresys.addons.local[addon_obj.slug] = Addon(coresys, addon_obj.slug)
         coresys.addons.data.user[addon_obj.slug] = {"version": AwesomeVersion("0.0.1")}
 
-    # Mock the Home Assistant version to be older
+    # Mock the Muthur Command version to be older
     with patch.object(
         MuthurCommand,
         "version",
@@ -754,14 +754,14 @@ async def test_api_store_addons_addon_availability_muthurcommand_version_too_old
         )
         assert resp.status == 400
         result = await resp.json()
-        assert result["error_key"] == "addon_not_supported_home_assistant_version_error"
+        assert result["error_key"] == "addon_not_supported_muthurcommand_version_error"
         assert result["extra_fields"] == {
             "slug": "test_version_addon",
             "version": "2023.1.1",
         }
         assert (
             result["message"]
-            == "App test_version_addon not supported on this system, requires Home Assistant version 2023.1.1 or greater"
+            == "App test_version_addon not supported on this system, requires Muthur Command version 2023.1.1 or greater"
         )
 
 
@@ -775,7 +775,7 @@ async def test_api_store_addons_addon_availability_installed_addon(
     install_addon_ssh.data_store["version"] = AwesomeVersion("10.0.0")
     install_addon_ssh.data_store["muthurcommand"] = AwesomeVersion("2023.1.1")
 
-    # Mock the Home Assistant version to be older
+    # Mock the Muthur Command version to be older
     with patch.object(
         MuthurCommand,
         "version",
@@ -785,7 +785,7 @@ async def test_api_store_addons_addon_availability_installed_addon(
         assert resp.status == 400
         result = await resp.json()
         assert (
-            "requires Home Assistant version 2023.1.1 or greater" in result["message"]
+            "requires Muthur Command version 2023.1.1 or greater" in result["message"]
         )
 
 
@@ -806,7 +806,7 @@ async def test_api_progress_updates_addon_install_update(
     job_name: str,
     addon_slug: str,
 ):
-    """Test progress updates sent to Home Assistant for installs/updates."""
+    """Test progress updates sent to Muthur Command for installs/updates."""
     coresys.hardware.disk.get_disk_free_space = lambda x: 5000
     coresys.core.set_state(CoreState.RUNNING)
 

@@ -104,7 +104,7 @@ class CoreConfig(FileConfiguration):
     def country(self) -> str | None:
         """Return supervisor country.
 
-        The format follows what Home Assistant Core provides, which today is
+        The format follows what Muthur Command Core provides, which today is
         ISO 3166-1 alpha-2.
         """
         return self._data.get(ATTR_COUNTRY)

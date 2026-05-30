@@ -434,7 +434,7 @@ jobs:
   #         exit 1
 
   #     # Wait for Core to come up so subsequent steps (backup, addon install) succeed.
-  #     # On first startup, Supervisor installs Core via the "home_assistant_core_install"
+  #     # On first startup, Supervisor installs Core via the "muthurcommand_core_install"
   #     # job (which pulls the image and then starts Core). Jobs with cleanup=True are
   #     # removed from the jobs list once done, so we poll until it's gone.
   #     - name: Wait for Core to be started

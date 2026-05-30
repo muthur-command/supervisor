@@ -1,5 +1,6 @@
 """Constants file for Supervisor."""
 
+import os
 from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import StrEnum
@@ -18,7 +19,13 @@ SERVER_SOFTWARE = (
 
 DOCKER_PREFIX: str = "mcio"
 OBSERVER_DOCKER_NAME: str = f"{DOCKER_PREFIX}_observer"
-SUPERVISOR_DOCKER_NAME: str = f"{DOCKER_PREFIX}_supervisor"
+SUPERVISOR_DOCKER_NAME: str = "mcos_supervisor"
+ENV_SUPERVISOR_NAME = "SUPERVISOR_NAME"
+
+
+def supervisor_container_name() -> str:
+    """Return the Docker container name for this Supervisor instance."""
+    return os.environ.get(ENV_SUPERVISOR_NAME, SUPERVISOR_DOCKER_NAME)
 MC_POSTGRES_DOCKER_NAME: str = f"{DOCKER_PREFIX}_mc_postgres"
 MC_REDIS_DOCKER_NAME: str = f"{DOCKER_PREFIX}_mc_redis"
 MC_BACKEND_DOCKER_NAME: str = f"{DOCKER_PREFIX}_mc_bd"
@@ -128,7 +135,6 @@ HEADER_TOKEN = "X-Supervisor-Token"
 ENV_MUTHURCOMMAND_REPOSITORY = "MUTHURCOMMAND_REPOSITORY"
 ENV_SUPERVISOR_DEV = "SUPERVISOR_DEV"
 ENV_SUPERVISOR_MACHINE = "SUPERVISOR_MACHINE"
-ENV_SUPERVISOR_NAME = "SUPERVISOR_NAME"
 ENV_SUPERVISOR_SHARE = "SUPERVISOR_SHARE"
 ENV_SUPERVISOR_CPU_RT = "SUPERVISOR_CPU_RT"
 
@@ -589,7 +595,7 @@ class CpuArch(StrEnum):
 
 @dataclass
 class MuthurCommandUser:
-    """A Home Assistant Core user.
+    """A Muthur Command Core user.
 
     Incomplete model — Core's User object has additional fields
     (credentials, refresh_tokens, etc.) that are not represented here.

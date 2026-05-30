@@ -10,7 +10,7 @@ VALID_DEFAULT = {
 
 
 def test_v1_muthurcommand_migration():
-    """Test v1 homeassistant validation migration."""
+    """Test v1 muthurcommand validation migration."""
 
     data = validate.SCHEMA_BACKUP(
         {

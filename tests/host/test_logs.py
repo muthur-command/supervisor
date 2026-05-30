@@ -60,7 +60,7 @@ async def test_logs(journald_gateway: MagicMock, coresys: CoreSys):
         )
         assert (
             line
-            == "2024-03-04 02:52:56.193 homeassistant systemd[1]: Started Hostname Service."
+            == "2024-03-04 02:52:56.193 mcos systemd[1]: Started Hostname Service."
         )
 
     with (
@@ -129,7 +129,7 @@ async def test_logs_verbose_no_colors(journald_gateway: MagicMock, coresys: Core
         # Colors should be stripped in verbose format too
         assert (
             line
-            == "2024-03-04 22:56:56.709 ha-hloub mcio_supervisor[466]: 24-03-04 23:56:56 INFO (MainThread) [__main__] Closing Supervisor"
+            == "2024-03-04 22:56:56.709 ha-hloub mcos_supervisor[466]: 24-03-04 23:56:56 INFO (MainThread) [__main__] Closing Supervisor"
         )
 
 
@@ -215,7 +215,7 @@ async def test_identifiers(journald_gateway: MagicMock, coresys: CoreSys):
     for identifier in [
         "addon_local_ssh",
         "mcio_dns",
-        "mcio_supervisor",
+        "mcos_supervisor",
         "kernel",
         "os-agent",
     ]:

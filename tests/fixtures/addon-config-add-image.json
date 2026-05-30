@@ -2,7 +2,7 @@
   "name": "Terminal & SSH",
   "version": "10.0.0",
   "slug": "ssh",
-  "description": "Allow logging in remotely to Home Assistant using SSH",
+  "description": "Allow logging in remotely to Muthur Command using SSH",
   "url": "https://github.com/muthur-command/addons/tree/master/ssh",
   "arch": ["aarch64", "amd64"],
   "init": false,

@@ -11,7 +11,7 @@ from .base import CheckBase
 _LOGGER: logging.Logger = logging.getLogger(__name__)
 
 # Partition labels to check for duplicates (GPT-based installations)
-HAOS_PARTITIONS = [
+MCOS_PARTITIONS = [
     "mcos-boot",
     "mcos-kernel0",
     "mcos-kernel1",
@@ -20,7 +20,7 @@ HAOS_PARTITIONS = [
 ]
 
 # Partition UUIDs to check for duplicates (MBR-based installations)
-HAOS_PARTITION_UUIDS = [
+MCOS_PARTITION_UUIDS = [
     "48617373-01",  # mcos-boot
     "48617373-05",  # mcos-kernel0
     "48617373-06",  # mcos-system0
@@ -32,7 +32,7 @@ HAOS_PARTITION_UUIDS = [
 def _get_device_specifications():
     """Generate DeviceSpecification objects for both GPT and MBR partitions."""
     # GPT-based installations (partition labels)
-    for partition_label in HAOS_PARTITIONS:
+    for partition_label in MCOS_PARTITIONS:
         yield (
             DeviceSpecification(partlabel=partition_label),
             "partition",
@@ -40,7 +40,7 @@ def _get_device_specifications():
         )
 
     # MBR-based installations (partition UUIDs)
-    for partition_uuid in HAOS_PARTITION_UUIDS:
+    for partition_uuid in MCOS_PARTITION_UUIDS:
         yield (
             DeviceSpecification(partuuid=partition_uuid),
             "partition UUID",

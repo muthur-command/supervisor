@@ -204,7 +204,7 @@ class Backup(JobGroup):
 
     @property
     def muthurcommand(self) -> dict[str, Any] | None:
-        """Return backup Home Assistant data."""
+        """Return backup Muthur Command data."""
         return self._data[ATTR_MUTHURCOMMAND]
 
     @property
@@ -904,7 +904,7 @@ class Backup(JobGroup):
 
     @Job(name="backup_store_muthurcommand", cleanup=False)
     async def store_muthurcommand(self, exclude_database: bool = False):
-        """Backup Home Assistant Core configuration folder."""
+        """Backup Muthur Command Core configuration folder."""
         if not self._outer_secure_tarfile:
             raise RuntimeError(
                 "Cannot backup components without initializing backup tar"
@@ -930,7 +930,7 @@ class Backup(JobGroup):
 
     @Job(name="backup_restore_muthurcommand", cleanup=False)
     async def restore_muthurcommand(self) -> Awaitable[None]:
-        """Restore Home Assistant Core configuration folder."""
+        """Restore Muthur Command Core configuration folder."""
         if not self._tmp:
             raise RuntimeError("Cannot restore components without opening backup tar")
 
@@ -960,11 +960,11 @@ class Backup(JobGroup):
                 if self.muthurcommand_version == self.sys_muthurcommand.version:
                     return
             except TypeError:
-                # Home Assistant is not yet installed / None
+                # Muthur Command is not yet installed / None
                 pass
             except AwesomeVersionCompareException as err:
                 raise BackupError(
-                    f"Invalid Home Assistant Core version {self.muthurcommand_version}",
+                    f"Invalid Muthur Command Core version {self.muthurcommand_version}",
                     _LOGGER.error,
                 ) from err
             await self.sys_muthurcommand.core.update(self.muthurcommand_version)

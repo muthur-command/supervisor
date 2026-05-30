@@ -1,4 +1,4 @@
-"""Init file for Supervisor Home Assistant RESTful API."""
+"""Init file for Supervisor Muthur Command RESTful API."""
 
 import asyncio
 from collections.abc import Awaitable
@@ -83,7 +83,7 @@ SCHEMA_STOP = vol.Schema(
 
 
 class APIMuthurCommand(CoreSysAttributes):
-    """Handle RESTful API for Home Assistant functions."""
+    """Handle RESTful API for Muthur Command functions."""
 
     async def _check_offline_migration(self, force: bool = False) -> None:
         """Check and raise if there's an offline DB migration in progress."""
@@ -119,7 +119,7 @@ class APIMuthurCommand(CoreSysAttributes):
 
     @api_process
     async def options(self, request: web.Request) -> None:
-        """Set Home Assistant options."""
+        """Set Muthur Command options."""
         body = await api_validate(SCHEMA_OPTIONS, request)
 
         if ATTR_IMAGE in body:
@@ -179,7 +179,7 @@ class APIMuthurCommand(CoreSysAttributes):
 
     @api_process
     async def update(self, request: web.Request) -> dict[str, str] | None:
-        """Update Home Assistant."""
+        """Update Muthur Command."""
         body = await api_validate(SCHEMA_UPDATE, request)
         await self._check_offline_migration()
 
@@ -198,7 +198,7 @@ class APIMuthurCommand(CoreSysAttributes):
 
     @api_process
     async def stop(self, request: web.Request) -> None:
-        """Stop Home Assistant."""
+        """Stop Muthur Command."""
         body = await api_validate(SCHEMA_STOP, request)
         await self._check_offline_migration(force=body[ATTR_FORCE])
 
@@ -206,12 +206,12 @@ class APIMuthurCommand(CoreSysAttributes):
 
     @api_process
     def start(self, request: web.Request) -> Awaitable[None]:
-        """Start Home Assistant."""
+        """Start Muthur Command."""
         return asyncio.shield(self.sys_muthurcommand.core.start())
 
     @api_process
     async def restart(self, request: web.Request) -> None:
-        """Restart Home Assistant."""
+        """Restart Muthur Command."""
         body = await api_validate(SCHEMA_RESTART, request)
         await self._check_offline_migration(force=body[ATTR_FORCE])
 
@@ -221,7 +221,7 @@ class APIMuthurCommand(CoreSysAttributes):
 
     @api_process
     async def rebuild(self, request: web.Request) -> None:
-        """Rebuild Home Assistant."""
+        """Rebuild Muthur Command."""
         body = await api_validate(SCHEMA_RESTART, request)
         await self._check_offline_migration(force=body[ATTR_FORCE])
 
@@ -231,7 +231,7 @@ class APIMuthurCommand(CoreSysAttributes):
 
     @api_process
     async def check(self, request: web.Request) -> None:
-        """Check configuration of Home Assistant."""
+        """Check configuration of Muthur Command."""
         result = await self.sys_muthurcommand.core.check_config()
         if not result.valid:
             raise APIError(result.log)

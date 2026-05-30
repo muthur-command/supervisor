@@ -8,9 +8,9 @@ from dbus_fast.aio.message_bus import MessageBus
 from ....exceptions import BoardInvalidError, DBusInterfaceError, DBusServiceUnkownError
 from ...const import (
     DBUS_ATTR_BOARD,
-    DBUS_IFACE_HAOS_BOARDS,
-    DBUS_NAME_HAOS,
-    DBUS_OBJECT_HAOS_BOARDS,
+    DBUS_IFACE_MCOS_BOARDS,
+    DBUS_NAME_MCOS,
+    DBUS_OBJECT_MCOS_BOARDS,
 )
 from ...interface import DBusInterfaceProxy, dbus_property
 from .const import BOARD_NAME_GREEN, BOARD_NAME_SUPERVISED, BOARD_NAME_YELLOW
@@ -25,9 +25,9 @@ _LOGGER: logging.Logger = logging.getLogger(__name__)
 class BoardManager(DBusInterfaceProxy):
     """Board manager object."""
 
-    bus_name: str = DBUS_NAME_HAOS
-    object_path: str = DBUS_OBJECT_HAOS_BOARDS
-    properties_interface: str = DBUS_IFACE_HAOS_BOARDS
+    bus_name: str = DBUS_NAME_MCOS
+    object_path: str = DBUS_OBJECT_MCOS_BOARDS
+    properties_interface: str = DBUS_IFACE_MCOS_BOARDS
     sync_properties: bool = False
 
     def __init__(self) -> None:

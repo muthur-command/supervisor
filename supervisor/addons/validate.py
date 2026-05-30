@@ -349,7 +349,7 @@ def _migrate_addon_config(protocol=False):
         # Always update config to clear potentially malformed ones
         config[ATTR_MAP] = volumes
 
-        # 2023-10 "config" became "homeassistant" so /config can be used for addon's public config
+        # 2023-10 "config" became "muthurcommand" map key so /config can be used for addon's public config
         if any(volume[ATTR_TYPE] == MappingType.CONFIG for volume in volumes):
             if any(
                 volume

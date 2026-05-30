@@ -15,11 +15,11 @@ from supervisor.muthurcommand.const import WSEvent, WSType
 
 @pytest.fixture
 def ha_core_configured(coresys: CoreSys) -> None:
-    """Pretend Home Assistant Core is installed (defeats the ``unused`` short-circuit).
+    """Pretend Muthur Command Core is installed (defeats the ``unused`` short-circuit).
 
     The default ``coresys`` fixture leaves both ``version`` and
     ``latest_version`` unset, which the websocket now treats as "MCOS
-    image with no Home Assistant Core" (Stage 5). Tests that exercise
+    image with no Muthur Command Core" (Stage 5). Tests that exercise
     the legacy "Core is configured but unreachable" branch need an
     explicit version.
     """
@@ -117,7 +117,7 @@ async def test_fire_and_forget_core_not_reachable(
 async def test_send_command_blocked_when_ha_core_unused(
     coresys: CoreSys, ha_ws_client: AsyncMock
 ):
-    """A new WebSocket connection is refused on MCOS images without HA Core."""
+    """A new WebSocket connection is refused on MCOS images without Muthur Command Core."""
     # Default conftest leaves ``version``/``latest_version`` unset → unused.
     assert coresys.muthurcommand.unused is True
     ha_ws_client.connected = False

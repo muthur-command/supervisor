@@ -111,7 +111,7 @@ async def test_unlabeled_container(coresys: CoreSys, container: DockerContainer)
     """Test attaching to unlabeled container is still watched."""
     container.id = "abc123"
     container.show.return_value = {
-        "Name": "homeassistant",
+        "Name": "muthurcommand",
         "Id": "abc123",
         "State": {"Status": "running"},
         "Config": {},
@@ -128,7 +128,7 @@ async def test_unlabeled_container(coresys: CoreSys, container: DockerContainer)
                 "Action": "die",
                 "Actor": {
                     "ID": "abc123",
-                    "Attributes": {"name": "homeassistant", "exitCode": "137"},
+                    "Attributes": {"name": "muthurcommand", "exitCode": "137"},
                 },
             }
         )
@@ -136,6 +136,6 @@ async def test_unlabeled_container(coresys: CoreSys, container: DockerContainer)
         fire_event.assert_called_once_with(
             BusEvent.DOCKER_CONTAINER_STATE_CHANGE,
             DockerContainerStateEvent(
-                "homeassistant", ContainerState.FAILED, "abc123", 123
+                "muthurcommand", ContainerState.FAILED, "abc123", 123
             ),
         )

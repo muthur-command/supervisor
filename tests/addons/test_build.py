@@ -415,7 +415,7 @@ async def test_labels_include_name_and_description(
     assert _is_label_in_command(
         args["command"],
         "io.mcio.description",
-        "Allow logging in remotely to Home Assistant using SSH",
+        "Allow logging in remotely to Muthur Command using SSH",
     )
 
 

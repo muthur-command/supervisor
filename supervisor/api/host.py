@@ -96,7 +96,7 @@ class APIHost(CoreSysAttributes):
             and state.offline_db_migration
         ):
             raise APIDBMigrationInProgress(
-                "Home Assistant offline database migration in progress, please wait until complete before shutting down host"
+                "Muthur Command offline database migration in progress, please wait until complete before shutting down host"
             )
 
     @api_process

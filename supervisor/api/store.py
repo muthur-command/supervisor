@@ -1,4 +1,4 @@
-"""Init file for Supervisor Home Assistant RESTful API."""
+"""Init file for Supervisor Muthur Command RESTful API."""
 
 import asyncio
 from pathlib import Path

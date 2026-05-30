@@ -1,4 +1,4 @@
-"""Home Assistant Websocket API."""
+"""Muthur Command Websocket API."""
 
 from __future__ import annotations
 
@@ -36,7 +36,7 @@ T = TypeVar("T")
 
 
 class WSClient:
-    """Home Assistant Websocket client."""
+    """Muthur Command Websocket client."""
 
     def __init__(
         self,
@@ -163,10 +163,10 @@ class WSClient:
 
 
 class MuthurCommandWebSocket(CoreSysAttributes):
-    """Home Assistant Websocket API."""
+    """Muthur Command Websocket API."""
 
     def __init__(self, coresys: CoreSys):
-        """Initialize Home Assistant object."""
+        """Initialize Muthur Command object."""
         self.coresys: CoreSys = coresys
         self._client: WSClient | None = None
         self._lock: asyncio.Lock = asyncio.Lock()
@@ -211,21 +211,21 @@ class MuthurCommandWebSocket(CoreSysAttributes):
         connected = self._client and self._client.connected
         if connected:
             # Already connected → allow fire-and-forget messages to fly
-            # even on "unused" MCOS images: a live socket means HA Core is
+            # even on "unused" MCOS images: a live socket means Muthur Command Core is
             # actually there in this run, regardless of the version JSON.
             return
 
         if self.sys_muthurcommand.unused:
             # Stage 5 of the A1 plan: skip *new* HA WebSocket connections
-            # on MCOS images that don't ship Home Assistant Core. Existing
+            # on MCOS images that don't ship Muthur Command Core. Existing
             # sessions handled above are not affected.
             raise MuthurCommandWSConnectionError(
-                "Home Assistant Core is unused on this MCOS image"
+                "Muthur Command Core is unused on this MCOS image"
             )
 
         if not await self.sys_muthurcommand.api.check_api_state():
             raise MuthurCommandWSConnectionError(
-                "Can't connect to Home Assistant Core WebSocket, the API is not reachable"
+                "Can't connect to Muthur Command Core WebSocket, the API is not reachable"
             )
 
         self._client = await self._get_ws_client()
@@ -288,7 +288,7 @@ class MuthurCommandWebSocket(CoreSysAttributes):
     async def async_supervisor_event_custom(
         self, event: WSEvent, extra_data: dict[str, Any] | None = None
     ) -> None:
-        """Send a supervisor/event message to Home Assistant with custom data."""
+        """Send a supervisor/event message to Muthur Command with custom data."""
         try:
             await self._async_send_command(
                 {
@@ -300,12 +300,12 @@ class MuthurCommandWebSocket(CoreSysAttributes):
                 }
             )
         except MuthurCommandWSError as err:
-            _LOGGER.error("Could not send message to Home Assistant due to %s", err)
+            _LOGGER.error("Could not send message to Muthur Command due to %s", err)
 
     def supervisor_event_custom(
         self, event: WSEvent, extra_data: dict[str, Any] | None = None
     ) -> None:
-        """Send a supervisor/event message to Home Assistant with custom data."""
+        """Send a supervisor/event message to Muthur Command with custom data."""
         if self.sys_core.state in CLOSING_STATES:
             return
         self.sys_create_task(self.async_supervisor_event_custom(event, extra_data))
@@ -313,7 +313,7 @@ class MuthurCommandWebSocket(CoreSysAttributes):
     def supervisor_event(
         self, event: WSEvent, data: dict[str, Any] | None = None
     ) -> None:
-        """Send a supervisor/event message to Home Assistant."""
+        """Send a supervisor/event message to Muthur Command."""
         if self.sys_core.state in CLOSING_STATES:
             return
         self.sys_create_task(

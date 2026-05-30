@@ -152,7 +152,7 @@ class Core(CoreSysAttributes):
             self.sys_dbus.load(),
             # Load Host
             self.sys_host.load(),
-            # Load HassOS
+            # Load MCOS
             self.sys_os.load(),
             # Adjust timezone / time settings
             self._adjust_system_datetime(),
@@ -164,7 +164,7 @@ class Core(CoreSysAttributes):
             self.sys_updater.load(),
             # Load Plugins container
             self.sys_plugins.load(),
-            # Load Home Assistant
+            # Load Muthur Command
             self.sys_muthurcommand.load(),
             # Load MC application stack (PostgreSQL → Redis → mc_bd → mc_fd)
             self.sys_mc_stack.load(),
@@ -257,7 +257,7 @@ class Core(CoreSysAttributes):
 
             # Start MC application stack first (when the four images are
             # configured AND the operator hasn't disabled auto-start). The
-            # HA Core path below stays in place for the transition period
+            # Muthur Command Core path below stays in place for the transition period
             # documented in the A1 plan, but the MC stack is now the
             # user-visible deliverable.
             if self.sys_mc_stack.enabled and self.sys_mc_stack.boot:
@@ -275,11 +275,11 @@ class Core(CoreSysAttributes):
                 self.sys_muthurcommand.boot
                 and not await self.sys_muthurcommand.core.is_running()
             ):
-                _LOGGER.info("Start Home Assistant Core")
+                _LOGGER.info("Start Muthur Command Core")
                 try:
                     await self.sys_muthurcommand.core.start()
                 except MuthurCommandCrashError as err:
-                    _LOGGER.error("Can't start Home Assistant Core - rebuiling")
+                    _LOGGER.error("Can't start Muthur Command Core - rebuiling")
                     await async_capture_exception(err)
 
                     with suppress(MuthurCommandError):
@@ -287,7 +287,7 @@ class Core(CoreSysAttributes):
                 except MuthurCommandError as err:
                     await async_capture_exception(err)
             else:
-                _LOGGER.info("Skipping start of Home Assistant")
+                _LOGGER.info("Skipping start of Muthur Command")
 
             # Core is not running
             if self.sys_muthurcommand.core.error_state:
@@ -375,10 +375,10 @@ class Core(CoreSysAttributes):
         if self.state == CoreState.RUNNING:
             await self.set_state(CoreState.SHUTDOWN)
 
-        # Shutdown Application Add-ons, using Home Assistant API
+        # Shutdown Application Add-ons, using Muthur Command API
         await self.sys_addons.shutdown(AddonStartup.APPLICATION)
 
-        # Close Home Assistant
+        # Close Muthur Command
         with suppress(McioError):
             await self.sys_muthurcommand.core.stop(
                 remove_container=remove_muthurcommand_container

@@ -1,4 +1,4 @@
-"""Init file for Supervisor HassOS RESTful API."""
+"""Init file for Supervisor MCOS RESTful API."""
 
 import asyncio
 from collections.abc import Awaitable

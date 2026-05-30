@@ -159,7 +159,7 @@ async def test_api_identifiers_info(api_client: TestClient, journald_logs: Magic
     resp = await api_client.get("/host/logs/identifiers")
     result = await resp.json()
     assert result["data"] == {
-        "identifiers": ["mcio_supervisor", "mcos-config", "kernel"]
+        "identifiers": ["mcos_supervisor", "mcos-config", "kernel"]
     }
 
 
@@ -848,7 +848,7 @@ async def test_migration_blocks_shutdown(
     result = await resp.json()
     assert (
         result["message"]
-        == "Home Assistant offline database migration in progress, please wait until complete before shutting down host"
+        == "Muthur Command offline database migration in progress, please wait until complete before shutting down host"
     )
 
 

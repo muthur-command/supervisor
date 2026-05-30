@@ -1,4 +1,4 @@
-"""Test Home Assistant Add-ons."""
+"""Test Muthur Command Add-ons."""
 
 import asyncio
 from datetime import timedelta
@@ -679,7 +679,7 @@ async def test_restore_while_running(
     tarfile = SecureTarFile(get_fixture_path("backup_local_ssh_stopped.tar.gz"))
     with (
         patch.object(DockerAddon, "is_running", return_value=True),
-        patch.object(Ingress, "update_hass_panel"),
+        patch.object(Ingress, "update_core_panel"),
     ):
         start_task = await coresys.addons.restore(TEST_ADDON_SLUG, tarfile)
 
@@ -714,7 +714,7 @@ async def test_restore_while_running_with_watchdog(
         patch.object(Addon, "start") as start,
         patch.object(Addon, "restart") as restart,
         patch.object(DockerAddon, "stop", new=mock_stop),
-        patch.object(Ingress, "update_hass_panel"),
+        patch.object(Ingress, "update_core_panel"),
     ):
         await coresys.addons.restore(TEST_ADDON_SLUG, tarfile)
         await asyncio.sleep(0)

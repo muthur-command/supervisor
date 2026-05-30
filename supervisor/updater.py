@@ -55,7 +55,7 @@ class Updater(FileConfiguration, CoreSysAttributes):
     async def load(self) -> None:
         """Update internal data."""
         # Delay loading data by default so JobCondition.OS_SUPPORTED works.
-        # Use HAOS unrestricted as indicator as this is what we need to evaluate
+        # Use MCOS unrestricted as indicator as this is what we need to evaluate
         # if the operating system version is supported.
         if self.sys_os.board and self.version_mcos_unrestricted is None:
             _LOGGER.info(
@@ -80,7 +80,7 @@ class Updater(FileConfiguration, CoreSysAttributes):
 
     @property
     def version_muthurcommand(self) -> AwesomeVersion | None:
-        """Return latest version of Home Assistant."""
+        """Return latest version of Muthur Command Core."""
         return self._data.get(ATTR_MUTHURCOMMAND)
 
     @property
@@ -90,7 +90,7 @@ class Updater(FileConfiguration, CoreSysAttributes):
 
     @property
     def version_mcos(self) -> AwesomeVersion | None:
-        """Return latest version of HassOS."""
+        """Return latest version of MCOS."""
         upgrade_map = self.upgrade_map_mcos
         unrestricted = self.version_mcos_unrestricted
 
@@ -123,12 +123,12 @@ class Updater(FileConfiguration, CoreSysAttributes):
 
     @property
     def version_mcos_unrestricted(self) -> AwesomeVersion | None:
-        """Return latest version of HassOS ignoring upgrade restrictions."""
+        """Return latest version of MCOS ignoring upgrade restrictions."""
         return self._data.get(ATTR_MCOS_UNRESTRICTED)
 
     @property
     def upgrade_map_mcos(self) -> dict[str, str] | None:
-        """Return HassOS upgrade map."""
+        """Return MCOS upgrade map."""
         return self._data.get(ATTR_MCOS_UPGRADE)
 
     @property
@@ -178,7 +178,7 @@ class Updater(FileConfiguration, CoreSysAttributes):
 
     @property
     def image_muthurcommand(self) -> str | None:
-        """Return image of Home Assistant docker."""
+        """Return image of Muthur Command Core docker."""
         if ATTR_MUTHURCOMMAND not in self._data[ATTR_IMAGE]:
             return None
         return format_version_image_template(
@@ -394,7 +394,7 @@ class Updater(FileConfiguration, CoreSysAttributes):
                         self.sys_os.board,
                     )
 
-            # Update Home Assistant plugins
+            # Update MCOS plugins
             self._data[ATTR_CLI] = AwesomeVersion(data["cli"])
             self._data[ATTR_DNS] = AwesomeVersion(data["dns"])
             self._data[ATTR_AUDIO] = AwesomeVersion(data["audio"])

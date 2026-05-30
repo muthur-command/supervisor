@@ -177,7 +177,7 @@
     "Env": [
       "TZ=America/New_York",
       "SUPERVISOR_TOKEN=abc123",
-      "HASSIO_TOKEN=abc123",
+      "SUPERVISOR_TOKEN=abc123",
       "PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
       "LANG=C.UTF-8",
       "DEBIAN_FRONTEND=noninteractive",
@@ -187,7 +187,7 @@
       "S6_CMD_WAIT_FOR_SERVICES=1"
     ],
     "Cmd": null,
-    "Image": "homeassistant/aarch64-addon-mosquitto:6.1.3",
+    "Image": "muthur-command/aarch64-addon-mosquitto:6.1.3",
     "Volumes": { "/data": {}, "/dev": {}, "/share": {}, "/ssl": {} },
     "WorkingDir": "/",
     "Entrypoint": ["/init"],

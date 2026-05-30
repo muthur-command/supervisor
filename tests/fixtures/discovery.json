@@ -8,7 +8,7 @@
         "port": 1883,
         "ssl": false,
         "protocol": "3.1.1",
-        "username": "homeassistant",
+        "username": "muthurcommand",
         "password": "password"
       },
       "uuid": "0c83a27125fe4421b58ea28eef5834c5"

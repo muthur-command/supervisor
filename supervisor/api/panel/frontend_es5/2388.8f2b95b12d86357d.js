@@ -1,5 +1,5 @@
 /*! For license information please see 2388.8f2b95b12d86357d.js.LICENSE.txt */
-"use strict";(self.webpackChunkhome_assistant_frontend=self.webpackChunkhome_assistant_frontend||[]).push([["2388"],{17372:function(t,a,o){o.a(t,async function(t,a){try{o(35748),o(95013);var e=o(69868),i=o(60498),r=o(84922),n=o(11991),l=t([i]);i=(l.then?(await l)():l)[0];let s,d=t=>t;class c extends i.A{static get styles(){return[i.A.styles,(0,r.AH)(s||(s=d`.button{--wa-form-control-padding-inline:16px;--wa-font-weight-action:var(--ha-font-weight-medium);--wa-form-control-border-radius:var(
+"use strict";(self.webpackChunkmcio_frontend=self.webpackChunkmcio_frontend||[]).push([["2388"],{17372:function(t,a,o){o.a(t,async function(t,a){try{o(35748),o(95013);var e=o(69868),i=o(60498),r=o(84922),n=o(11991),l=t([i]);i=(l.then?(await l)():l)[0];let s,d=t=>t;class c extends i.A{static get styles(){return[i.A.styles,(0,r.AH)(s||(s=d`.button{--wa-form-control-padding-inline:16px;--wa-font-weight-action:var(--ha-font-weight-medium);--wa-form-control-border-radius:var(
             --ha-button-border-radius,
             var(--ha-border-radius-pill)
           );--wa-form-control-height:var(

@@ -415,7 +415,7 @@ class Job(CoreSysAttributes):
             in coresys.sys_resolution.unsupported
         ):
             raise JobConditionException(
-                f"'{method_name}' blocked from execution, unsupported Home Assistant Core version"
+                f"'{method_name}' blocked from execution, unsupported Muthur Command Core version"
             )
 
         if (

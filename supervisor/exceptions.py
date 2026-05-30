@@ -156,31 +156,31 @@ class JobGroupExecutionLimitExceeded(JobException):
 
 
 class MuthurCommandError(McioError):
-    """Home Assistant exception."""
+    """Muthur Command exception."""
 
 
 class MuthurCommandUpdateError(MuthurCommandError):
-    """Error on update of a Home Assistant."""
+    """Error on update of a Muthur Command."""
 
 
 class MuthurCommandCrashError(MuthurCommandError):
-    """Error on crash of a Home Assistant startup."""
+    """Error on crash of a Muthur Command startup."""
 
 
 class MuthurCommandStartupTimeout(MuthurCommandCrashError):
-    """Timeout waiting for Home Assistant successful startup."""
+    """Timeout waiting for Muthur Command successful startup."""
 
 
 class MuthurCommandAPIError(MuthurCommandError):
-    """Home Assistant API exception."""
+    """Muthur Command API exception."""
 
 
 class MuthurCommandAuthError(MuthurCommandAPIError):
-    """Home Assistant Auth API exception."""
+    """Muthur Command Auth API exception."""
 
 
 class MuthurCommandWSError(MuthurCommandAPIError):
-    """Home Assistant websocket error."""
+    """Muthur Command websocket error."""
 
 
 class MuthurCommandWSConnectionError(MuthurCommandWSError):
@@ -188,7 +188,7 @@ class MuthurCommandWSConnectionError(MuthurCommandWSError):
 
 
 class MuthurCommandJobError(MuthurCommandError, JobException):
-    """Raise on Home Assistant job error."""
+    """Raise on Muthur Command job error."""
 
 
 # MC stack (PostgreSQL → Redis → mc_bd → mc_fd)
@@ -236,23 +236,23 @@ class SupervisorJobError(SupervisorError, JobException):
     """Raise on job errors."""
 
 
-# HassOS
+# MCOS
 
 
 class McosError(McioError):
-    """HassOS exception."""
+    """MCOS exception."""
 
 
 class McosUpdateError(McosError):
-    """Error on update of a HassOS."""
+    """Error on update of MCOS."""
 
 
 class McosJobError(McosError, JobException):
-    """Function not supported by HassOS."""
+    """Function not supported by MCOS."""
 
 
 class McosDataDiskError(McosError):
-    """Issues with the DataDisk feature from HAOS."""
+    """Issues with the DataDisk feature from MCOS."""
 
 
 class McosSlotNotFound(McosError):
@@ -475,10 +475,10 @@ class AddonNotSupportedMachineTypeError(AddonNotSupportedError):
 
 
 class AddonNotSupportedMuthurCommandVersionError(AddonNotSupportedError):
-    """Addon does not support system due to Home Assistant version."""
+    """Addon does not support system due to Muthur Command version."""
 
-    error_key = "addon_not_supported_home_assistant_version_error"
-    message_template = "App {slug} not supported on this system, requires Home Assistant version {version} or greater"
+    error_key = "addon_not_supported_muthurcommand_version_error"
+    message_template = "App {slug} not supported on this system, requires Muthur Command version {version} or greater"
 
     def __init__(
         self,
@@ -587,7 +587,7 @@ class AddonsJobError(AddonsError, JobException):
 # Arch
 
 
-class HassioArchNotFound(McioNotSupportedError):
+class McioArchNotFound(McioNotSupportedError):
     """No matches with exists arch."""
 
 
@@ -630,7 +630,7 @@ class AuthListUsersError(AuthError, APIUnknownSupervisorError):
     """Auth error if listing users failed."""
 
     error_key = "auth_list_users_error"
-    message_template = "Can't request listing users on Home Assistant"
+    message_template = "Can't request listing users on Muthur Command"
 
 
 class AuthInvalidNonStringValueError(AuthError, APIUnauthorized):
@@ -650,10 +650,10 @@ class AuthInvalidNonStringValueError(AuthError, APIUnauthorized):
 
 
 class AuthMuthurCommandAPIValidationError(AuthError, APIUnknownSupervisorError):
-    """Error encountered trying to validate auth details via Home Assistant API."""
+    """Error encountered trying to validate auth details via Muthur Command API."""
 
-    error_key = "auth_home_assistant_api_validation_error"
-    message_template = "Unable to validate authentication details with Home Assistant"
+    error_key = "auth_muthurcommand_api_validation_error"
+    message_template = "Unable to validate authentication details with Muthur Command"
 
 
 # Host
@@ -1101,7 +1101,7 @@ class BackupError(McioError):
 
 
 class MuthurCommandBackupError(BackupError, MuthurCommandError):
-    """Raise if an error during Home Assistant Core backup is happening."""
+    """Raise if an error during Muthur Command Core backup is happening."""
 
 
 class BackupInvalidError(BackupError):

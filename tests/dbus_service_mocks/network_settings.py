@@ -29,7 +29,7 @@ class Settings(DBusServiceMock):
     @dbus_property(access=PropertyAccess.READ)
     def Hostname(self) -> "s":
         """Get Hostname."""
-        return "homeassistant"
+        return "mcos"
 
     @dbus_property(access=PropertyAccess.READ)
     def CanModify(self) -> "b":

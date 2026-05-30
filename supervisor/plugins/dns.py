@@ -1,4 +1,4 @@
-"""Home Assistant dns plugin.
+"""Muthur Command dns plugin.
 
 Code: https://github.com/muthur-command/plugin-dns
 """
@@ -64,7 +64,7 @@ class HostEntry:
 
 
 class PluginDns(PluginBase):
-    """Home Assistant core object for handle it."""
+    """Muthur Command core object for handle it."""
 
     def __init__(self, coresys: CoreSys):
         """Initialize hass object."""

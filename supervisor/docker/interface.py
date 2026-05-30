@@ -202,9 +202,9 @@ class DockerInterface(JobGroup, ABC):
             credentials[ATTR_REGISTRY] = registry
 
             # For Docker Hub images, the image name typically lacks a registry
-            # prefix (e.g. "homeassistant/foo" instead of "docker.io/muthurcommand/foo").
+            # prefix (e.g. legacy "muthur-command/foo" instead of "docker.io/muthur-command/foo").
             # aiodocker derives ServerAddress from image.partition("/"), so without
-            # the prefix it would use the namespace ("homeassistant") as ServerAddress,
+            # the prefix it would use the namespace as ServerAddress,
             # which Docker's containerd resolver rejects as a host mismatch.
             if registry in (DOCKER_HUB, DOCKER_HUB_LEGACY):
                 qualified_image = f"{DOCKER_HUB}/{image}"

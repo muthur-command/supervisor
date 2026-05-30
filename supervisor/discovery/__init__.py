@@ -1,4 +1,4 @@
-"""Handle discover message for Home Assistant."""
+"""Handle discover message for Muthur Command."""
 
 from __future__ import annotations
 
@@ -34,7 +34,7 @@ class Message:
 
 
 class Discovery(CoreSysAttributes, FileConfiguration):
-    """Home Assistant Discovery handler."""
+    """Muthur Command Discovery handler."""
 
     def __init__(self, coresys: CoreSys):
         """Initialize discovery handler."""
@@ -72,7 +72,7 @@ class Discovery(CoreSysAttributes, FileConfiguration):
         return list(self.message_obj.values())
 
     async def send(self, addon: Addon, service: str, config: dict[str, Any]) -> Message:
-        """Send a discovery message to Home Assistant."""
+        """Send a discovery message to Muthur Command."""
         # Create message
         message = Message(addon.slug, service, config)
 
@@ -89,7 +89,7 @@ class Discovery(CoreSysAttributes, FileConfiguration):
             break
 
         _LOGGER.info(
-            "Sending discovery to Home Assistant %s from %s", service, addon.slug
+            "Sending discovery to Muthur Command %s from %s", service, addon.slug
         )
         self.message_obj[message.uuid] = message
         await self.save()
@@ -98,12 +98,12 @@ class Discovery(CoreSysAttributes, FileConfiguration):
         return message
 
     async def remove(self, message: Message) -> None:
-        """Remove a discovery message from Home Assistant."""
+        """Remove a discovery message from Muthur Command."""
         self.message_obj.pop(message.uuid, None)
         await self.save()
 
         _LOGGER.info(
-            "Delete discovery to Home Assistant %s from %s",
+            "Delete discovery to Muthur Command %s from %s",
             message.service,
             message.addon,
         )
@@ -121,7 +121,7 @@ class Discovery(CoreSysAttributes, FileConfiguration):
         try:
             async with self.sys_muthurcommand.api.make_request(
                 command,
-                f"api/hassio_push/discovery/{message.uuid}",
+                f"api/mcio_push/discovery/{message.uuid}",
                 json=data,
                 timeout=10,
             ):

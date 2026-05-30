@@ -195,7 +195,7 @@ class PullLogEntry:
 
 
 class DockerConfig(FileConfiguration):
-    """Home Assistant core object for Docker configuration."""
+    """Muthur Command core object for Docker configuration."""
 
     def __init__(self):
         """Initialize the JSON configuration."""

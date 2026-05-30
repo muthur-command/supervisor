@@ -77,7 +77,7 @@ ATTR_VIRTUALIZATION = "virtualization"
 
 
 class BootSlot(StrEnum):
-    """Boot slots used by HAOS."""
+    """Boot slots used by MCOS."""
 
     A = "A"
     B = "B"

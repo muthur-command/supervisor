@@ -26,7 +26,7 @@ class EvaluateAppArmor(EvaluateBase):
     @property
     def on_failure(self) -> str:
         """Return a string that is printed when self.evaluate is True."""
-        return "AppArmor is required for Home Assistant."
+        return "AppArmor is required for Muthur Command."
 
     @property
     def states(self) -> list[CoreState]:

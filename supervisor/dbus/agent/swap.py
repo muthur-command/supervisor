@@ -5,9 +5,9 @@ from collections.abc import Awaitable
 from ..const import (
     DBUS_ATTR_SWAP_SIZE,
     DBUS_ATTR_SWAPPINESS,
-    DBUS_IFACE_HAOS_CONFIG_SWAP,
-    DBUS_NAME_HAOS,
-    DBUS_OBJECT_HAOS_CONFIG_SWAP,
+    DBUS_IFACE_MCOS_CONFIG_SWAP,
+    DBUS_NAME_MCOS,
+    DBUS_OBJECT_MCOS_CONFIG_SWAP,
 )
 from ..interface import DBusInterfaceProxy, dbus_property
 
@@ -15,9 +15,9 @@ from ..interface import DBusInterfaceProxy, dbus_property
 class Swap(DBusInterfaceProxy):
     """Swap object for OS Agent."""
 
-    bus_name: str = DBUS_NAME_HAOS
-    object_path: str = DBUS_OBJECT_HAOS_CONFIG_SWAP
-    properties_interface: str = DBUS_IFACE_HAOS_CONFIG_SWAP
+    bus_name: str = DBUS_NAME_MCOS
+    object_path: str = DBUS_OBJECT_MCOS_CONFIG_SWAP
+    properties_interface: str = DBUS_IFACE_MCOS_CONFIG_SWAP
 
     @property
     @dbus_property

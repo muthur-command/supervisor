@@ -95,7 +95,7 @@ from ..exceptions import (
     AddonNotSupportedError,
     AddonNotSupportedMachineTypeError,
     AddonNotSupportedMuthurCommandVersionError,
-    HassioArchNotFound,
+    McioArchNotFound,
 )
 from ..jobs.const import JOB_GROUP_ADDON
 from ..jobs.job_group import JobGroup
@@ -378,7 +378,7 @@ class AddonModel(JobGroup, ABC):
 
     @property
     def legacy(self) -> bool:
-        """Return if the add-on don't support Home Assistant labels."""
+        """Return if the add-on don't support Muthur Command labels."""
         return self.data[ATTR_LEGACY]
 
     @property
@@ -393,7 +393,7 @@ class AddonModel(JobGroup, ABC):
 
     @property
     def access_muthurcommand_api(self) -> bool:
-        """Return True if the add-on access to Home Assistant API proxy."""
+        """Return True if the add-on access to Muthur Command API proxy."""
         return self.data[ATTR_MUTHURCOMMAND_API]
 
     @property
@@ -513,7 +513,7 @@ class AddonModel(JobGroup, ABC):
 
     @property
     def muthurcommand_version(self) -> AwesomeVersion | None:
-        """Return min Home Assistant version they needed by Add-on."""
+        """Return min Muthur Command version they needed by Add-on."""
         return self.data.get(ATTR_MUTHURCOMMAND)
 
     @property
@@ -728,7 +728,7 @@ class AddonModel(JobGroup, ABC):
                 logger, slug=self.slug, machine_types=machine
             )
 
-        # Home Assistant
+        # Muthur Command
         version: AwesomeVersion | None = config.get(ATTR_MUTHURCOMMAND)
         with suppress(AwesomeVersionException, TypeError):
             if version and not version_is_new_enough(
@@ -753,7 +753,7 @@ class AddonModel(JobGroup, ABC):
         if ATTR_IMAGE in config:
             try:
                 arch = self.sys_arch.match(config[ATTR_ARCH])
-            except HassioArchNotFound:
+            except McioArchNotFound:
                 arch = self.sys_arch.default
             return config[ATTR_IMAGE].format(arch=arch)
 

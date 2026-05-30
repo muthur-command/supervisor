@@ -1,4 +1,4 @@
-"""Test homeassistant api."""
+"""Test muthurcommand api."""
 
 import asyncio
 from pathlib import Path
@@ -54,7 +54,7 @@ async def test_api_stats(api_client: TestClient, container: DockerContainer):
 
 
 async def test_api_set_options(api_client: TestClient):
-    """Test setting options for homeassistant."""
+    """Test setting options for muthurcommand."""
     resp = await api_client.get("/muthurcommand/info")
     assert resp.status == 200
     result = await resp.json()
@@ -77,7 +77,7 @@ async def test_api_set_options(api_client: TestClient):
 
 
 async def test_api_set_image(api_client: TestClient, coresys: CoreSys):
-    """Test changing the image for homeassistant."""
+    """Test changing the image for muthurcommand."""
     assert (
         coresys.muthurcommand.image
         == "ghcr.io/muthur-command/amd64-muthurcommand-qemux86-64"
@@ -111,7 +111,7 @@ async def test_api_set_image(api_client: TestClient, coresys: CoreSys):
 async def test_api_restart(
     api_client: TestClient, container: DockerContainer, tmp_supervisor_data: Path
 ):
-    """Test restarting homeassistant."""
+    """Test restarting muthurcommand."""
     safe_mode_marker = tmp_supervisor_data / "muthurcommand" / "safe-mode"
 
     with patch.object(MuthurCommandCore, "_block_till_run"):
@@ -134,7 +134,7 @@ async def test_api_rebuild(
     container: DockerContainer,
     tmp_supervisor_data: Path,
 ):
-    """Test rebuilding homeassistant."""
+    """Test rebuilding Muthur Command."""
     coresys.muthurcommand.version = AwesomeVersion("2023.09.0")
     safe_mode_marker = tmp_supervisor_data / "muthurcommand" / "safe-mode"
 
@@ -200,14 +200,14 @@ async def test_force_stop_during_migration(api_client: TestClient, coresys: Core
     ("make_backup", "backup_called", "update_called"),
     [(True, True, False), (False, False, True)],
 )
-async def test_home_assistant_background_update(
+async def test_muthurcommand_background_update(
     api_client: TestClient,
     coresys: CoreSys,
     make_backup: bool,
     backup_called: bool,
     update_called: bool,
 ):
-    """Test background update of Home Assistant."""
+    """Test background update of Muthur Command."""
     coresys.hardware.disk.get_disk_free_space = lambda x: 5000
     event = asyncio.Event()
     mock_update_called = mock_backup_called = False
@@ -243,14 +243,14 @@ async def test_home_assistant_background_update(
     assert resp.status == 200
     body = await resp.json()
     assert (job := coresys.jobs.get_job(body["data"]["job_id"]))
-    assert job.name == "home_assistant_core_update"
+    assert job.name == "muthurcommand_core_update"
     event.set()
 
 
-async def test_background_home_assistant_update_fails_fast(
+async def test_background_muthurcommand_update_fails_fast(
     api_client: TestClient, coresys: CoreSys
 ):
-    """Test background Home Assistant update returns error not job if validation doesn't succeed."""
+    """Test background Muthur Command update returns error not job if validation doesn't succeed."""
     coresys.hardware.disk.get_disk_free_space = lambda x: 5000
 
     with (
@@ -271,10 +271,10 @@ async def test_background_home_assistant_update_fails_fast(
 
 
 @pytest.mark.usefixtures("tmp_supervisor_data")
-async def test_api_progress_updates_home_assistant_update(
+async def test_api_progress_updates_muthurcommand_update(
     api_client: TestClient, coresys: CoreSys, ha_ws_client: AsyncMock
 ):
-    """Test progress updates sent to Home Assistant for updates."""
+    """Test progress updates sent to Muthur Command for updates."""
     coresys.hardware.disk.get_disk_free_space = lambda x: 5000
     coresys.core.set_state(CoreState.RUNNING)
 
@@ -306,7 +306,7 @@ async def test_api_progress_updates_home_assistant_update(
         for evt in ha_ws_client.async_send_command.call_args_list
         if "data" in evt.args[0]
         and evt.args[0]["data"]["event"] == WSEvent.JOB
-        and evt.args[0]["data"]["data"]["name"] == "home_assistant_core_update"
+        and evt.args[0]["data"]["data"]["name"] == "muthurcommand_core_update"
     ]
     # Count-based progress: 2 layers need pulling (each worth 50%)
     # Layers that already exist are excluded from progress calculation

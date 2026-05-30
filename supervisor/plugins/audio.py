@@ -1,4 +1,4 @@
-"""Home Assistant audio plugin.
+"""Muthur Command audio plugin.
 
 Code: https://github.com/muthur-command/plugin-audio
 """
@@ -45,7 +45,7 @@ ASOUND_TMPL: Path = Path(__file__).parents[1].joinpath("data/asound.tmpl")
 
 
 class PluginAudio(PluginBase):
-    """Home Assistant core object for handle audio."""
+    """Muthur Command core object for handle audio."""
 
     def __init__(self, coresys: CoreSys):
         """Initialize hass object."""

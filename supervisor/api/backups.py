@@ -273,7 +273,7 @@ class APIBackups(CoreSysAttributes):
     def _validate_cloud_backup_location(
         self, request: web.Request, location: list[str | None] | str | None
     ) -> None:
-        """Cloud backup location is only available to Home Assistant."""
+        """Cloud backup location is only available to Muthur Command."""
         if not isinstance(location, list):
             location = [location]
         if (
@@ -281,7 +281,7 @@ class APIBackups(CoreSysAttributes):
             and request.get(REQUEST_FROM) != self.sys_muthurcommand
         ):
             raise APIForbidden(
-                f"Location {LOCATION_CLOUD_BACKUP} is only available for Home Assistant"
+                f"Location {LOCATION_CLOUD_BACKUP} is only available for Muthur Command"
             )
 
     @api_process

@@ -1,4 +1,4 @@
-"""Constants for homeassistant."""
+"""Constants for Muthur Command Core."""
 
 from datetime import timedelta
 from enum import StrEnum
@@ -32,7 +32,7 @@ class WSType(StrEnum):
     SUPERVISOR_EVENT = "supervisor/event"
     BACKUP_START = "backup/start"
     BACKUP_END = "backup/end"
-    HASSIO_UPDATE_ADDON = "hassio/update/addon"
+    MCIO_UPDATE_ADDON = "mcio/update/addon"
 
 
 class WSEvent(StrEnum):

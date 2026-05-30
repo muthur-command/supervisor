@@ -544,7 +544,7 @@ async def test_restore_immediate_errors(
             json={"background": True, "muthurcommand": True},
         )
     assert resp.status == 400
-    assert "No Home Assistant" in (await resp.json())["message"]
+    assert "No Muthur Command" in (await resp.json())["message"]
 
     resp = await api_client.post(
         f"/backups/{mock_partial_backup.slug}/restore/partial",
@@ -1273,7 +1273,7 @@ async def test_protected_backup(
         body["data"]["backups"][0]["location_attributes"][".local"]["protected"] is True
     )
     # NOTE: It is not safe to check size exactly here, as order of keys in
-    # `homeassistant.json` and potentially other random data (e.g. isntance UUID,
+    # `muthurcommand.json` and potentially other random data (e.g. isntance UUID,
     # backup slug) does change the size of the backup (due to gzip).
     assert body["data"]["backups"][0]["location_attributes"][".local"]["size_bytes"] > 0
 

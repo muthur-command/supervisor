@@ -3,11 +3,11 @@
 Stage 4: ``MCStack`` orchestration polish — differentiated update strategies,
 ``healthcheck()`` consumed by Resolution / API.
 
-Stage 5: HA Core watchdog short-circuits when the MCOS image marks Home
+Stage 5: Muthur Command Core watchdog short-circuits when the MCOS image marks Home
 Assistant Core as ``unused``; MC stack watchdog policy escalates
 ``mc_bd → stack`` and never touches data volumes.
 
-Stage 6: Resolution evaluates MC stack staleness; ``HomeAssistantCore``
+Stage 6: Resolution evaluates MC stack staleness; ``MuthurCommandCore``
 version evaluator no-ops when Core is unused; ``/info`` and
 ``/available_updates`` surface MC stack data; sentry diagnostic context
 includes MC stack versions.
@@ -232,7 +232,7 @@ async def test_healthcheck_returns_empty_when_disabled(coresys: CoreSys) -> None
 
 
 # ---------------------------------------------------------------------------
-# Stage 5: HA Core watchdog short-circuits + MC stack policy
+# Stage 5: Muthur Command Core watchdog short-circuits + MC stack policy
 # ---------------------------------------------------------------------------
 
 
@@ -344,7 +344,7 @@ async def test_mc_stack_watchdog_escalates_to_stack_when_backend_dead(
 
 
 async def test_evaluate_ha_core_version_skips_when_unused(coresys: CoreSys) -> None:
-    """The HA Core staleness eval no-ops on MCOS images that omit Home Assistant."""
+    """The Muthur Command Core staleness eval no-ops on MCOS images that omit Muthur Command."""
     eval_obj = EvaluateMuthurCommandCoreVersion(coresys)
     assert coresys.muthurcommand.unused is True
     assert await eval_obj.evaluate() is False
@@ -496,10 +496,10 @@ async def test_mc_fd_web_proxy_returns_503_when_disabled(
     assert resp.status == 503
 
 
-async def test_ingress_update_hass_panel_skipped_when_unused(coresys: CoreSys) -> None:
-    """``Ingress.update_hass_panel`` short-circuits when HA Core is unused.
+async def test_ingress_update_core_panel_skipped_when_unused(coresys: CoreSys) -> None:
+    """``Ingress.update_core_panel`` short-circuits when Muthur Command Core is unused.
 
-    The MCOS-only image does not expose HA's ``hassio_push/panel`` API,
+    The MCOS-only image does not expose HA's ``mcio_push/panel`` API,
     so the ingress manager must never attempt the call.
     """
     assert coresys.muthurcommand.unused is True
@@ -513,6 +513,6 @@ async def test_ingress_update_hass_panel_skipped_when_unused(coresys: CoreSys) -
         "make_request",
         new=AsyncMock(),
     ) as make_request:
-        await coresys.ingress.update_hass_panel(addon)
+        await coresys.ingress.update_core_panel(addon)
 
     make_request.assert_not_called()

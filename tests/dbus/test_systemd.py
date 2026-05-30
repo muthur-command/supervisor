@@ -187,7 +187,7 @@ async def test_start_transient_unit(
                 ("Description", Variant("s", "Test")),
                 ("What", Variant("s", "//muthurcommand/config")),
                 ("Type", Variant("s", "cifs")),
-                ("Options", Variant("s", "username=homeassistant,password=password")),
+                ("Options", Variant("s", "username=muthurcommand,password=password")),
             ],
         )
         == "/org/freedesktop/systemd1/job/7623"
@@ -200,7 +200,7 @@ async def test_start_transient_unit(
                 ("Description", Variant("s", "Test")),
                 ("What", Variant("s", "//muthurcommand/config")),
                 ("Type", Variant("s", "cifs")),
-                ("Options", Variant("s", "username=homeassistant,password=password")),
+                ("Options", Variant("s", "username=muthurcommand,password=password")),
             ],
             [],
         )

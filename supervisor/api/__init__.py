@@ -8,7 +8,7 @@ from typing import Any
 
 from aiohttp import hdrs, web
 
-from ..const import SUPERVISOR_DOCKER_NAME, AddonState
+from ..const import AddonState, supervisor_container_name
 from ..coresys import CoreSys, CoreSysAttributes
 from ..exceptions import APIAddonNotInstalled, HostNotSupportedError
 from ..utils.sentry import async_capture_exception
@@ -462,7 +462,7 @@ class RestAPI(CoreSysAttributes):
         async def get_supervisor_logs(*args, **kwargs):
             try:
                 return await self._api_host.advanced_logs_handler(
-                    *args, identifier=SUPERVISOR_DOCKER_NAME, **kwargs
+                    *args, identifier=supervisor_container_name(), **kwargs
                 )
             except Exception as err:  # pylint: disable=broad-exception-caught
                 # Supervisor logs are critical, so catch everything, log the exception
@@ -499,7 +499,7 @@ class RestAPI(CoreSysAttributes):
         )
 
     def _register_muthurcommand(self) -> None:
-        """Register Home Assistant functions."""
+        """Register Muthur Command functions."""
         api_hass = APIMuthurCommand()
         api_hass.coresys = self.coresys
 
@@ -567,7 +567,7 @@ class RestAPI(CoreSysAttributes):
         )
 
     def _register_proxy(self) -> None:
-        """Register Home Assistant API Proxy."""
+        """Register Muthur Command API Proxy."""
         api_proxy = APIProxy()
         api_proxy.coresys = self.coresys
 
@@ -863,7 +863,7 @@ class RestAPI(CoreSysAttributes):
         )
 
     def _register_panel(self) -> list[StaticResourceConfig]:
-        """Register panel for Home Assistant."""
+        """Register panel for Muthur Command."""
         return [StaticResourceConfig("/app", Path(__file__).parent.joinpath("panel"))]
 
     def _register_docker(self) -> None:

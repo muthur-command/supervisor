@@ -30,7 +30,7 @@ def rating_security(addon: AddonModel) -> int:
     elif addon.apparmor == SECURITY_PROFILE:
         rating += 1
 
-    # Home Assistant Login & Ingress
+    # Muthur Command Login & Ingress
     if addon.with_ingress:
         rating += 2
     elif addon.access_auth_api:

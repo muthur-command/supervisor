@@ -1,1 +1,1 @@
-"""Home Assistant Operating-System backend."""
+"""Muthur Command OS backend."""

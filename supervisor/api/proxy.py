@@ -1,4 +1,4 @@
-"""Utils for Home Assistant Proxy."""
+"""Utils for Muthur Command Proxy."""
 
 import asyncio
 from collections.abc import AsyncIterator
@@ -30,7 +30,7 @@ FORWARD_HEADERS = (
 )
 HEADER_HA_ACCESS = "X-Ha-Access"
 
-# Maximum message size for websocket messages from Home Assistant.
+# Maximum message size for websocket messages from Muthur Command.
 # Since these are coming from core we want the largest possible size
 # that is not likely to cause a memory problem as most modern browsers
 # support large messages.
@@ -39,7 +39,7 @@ MAX_MESSAGE_SIZE_FROM_CORE = 64 * 1024 * 1024
 
 
 class APIProxy(CoreSysAttributes):
-    """API Proxy for Home Assistant."""
+    """API Proxy for Muthur Command."""
 
     async def _stream_client_response(
         self,
@@ -51,7 +51,7 @@ class APIProxy(CoreSysAttributes):
     ) -> web.StreamResponse:
         """Stream an upstream aiohttp response to the caller.
 
-        Used for event streams (e.g. Home Assistant /api/stream) and for SSE endpoints
+        Used for event streams (e.g. Muthur Command /api/stream) and for SSE endpoints
         such as MCP (text/event-stream).
         """
         response = web.StreamResponse(status=client.status)
@@ -83,7 +83,7 @@ class APIProxy(CoreSysAttributes):
 
         addon = self.sys_addons.from_token(supervisor_token)
         if not addon:
-            _LOGGER.warning("Unknown Home Assistant API access!")
+            _LOGGER.warning("Unknown Muthur Command API access!")
         elif not addon.access_muthurcommand_api:
             _LOGGER.warning("Not permitted API access: %s", addon.slug)
         else:
@@ -96,7 +96,7 @@ class APIProxy(CoreSysAttributes):
     async def _api_client(
         self, request: web.Request, path: str, timeout: int | None = 300
     ) -> AsyncIterator[aiohttp.ClientResponse]:
-        """Return a client request with proxy origin for Home Assistant."""
+        """Return a client request with proxy origin for Muthur Command."""
         try:
             async with self.sys_muthurcommand.api.make_request(
                 request.method.lower(),
@@ -131,7 +131,7 @@ class APIProxy(CoreSysAttributes):
         if not await self.sys_muthurcommand.api.check_api_state():
             raise HTTPBadGateway()
 
-        _LOGGER.info("Home Assistant EventStream start")
+        _LOGGER.info("Muthur Command EventStream start")
         async with self._api_client(request, "stream", timeout=None) as client:
             response = await self._stream_client_response(
                 request,
@@ -139,11 +139,11 @@ class APIProxy(CoreSysAttributes):
                 content_type=request.headers.get(CONTENT_TYPE, ""),
             )
 
-            _LOGGER.info("Home Assistant EventStream close")
+            _LOGGER.info("Muthur Command EventStream close")
             return response
 
     async def api(self, request: web.Request):
-        """Proxy Home Assistant API Requests."""
+        """Proxy Muthur Command API Requests."""
         self._check_access(request)
         if not await self.sys_muthurcommand.api.check_api_state():
             raise HTTPBadGateway()
@@ -195,7 +195,7 @@ class APIProxy(CoreSysAttributes):
             if data.get("type") != "auth_required":
                 # Invalid protocol
                 raise APIError(
-                    f"Got unexpected response from Home Assistant WebSocket: {data}",
+                    f"Got unexpected response from Muthur Command WebSocket: {data}",
                     _LOGGER.error,
                 )
 
@@ -227,7 +227,7 @@ class APIProxy(CoreSysAttributes):
         except (RuntimeError, ValueError, TypeError, ClientConnectorError) as err:
             _LOGGER.error("Client error on WebSocket API %s.", err)
         except MuthurCommandAuthError:
-            _LOGGER.error("Failed authentication to Home Assistant WebSocket")
+            _LOGGER.error("Failed authentication to Muthur Command WebSocket")
 
         raise APIError()
 
@@ -273,7 +273,7 @@ class APIProxy(CoreSysAttributes):
         """Initialize a WebSocket API connection."""
         if not await self.sys_muthurcommand.api.check_api_state():
             raise HTTPBadGateway()
-        _LOGGER.info("Home Assistant WebSocket API request initialize")
+        _LOGGER.info("Muthur Command WebSocket API request initialize")
 
         # init server
         server = web.WebSocketResponse(heartbeat=30)
@@ -328,7 +328,7 @@ class APIProxy(CoreSysAttributes):
             return server
 
         logger = AddonLoggerAdapter(_LOGGER, {"addon_name": addon_name})
-        logger.info("Home Assistant WebSocket API proxy running")
+        logger.info("Muthur Command WebSocket API proxy running")
 
         client_task = self.sys_create_task(self._proxy_message(client, server, logger))
         server_task = self.sys_create_task(self._proxy_message(server, client, logger))
@@ -354,5 +354,5 @@ class APIProxy(CoreSysAttributes):
                 task.cancel()
                 logger.critical("WebSocket proxy task: %s did not end gracefully", task)
 
-        logger.info("Home Assistant WebSocket API closed")
+        logger.info("Muthur Command WebSocket API closed")
         return server
