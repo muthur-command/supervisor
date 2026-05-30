@@ -4,27 +4,12 @@
 import asyncio
 from unittest.mock import AsyncMock, patch
 
-from awesomeversion import AwesomeVersion
 import pytest
 
 from supervisor.const import CoreState
 from supervisor.coresys import CoreSys
 from supervisor.exceptions import MuthurCommandWSConnectionError
 from supervisor.muthurcommand.const import WSEvent, WSType
-
-
-@pytest.fixture
-def ha_core_configured(coresys: CoreSys) -> None:
-    """Pretend Muthur Command Core is installed (defeats the ``unused`` short-circuit).
-
-    The default ``coresys`` fixture leaves both ``version`` and
-    ``latest_version`` unset, which the websocket now treats as "MCOS
-    image with no Muthur Command Core" (Stage 5). Tests that exercise
-    the legacy "Core is configured but unreachable" branch need an
-    explicit version.
-    """
-    coresys.muthurcommand.version = AwesomeVersion("2024.1.0")
-    coresys.updater._data["muthurcommand"] = AwesomeVersion("2024.1.0")  # noqa: SLF001
 
 
 async def test_send_command(coresys: CoreSys, ha_ws_client: AsyncMock):

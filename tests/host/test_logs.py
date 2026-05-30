@@ -59,8 +59,7 @@ async def test_logs(journald_gateway: MagicMock, coresys: CoreSys):
             == "s=83fee99ca0c3466db5fc120d52ca7dd8;i=203f2ce;b=f5a5c442fa6548cf97474d2d57c920b3;m=3191a3c620;t=612ccd299e7af;x=8675b540119d10bb"
         )
         assert (
-            line
-            == "2024-03-04 02:52:56.193 mcos systemd[1]: Started Hostname Service."
+            line == "2024-03-04 02:52:56.193 mcos systemd[1]: Started Hostname Service."
         )
 
     with (
@@ -129,7 +128,7 @@ async def test_logs_verbose_no_colors(journald_gateway: MagicMock, coresys: Core
         # Colors should be stripped in verbose format too
         assert (
             line
-            == "2024-03-04 22:56:56.709 ha-hloub mcos_supervisor[466]: 24-03-04 23:56:56 INFO (MainThread) [__main__] Closing Supervisor"
+            == "2024-03-04 22:56:56.709 ha-hloub mcio_supervisor[466]: 24-03-04 23:56:56 INFO (MainThread) [__main__] Closing Supervisor"
         )
 
 
