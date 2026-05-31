@@ -172,7 +172,7 @@ class APIMCStack(CoreSysAttributes):
             url = f"{url}?{request.query_string}"
 
         # Strip hop-by-hop headers and any Supervisor auth headers; the
-        # MC stack is reachable on the internal ``mcio`` network and
+        # MC stack is reachable on the internal ``mcos`` network and
         # mc_fd should never see Supervisor's bearer tokens.
         headers: dict[str, str] = {}
         for key, value in request.headers.items():
@@ -182,7 +182,7 @@ class APIMCStack(CoreSysAttributes):
                 hdrs.CONTENT_ENCODING.lower(),
                 hdrs.TRANSFER_ENCODING.lower(),
                 hdrs.UPGRADE.lower(),
-                "x-mcio-key",
+                "x-mcos-key",
                 "x-supervisor-token",
             }:
                 continue

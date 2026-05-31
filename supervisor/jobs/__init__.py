@@ -19,7 +19,7 @@ from attrs.validators import ge, le
 
 from ..const import BusEvent
 from ..coresys import CoreSys, CoreSysAttributes
-from ..exceptions import JobNotFound, JobStartException, McioError
+from ..exceptions import JobNotFound, JobStartException, McosRuntimeError
 from ..muthurcommand.const import WSEvent
 from ..utils.common import FileConfiguration
 from ..utils.dt import utcnow
@@ -97,7 +97,7 @@ class ParentJobSync:
 class SupervisorJobError:
     """Representation of an error occurring during a supervisor job."""
 
-    type_: type[McioError] = McioError
+    type_: type[McosRuntimeError] = McosRuntimeError
     message: str = "Unknown error, see Supervisor logs"
     stage: str | None = None
     error_key: str | None = None
@@ -157,7 +157,7 @@ class SupervisorJob:
             "extra": self.extra,
         }
 
-    def capture_error(self, err: McioError | None = None) -> None:
+    def capture_error(self, err: McosRuntimeError | None = None) -> None:
         """Capture an error or record that an unknown error has occurred."""
         if err:
             new_error = SupervisorJobError(

@@ -1529,11 +1529,11 @@ async def test_pre_post_backup_command_error(
     assert job.errors[0].message == (
         "Pre-/Post backup command for app local_example returned error code: "
         "1. Please report this to the app developer. Enable debug "
-        "logging to capture complete command output using ha supervisor options --logging debug"
+        "logging to capture complete command output using mc supervisor options --logging debug"
     )
     assert job.errors[0].error_key == "addon_pre_post_backup_command_returned_error"
     assert job.errors[0].extra_fields == {
         "addon": "local_example",
         "exit_code": 1,
-        "debug_logging_command": "ha supervisor options --logging debug",
+        "debug_logging_command": "mc supervisor options --logging debug",
     }

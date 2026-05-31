@@ -9,7 +9,7 @@ from aiohttp import hdrs
 import attr
 from sentry_sdk.types import Event, Hint
 
-from ..const import DOCKER_IPV4_NETWORK_MASK, HEADER_MCIO_KEY, HEADER_TOKEN, CoreState
+from ..const import DOCKER_IPV4_NETWORK_MASK, HEADER_MCOS_KEY, HEADER_TOKEN, CoreState
 from ..coresys import CoreSys
 from ..exceptions import AddonConfigurationError
 
@@ -163,8 +163,8 @@ def filter_data(coresys: CoreSys, event: Event, hint: Hint) -> Event | None:
                 headers[hdrs.REFERER] = sanitize_url(headers[hdrs.REFERER])
             if HEADER_TOKEN in headers:
                 headers[HEADER_TOKEN] = "XXXXXXXXXXXXXXXXXXX"
-            if HEADER_MCIO_KEY in headers:
-                headers[HEADER_MCIO_KEY] = "XXXXXXXXXXXXXXXXXXX"
+            if HEADER_MCOS_KEY in headers:
+                headers[HEADER_MCOS_KEY] = "XXXXXXXXXXXXXXXXXXX"
             if hdrs.HOST in headers:
                 headers[hdrs.HOST] = sanitize_host(headers[hdrs.HOST])
             if hdrs.X_FORWARDED_HOST in headers:

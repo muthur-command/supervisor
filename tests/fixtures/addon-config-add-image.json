@@ -11,8 +11,8 @@
   "ingress": true,
   "panel_icon": "mdi:console",
   "panel_title": "Terminal",
-  "mcio_api": true,
-  "mcio_role": "manager",
+  "mcos_api": true,
+  "mcos_role": "manager",
   "audio": true,
   "uart": true,
   "ports": {

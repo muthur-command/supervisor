@@ -28,7 +28,7 @@ from ..exceptions import (
     DBusServiceUnkownError,
     DBusTimedOutError,
     DBusTimeoutError,
-    McioNotSupportedError,
+    McosNotSupportedError,
 )
 from .sentry import async_capture_exception
 
@@ -78,7 +78,7 @@ class DBus:
         return self
 
     @staticmethod
-    def from_dbus_error(err: DBusFastDBusError) -> McioNotSupportedError | DBusError:
+    def from_dbus_error(err: DBusFastDBusError) -> McosNotSupportedError | DBusError:
         """Return correct dbus error based on type."""
         if err.type == ErrorType.SERVICE_UNKNOWN:
             return DBusServiceUnkownError(err.text)

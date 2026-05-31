@@ -13,7 +13,7 @@ import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
 from ..const import (
-    HEADER_MCIO_KEY,
+    HEADER_MCOS_KEY,
     HEADER_TOKEN,
     JSON_DATA,
     JSON_ERROR_KEY,
@@ -26,7 +26,7 @@ from ..const import (
     RESULT_OK,
 )
 from ..coresys import CoreSys, CoreSysAttributes
-from ..exceptions import APIError, DockerAPIError, McioError
+from ..exceptions import APIError, DockerAPIError, McosRuntimeError
 from ..jobs import JobSchedulerOptions, SupervisorJob
 from ..utils import check_exception_chain, get_message_from_exception_chain
 from ..utils.json import json_dumps, json_loads as json_loads_util
@@ -39,7 +39,7 @@ def extract_supervisor_token(request: web.Request) -> str | None:
     if supervisor_token := request.headers.get(HEADER_TOKEN):
         return supervisor_token
 
-    if supervisor_token := request.headers.get(HEADER_MCIO_KEY):
+    if supervisor_token := request.headers.get(HEADER_MCOS_KEY):
         return supervisor_token
 
     # API access only
@@ -70,7 +70,7 @@ def api_process(method):
             return api_return_error(
                 err, status=err.status, job_id=err.job_id, headers=err.headers
             )
-        except McioError as err:
+        except McosRuntimeError as err:
             return api_return_error(err)
 
         if isinstance(answer, (dict, list)):
@@ -117,7 +117,7 @@ def api_process_raw(content, *, error_type=None):
                     status=err.status,
                     job_id=err.job_id,
                 )
-            except McioError as err:
+            except McosRuntimeError as err:
                 return api_return_error(
                     err, error_type=error_type or const.CONTENT_TYPE_BINARY
                 )
@@ -133,7 +133,7 @@ def api_process_raw(content, *, error_type=None):
 
 
 def api_return_error(
-    error: McioError | None = None,
+    error: McosRuntimeError | None = None,
     message: str | None = None,
     error_type: str | None = None,
     status: int = 400,

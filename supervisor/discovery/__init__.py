@@ -8,7 +8,7 @@ from uuid import uuid4
 
 import attr
 
-from ..const import ATTR_CONFIG, ATTR_DISCOVERY, FILE_MCIO_DISCOVERY
+from ..const import ATTR_CONFIG, ATTR_DISCOVERY, FILE_MCOS_DISCOVERY
 from ..coresys import CoreSys, CoreSysAttributes
 from ..exceptions import MuthurCommandAPIError
 from ..utils.common import FileConfiguration
@@ -38,7 +38,7 @@ class Discovery(CoreSysAttributes, FileConfiguration):
 
     def __init__(self, coresys: CoreSys):
         """Initialize discovery handler."""
-        super().__init__(FILE_MCIO_DISCOVERY, SCHEMA_DISCOVERY_CONFIG)
+        super().__init__(FILE_MCOS_DISCOVERY, SCHEMA_DISCOVERY_CONFIG)
         self.coresys: CoreSys = coresys
         self.message_obj: dict[str, Message] = {}
 
@@ -121,7 +121,7 @@ class Discovery(CoreSysAttributes, FileConfiguration):
         try:
             async with self.sys_muthurcommand.api.make_request(
                 command,
-                f"api/mcio_push/discovery/{message.uuid}",
+                f"api/mcos_push/discovery/{message.uuid}",
                 json=data,
                 timeout=10,
             ):

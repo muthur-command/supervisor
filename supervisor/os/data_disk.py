@@ -19,7 +19,7 @@ from ..exceptions import (
     DBusObjectError,
     HostError,
     McosDataDiskError,
-    McosError,
+    McosOsError,
     McosJobError,
 )
 from ..jobs.const import JobConcurrency, JobCondition
@@ -297,7 +297,7 @@ class DataDisk(CoreSysAttributes):
         try:
             await self.sys_host.control.reboot()
         except HostError as err:
-            raise McosError(
+            raise McosOsError(
                 f"Can't restart device to finish disk migration: {err!s}",
                 _LOGGER.warning,
             ) from err
@@ -326,7 +326,7 @@ class DataDisk(CoreSysAttributes):
         try:
             await self.sys_host.control.reboot()
         except (HostError, DBusError) as err:
-            raise McosError(
+            raise McosOsError(
                 f"Can't restart device to finish data disk wipe: {err!s}",
                 _LOGGER.warning,
             ) from err

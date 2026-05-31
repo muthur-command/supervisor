@@ -58,7 +58,7 @@ SAMPLE_EVENT_AIOHTTP_EXTERNAL = {
             "Cache-Control": "no-cache",
             "Upgrade": "websocket",
             "X-Hass-Source": "core.ingress",
-            "X-Ingress-Path": "/api/mcio_ingress/SRtKwGqE15nF6jbzGCjkM7Nn3_uQlZ08RrJLzLJJQKc",
+            "X-Ingress-Path": "/api/mcos_ingress/SRtKwGqE15nF6jbzGCjkM7Nn3_uQlZ08RrJLzLJJQKc",
             "X-Forwarded-For": "",
             "X-Forwarded-Host": "debian-supervised-dev.lan:8123",
             "X-Forwarded-Proto": "http",

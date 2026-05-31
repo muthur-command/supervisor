@@ -197,7 +197,7 @@ async def test_notify_on_change(coresys: CoreSys, ha_ws_client: AsyncMock):
                         "parent_id": None,
                         "errors": [
                             {
-                                "type": "McioError",
+                                "type": "McosRuntimeError",
                                 "message": "Unknown error, see Supervisor logs",
                                 "stage": "test",
                                 "error_key": None,
@@ -227,7 +227,7 @@ async def test_notify_on_change(coresys: CoreSys, ha_ws_client: AsyncMock):
                     "parent_id": None,
                     "errors": [
                         {
-                            "type": "McioError",
+                            "type": "McosRuntimeError",
                             "message": "Unknown error, see Supervisor logs",
                             "stage": "test",
                             "error_key": None,

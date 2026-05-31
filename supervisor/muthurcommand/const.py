@@ -12,6 +12,15 @@ ATTR_ERROR = "error"
 ATTR_OVERRIDE_IMAGE = "override_image"
 ATTR_SUCCESS = "success"
 LANDINGPAGE: AwesomeVersion = AwesomeVersion("landingpage")
+
+
+def is_landingpage(version: AwesomeVersion | None) -> bool:
+    """Return True when *version* is the landingpage placeholder.
+
+    Compare only when *version* is set: ``None == LANDINGPAGE`` and
+    ``None != LANDINGPAGE`` both delegate to AwesomeVersion and raise.
+    """
+    return version is not None and version == LANDINGPAGE
 WATCHDOG_RETRY_SECONDS = 10
 WATCHDOG_MAX_ATTEMPTS = 5
 WATCHDOG_THROTTLE_PERIOD = timedelta(minutes=30)
@@ -32,7 +41,7 @@ class WSType(StrEnum):
     SUPERVISOR_EVENT = "supervisor/event"
     BACKUP_START = "backup/start"
     BACKUP_END = "backup/end"
-    MCIO_UPDATE_ADDON = "mcio/update/addon"
+    MCOS_UPDATE_ADDON = "mcos/update/addon"
 
 
 class WSEvent(StrEnum):

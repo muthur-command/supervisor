@@ -386,7 +386,7 @@ async def test_config_check(
             "AttachStdout": False,
             "AttachStderr": False,
             "HostConfig": {
-                "NetworkMode": "mcio",
+                "NetworkMode": "mcos",
                 "Init": True,
                 "Privileged": True,
                 "Mounts": [

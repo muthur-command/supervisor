@@ -51,7 +51,7 @@ from supervisor.docker.mc_backend import DockerMcBackend
 from supervisor.docker.mc_frontend import DockerMcFrontend
 from supervisor.docker.mc_postgres import DockerMcPostgres
 from supervisor.docker.mc_redis import DockerMcRedis
-from supervisor.exceptions import DockerJobError, McioError
+from supervisor.exceptions import DockerJobError, McosRuntimeError
 
 # --- Fixtures & helpers ----------------------------------------------------
 
@@ -277,7 +277,7 @@ async def test_mc_stack_run_without_version_raises(
     with (
         patch.object(cls, "is_running", new=AsyncMock(return_value=False)),
         patch.object(cls, "stop", new=AsyncMock()),
-        pytest.raises((DockerJobError, McioError)),
+        pytest.raises((DockerJobError, McosRuntimeError)),
     ):
         await instance.run()
     run.assert_not_called()
@@ -369,7 +369,7 @@ async def test_mc_stack_cleanup_keeps_volume(coresys: CoreSys) -> None:
     """
     instance = DockerMcPostgres(coresys)
     instance._meta = {  # noqa: SLF001
-        "Config": {"Labels": {"io.mcio.version": "16.3"}}
+        "Config": {"Labels": {"io.mcos.version": "16.3"}}
     }
     cleanup_old_images = AsyncMock()
     instance.sys_docker.cleanup_old_images = cleanup_old_images  # type: ignore[method-assign]

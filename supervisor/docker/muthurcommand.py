@@ -11,7 +11,7 @@ from ..exceptions import DockerJobError
 from ..hardware.const import PolicyGroup
 from ..jobs.const import JobConcurrency
 from ..jobs.decorator import Job
-from ..muthurcommand.const import LANDINGPAGE
+from ..muthurcommand.const import is_landingpage
 from .const import (
     ENV_DUPLICATE_LOG_FILE,
     ENV_TIME,
@@ -81,7 +81,7 @@ class DockerMuthurCommand(DockerInterface):
         """Return a list of needed cgroups permission."""
         return (
             []
-            if self.sys_muthurcommand.version == LANDINGPAGE
+            if is_landingpage(self.sys_muthurcommand.version)
             else (
                 self.sys_hardware.policy.get_cgroups_rules(PolicyGroup.UART)
                 + self.sys_hardware.policy.get_cgroups_rules(PolicyGroup.VIDEO)
@@ -107,7 +107,7 @@ class DockerMuthurCommand(DockerInterface):
         ]
 
         # Landingpage does not need all this access
-        if self.sys_muthurcommand.version != LANDINGPAGE:
+        if not is_landingpage(self.sys_muthurcommand.version):
             mounts.extend(
                 [
                     # All other folders
@@ -184,7 +184,7 @@ class DockerMuthurCommand(DockerInterface):
             name=self.name,
             hostname=self.name,
             detach=True,
-            privileged=self.sys_muthurcommand.version != LANDINGPAGE,
+            privileged=not is_landingpage(self.sys_muthurcommand.version),
             init=False,
             security_opt=self.security_opt,
             network_mode="host",

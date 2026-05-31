@@ -74,7 +74,7 @@ async def test_dynamic_ports(coresys: CoreSys):
 async def test_ingress_save_data(coresys: CoreSys, tmp_supervisor_data: Path):
     """Test saving ingress data to file."""
     config_file = tmp_supervisor_data / "ingress.json"
-    with patch("supervisor.ingress.FILE_MCIO_INGRESS", new=config_file):
+    with patch("supervisor.ingress.FILE_MCOS_INGRESS", new=config_file):
         ingress = await Ingress(coresys).load_config()
         session = ingress.create_session(
             IngressSessionData(MuthurCommandUser("123", name="Test", username="test"))
@@ -119,7 +119,7 @@ async def test_ingress_load_legacy_displayname(
         )
     )
 
-    with patch("supervisor.ingress.FILE_MCIO_INGRESS", new=config_file):
+    with patch("supervisor.ingress.FILE_MCOS_INGRESS", new=config_file):
         ingress = await Ingress(coresys).load_config()
 
     session_data = ingress.get_session_data(session_token)

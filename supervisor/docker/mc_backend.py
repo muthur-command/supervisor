@@ -1,7 +1,7 @@
 """Docker wrapper for the MC stack backend (mc_bd) container.
 
 The ``mc_bd`` API container runs FastAPI/Granian and depends on PostgreSQL +
-Redis being reachable inside the ``mcio`` network. It is exposed under the
+Redis being reachable inside the ``mcos`` network. It is exposed under the
 alias ``mc_bd`` (matches the upstream nginx ``proxy_pass`` host used by
 ``mc_fd``) and exposes :data:`MC_BACKEND_PORT` for in-network HTTP calls.
 """
@@ -110,7 +110,7 @@ class DockerMcBackend(DockerInterface, CoreSysAttributes):
 
     @property
     def networking_config(self) -> dict[str, dict[str, dict]]:
-        """Network endpoint config attaching to ``mcio`` with stack alias."""
+        """Network endpoint config attaching to ``mcos`` with stack alias."""
         return mc_stack_networking_config(_BD_ALIAS_PRIMARY, _BD_ALIAS_DNS)
 
     @Job(

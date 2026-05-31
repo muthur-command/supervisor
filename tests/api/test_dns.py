@@ -68,4 +68,4 @@ async def test_options(api_client: TestClient, coresys: CoreSys):
 
 async def test_api_dns_logs(advanced_logs_tester):
     """Test dns logs."""
-    await advanced_logs_tester("/dns", "mcio_dns", LogFormatter.VERBOSE)
+    await advanced_logs_tester("/dns", "mcos_dns", LogFormatter.VERBOSE)

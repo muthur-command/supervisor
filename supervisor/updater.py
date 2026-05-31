@@ -27,8 +27,8 @@ from .const import (
     ATTR_POSTGRESQL,
     ATTR_REDIS,
     ATTR_SUPERVISOR,
-    FILE_MCIO_UPDATER,
-    URL_MCIO_VERSION,
+    FILE_MCOS_UPDATER,
+    URL_MCOS_VERSION,
     BusEvent,
     UpdateChannel,
 )
@@ -48,7 +48,7 @@ class Updater(FileConfiguration, CoreSysAttributes):
 
     def __init__(self, coresys: CoreSys) -> None:
         """Initialize updater."""
-        super().__init__(FILE_MCIO_UPDATER, SCHEMA_UPDATER_CONFIG)
+        super().__init__(FILE_MCOS_UPDATER, SCHEMA_UPDATER_CONFIG)
         self.coresys = coresys
         self._connectivity_listener: EventListener | None = None
 
@@ -326,7 +326,7 @@ class Updater(FileConfiguration, CoreSysAttributes):
 
         Is a coroutine.
         """
-        url = URL_MCIO_VERSION.format(channel=self.channel)
+        url = URL_MCOS_VERSION.format(channel=self.channel)
         machine = self.sys_machine or "default"
 
         # Get data

@@ -478,7 +478,7 @@ class Addon(AddonModel):
     def ingress_entry(self) -> str | None:
         """Return ingress external URL."""
         if self.with_ingress:
-            return f"/api/mcio_ingress/{self.ingress_token}"
+            return f"/api/mcos_ingress/{self.ingress_token}"
         return None
 
     @property
@@ -527,7 +527,7 @@ class Addon(AddonModel):
         if not self.with_ingress:
             return None
 
-        url = f"/api/mcio_ingress/{self.ingress_token}/"
+        url = f"/api/mcos_ingress/{self.ingress_token}/"
         if ATTR_INGRESS_ENTRY in self.data:
             return f"{url}{self.data[ATTR_INGRESS_ENTRY]}"
         return url

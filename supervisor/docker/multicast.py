@@ -11,7 +11,7 @@ from .interface import DockerInterface
 
 _LOGGER: logging.Logger = logging.getLogger(__name__)
 
-MULTICAST_DOCKER_NAME: str = "mcio_multicast"
+MULTICAST_DOCKER_NAME: str = "mcos_multicast"
 
 
 class DockerMulticast(DockerInterface, CoreSysAttributes):

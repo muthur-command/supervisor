@@ -22,7 +22,7 @@ from ..exceptions import (
 )
 from ..jobs.const import JobConcurrency
 from ..jobs.decorator import Job, JobCondition
-from ..muthurcommand.const import LANDINGPAGE, WSType
+from ..muthurcommand.const import LANDINGPAGE, WSType, is_landingpage
 from ..plugins.const import PLUGIN_UPDATE_CONDITIONS
 from ..utils.dt import utcnow
 from ..utils.sentry import async_capture_exception
@@ -155,7 +155,7 @@ class Tasks(CoreSysAttributes):
             # Ultimately auto updates should be handled by Muthur Command Core itself
             # through a update entity feature.
             message = {
-                ATTR_TYPE: WSType.MCIO_UPDATE_ADDON,
+                ATTR_TYPE: WSType.MCOS_UPDATE_ADDON,
                 "addon": addon.slug,
                 "backup": True,
             }
@@ -188,7 +188,7 @@ class Tasks(CoreSysAttributes):
         if self.sys_muthurcommand.error_state:
             # Muthur Command is in an error state, this is handled by the rollback feature
             return
-        if self.sys_muthurcommand.version == LANDINGPAGE:
+        if is_landingpage(self.sys_muthurcommand.version):
             # Skip watchdog for landingpage
             return
         if not await self.sys_muthurcommand.core.is_running():

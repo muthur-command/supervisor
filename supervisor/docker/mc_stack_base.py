@@ -44,7 +44,7 @@ def mc_stack_labels(role: str) -> dict[str, str]:
 
 
 def mc_stack_networking_config(*aliases: str) -> dict[str, dict[str, dict]]:
-    """Build a ``NetworkingConfig`` payload attached to the ``mcio`` network.
+    """Build a ``NetworkingConfig`` payload attached to the ``mcos`` network.
 
     Multiple aliases can be supplied so containers are reachable under both
     the underscore (``mc_postgres``) and hyphen (``mc-postgres``) variants

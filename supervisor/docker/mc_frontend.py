@@ -2,7 +2,7 @@
 
 The ``mc_fd`` Nginx static-site container is the user-facing entry point of
 the MC application stack. It proxies API calls to ``mc_bd`` over the
-internal ``mcio`` network and exposes itself via a published port so the
+internal ``mcos`` network and exposes itself via a published port so the
 operator (or HA OS Ingress) can reach the login page.
 """
 
@@ -78,7 +78,7 @@ class DockerMcFrontend(DockerInterface, CoreSysAttributes):
 
     @property
     def networking_config(self) -> dict[str, dict[str, dict]]:
-        """Network endpoint config attaching to ``mcio`` with stack alias."""
+        """Network endpoint config attaching to ``mcos`` with stack alias."""
         return mc_stack_networking_config(_FD_ALIAS_PRIMARY, _FD_ALIAS_DNS)
 
     @Job(

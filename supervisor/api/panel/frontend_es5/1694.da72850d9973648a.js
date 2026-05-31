@@ -1,1 +1,1 @@
-"use strict";(self.webpackChunkmcio_frontend=self.webpackChunkmcio_frontend||[]).push([["1694"],{63853:function(s,n,e){e.r(n)}}]);
+"use strict";(self.webpackChunkmcos_frontend=self.webpackChunkmcos_frontend||[]).push([["1694"],{63853:function(s,n,e){e.r(n)}}]);

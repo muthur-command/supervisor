@@ -6,7 +6,7 @@ from typing import Any
 from .const import OBSERVER_PORT
 
 
-class McioError(Exception):
+class McosRuntimeError(Exception):
     """Root exception."""
 
     error_key: str | None = None
@@ -34,14 +34,14 @@ class McioError(Exception):
             super().__init__()
 
 
-class McioNotSupportedError(McioError):
+class McosNotSupportedError(McosRuntimeError):
     """Function is not supported."""
 
 
 # API
 
 
-class APIError(McioError):
+class APIError(McosRuntimeError):
     """API errors."""
 
     status = 400
@@ -128,7 +128,7 @@ class APIUnknownSupervisorError(APIError):
 # JobManager
 
 
-class JobException(McioError):
+class JobException(McosRuntimeError):
     """Base job exception."""
 
 
@@ -155,7 +155,7 @@ class JobGroupExecutionLimitExceeded(JobException):
 # MuthurCommand
 
 
-class MuthurCommandError(McioError):
+class MuthurCommandError(McosRuntimeError):
     """Muthur Command exception."""
 
 
@@ -194,7 +194,7 @@ class MuthurCommandJobError(MuthurCommandError, JobException):
 # MC stack (PostgreSQL → Redis → mc_bd → mc_fd)
 
 
-class MCStackError(McioError):
+class MCStackError(McosRuntimeError):
     """Generic MC application stack error."""
 
 
@@ -213,7 +213,7 @@ class MCStackJobError(MCStackError, JobException):
 # Supervisor
 
 
-class SupervisorError(McioError):
+class SupervisorError(McosRuntimeError):
     """Supervisor error."""
 
 
@@ -239,34 +239,34 @@ class SupervisorJobError(SupervisorError, JobException):
 # MCOS
 
 
-class McosError(McioError):
+class McosOsError(McosRuntimeError):
     """MCOS exception."""
 
 
-class McosUpdateError(McosError):
+class McosUpdateError(McosOsError):
     """Error on update of MCOS."""
 
 
-class McosJobError(McosError, JobException):
+class McosJobError(McosOsError, JobException):
     """Function not supported by MCOS."""
 
 
-class McosDataDiskError(McosError):
+class McosDataDiskError(McosOsError):
     """Issues with the DataDisk feature from MCOS."""
 
 
-class McosSlotNotFound(McosError):
+class McosSlotNotFound(McosOsError):
     """Could not find boot slot."""
 
 
-class McosSlotUpdateError(McosError):
+class McosSlotUpdateError(McosOsError):
     """Error while updating a slot via rauc."""
 
 
 # All Plugins
 
 
-class PluginError(McioError):
+class PluginError(McosRuntimeError):
     """Plugin error."""
 
 
@@ -364,7 +364,7 @@ class AudioJobError(AudioError, PluginJobError):
 # Addons
 
 
-class AddonsError(McioError):
+class AddonsError(McosRuntimeError):
     """Addons exception."""
 
 
@@ -434,7 +434,7 @@ class AddonPortConflict(AddonsError, APIError):
         super().__init__(None, logger)
 
 
-class AddonNotSupportedError(McioNotSupportedError):
+class AddonNotSupportedError(McosNotSupportedError):
     """Addon doesn't support a function."""
 
 
@@ -520,7 +520,7 @@ class AddonBuildDockerfileMissingError(AddonNotSupportedError, APIError):
         self, logger: Callable[..., None] | None = None, *, addon: str
     ) -> None:
         """Initialize exception."""
-        self.extra_fields = {"addon": addon, "repair_command": "ha supervisor repair"}
+        self.extra_fields = {"addon": addon, "repair_command": "mc supervisor repair"}
         super().__init__(None, logger)
 
 
@@ -587,14 +587,14 @@ class AddonsJobError(AddonsError, JobException):
 # Arch
 
 
-class McioArchNotFound(McioNotSupportedError):
+class McosArchNotFound(McosNotSupportedError):
     """No matches with exists arch."""
 
 
 # Updater
 
 
-class UpdaterError(McioError):
+class UpdaterError(McosRuntimeError):
     """Error on Updater."""
 
 
@@ -605,7 +605,7 @@ class UpdaterJobError(UpdaterError, JobException):
 # Auth
 
 
-class AuthError(McioError):
+class AuthError(McosRuntimeError):
     """Auth errors."""
 
 
@@ -622,7 +622,7 @@ class AuthPasswordResetError(AuthError, APIError):
         user: str,
     ) -> None:
         """Initialize exception."""
-        self.extra_fields = {"user": user, "auth_list_command": "ha auth list"}
+        self.extra_fields = {"user": user, "auth_list_command": "mc auth list"}
         super().__init__(None, logger)
 
 
@@ -659,11 +659,11 @@ class AuthMuthurCommandAPIValidationError(AuthError, APIUnknownSupervisorError):
 # Host
 
 
-class HostError(McioError):
+class HostError(McosRuntimeError):
     """Internal Host error."""
 
 
-class HostNotSupportedError(McioNotSupportedError):
+class HostNotSupportedError(McosNotSupportedError):
     """Host function is not supprted."""
 
 
@@ -690,18 +690,18 @@ class HostLogError(HostError):
 # Service / Discovery
 
 
-class DiscoveryError(McioError):
+class DiscoveryError(McosRuntimeError):
     """Discovery Errors."""
 
 
-class ServicesError(McioError):
+class ServicesError(McosRuntimeError):
     """Services Errors."""
 
 
 # utils/dbus
 
 
-class DBusError(McioError):
+class DBusError(McosRuntimeError):
     """D-Bus generic error."""
 
 
@@ -709,15 +709,15 @@ class DBusNotConnectedError(HostNotSupportedError):
     """D-Bus is not connected and call a method."""
 
 
-class DBusServiceUnkownError(McioNotSupportedError):
+class DBusServiceUnkownError(McosNotSupportedError):
     """D-Bus service was not available."""
 
 
-class DBusInterfaceError(McioNotSupportedError):
+class DBusInterfaceError(McosNotSupportedError):
     """D-Bus interface not connected."""
 
 
-class DBusObjectError(McioNotSupportedError):
+class DBusObjectError(McosNotSupportedError):
     """D-Bus object not defined."""
 
 
@@ -798,7 +798,7 @@ class BoardInvalidError(DBusObjectError):
 # util/common
 
 
-class ConfigurationFileError(McioError):
+class ConfigurationFileError(McosRuntimeError):
     """Invalid JSON or YAML file."""
 
 
@@ -819,7 +819,7 @@ class YamlFileError(ConfigurationFileError):
 # util/pwned
 
 
-class PwnedError(McioError):
+class PwnedError(McosRuntimeError):
     """Errors while checking pwned passwords."""
 
 
@@ -834,7 +834,7 @@ class PwnedConnectivityError(PwnedError):
 # util/whoami
 
 
-class WhoamiError(McioError):
+class WhoamiError(McosRuntimeError):
     """Error while using whoami."""
 
 
@@ -849,7 +849,7 @@ class WhoamiConnectivityError(WhoamiError):
 # utils/systemd_journal
 
 
-class SystemdJournalError(McioError):
+class SystemdJournalError(McosRuntimeError):
     """Error while processing systemd journal logs."""
 
 
@@ -860,7 +860,7 @@ class MalformedBinaryEntryError(SystemdJournalError):
 # docker/api
 
 
-class DockerError(McioError):
+class DockerError(McosRuntimeError):
     """Docker API/Transport errors."""
 
 
@@ -948,7 +948,7 @@ class DockerJobError(DockerError, JobException):
 # Hardware
 
 
-class HardwareError(McioError):
+class HardwareError(McosRuntimeError):
     """General Hardware Error on Supervisor."""
 
 
@@ -956,21 +956,21 @@ class HardwareNotFound(HardwareError):
     """Hardware path or device doesn't exist on the Host."""
 
 
-class HardwareNotSupportedError(McioNotSupportedError):
+class HardwareNotSupportedError(McosNotSupportedError):
     """Raise if hardware function is not supported."""
 
 
 # Pulse Audio
 
 
-class PulseAudioError(McioError):
+class PulseAudioError(McosRuntimeError):
     """Raise if an sound error is happening."""
 
 
 # Resolution
 
 
-class ResolutionError(McioError):
+class ResolutionError(McosRuntimeError):
     """Raise if an error is happning on resoltuion."""
 
 
@@ -982,7 +982,7 @@ class ResolutionNotFound(ResolutionError):
     """Raise if suggestion/issue was not found."""
 
 
-class ResolutionFixupError(McioError):
+class ResolutionFixupError(McosRuntimeError):
     """Rasie if a fixup fails."""
 
 
@@ -1031,7 +1031,7 @@ class ResolutionSuggestionNotFound(ResolutionNotFound, APINotFound):  # pylint: 
 # Store
 
 
-class StoreError(McioError):
+class StoreError(McosRuntimeError):
     """Raise if an error on store is happening."""
 
 
@@ -1096,7 +1096,7 @@ class StoreRepositoryUnknownError(StoreError, APIUnknownSupervisorError):
 # Backup
 
 
-class BackupError(McioError):
+class BackupError(McosRuntimeError):
     """Raise if an error during backup is happening."""
 
 
@@ -1173,7 +1173,7 @@ class AddonPrePostBackupCommandReturnedError(BackupError, APIError):
         self.extra_fields = {
             "addon": addon,
             "exit_code": exit_code,
-            "debug_logging_command": "ha supervisor options --logging debug",
+            "debug_logging_command": "mc supervisor options --logging debug",
         }
         super().__init__(None, logger)
 
@@ -1188,7 +1188,7 @@ class BackupRestoreUnknownError(BackupError, APIUnknownSupervisorError):
 # Security
 
 
-class SecurityError(McioError):
+class SecurityError(McosRuntimeError):
     """Raise if an error during security checks are happening."""
 
 
@@ -1199,7 +1199,7 @@ class SecurityJobError(SecurityError, JobException):
 # Mount
 
 
-class MountError(McioError):
+class MountError(McosRuntimeError):
     """Raise on an error related to mounting/unmounting."""
 
 
@@ -1222,5 +1222,5 @@ class MountJobError(MountError, JobException):
 # Network
 
 
-class NetworkInterfaceNotFound(McioError):
+class NetworkInterfaceNotFound(McosRuntimeError):
     """Raise on network interface not found."""

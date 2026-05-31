@@ -37,7 +37,7 @@ from ..exceptions import (
     AddonBuildArchitectureNotSupportedError,
     AddonBuildDockerfileMissingError,
     ConfigurationFileError,
-    McioArchNotFound,
+    McosArchNotFound,
 )
 from ..utils.common import find_one_filetype, read_json_or_yaml_file
 from .validate import SCHEMA_BUILD_CONFIG
@@ -133,7 +133,7 @@ class AddonBuild(CoreSysAttributes):
 
         # Dict - per-arch base images in build config
         if self.arch not in self._build_config[ATTR_BUILD_FROM]:
-            raise McioArchNotFound(
+            raise McosArchNotFound(
                 f"App {self.addon.slug} is not supported on {self.arch}"
             )
         return self._build_config[ATTR_BUILD_FROM][self.arch]
@@ -173,7 +173,7 @@ class AddonBuild(CoreSysAttributes):
                 raise AddonBuildDockerfileMissingError(
                     _LOGGER.error, addon=self.addon.slug
                 )
-        except McioArchNotFound:
+        except McosArchNotFound:
             raise AddonBuildArchitectureNotSupportedError(
                 _LOGGER.error,
                 addon=self.addon.slug,

@@ -13,7 +13,7 @@ from typing import cast
 from ..addons.addon import Addon
 from ..const import (
     ATTR_DAYS_UNTIL_STALE,
-    FILE_MCIO_BACKUPS,
+    FILE_MCOS_BACKUPS,
     FOLDER_MUTHURCOMMAND,
     CoreState,
 )
@@ -59,7 +59,7 @@ class BackupManager(FileConfiguration, JobGroup):
 
     def __init__(self, coresys: CoreSys):
         """Initialize a backup manager."""
-        super().__init__(FILE_MCIO_BACKUPS, SCHEMA_BACKUPS_CONFIG)
+        super().__init__(FILE_MCOS_BACKUPS, SCHEMA_BACKUPS_CONFIG)
         super(FileConfiguration, self).__init__(coresys, JOB_GROUP_BACKUP_MANAGER)
         self._backups: dict[str, Backup] = {}
         self._thaw_task: Awaitable[None] | None = None

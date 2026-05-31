@@ -62,7 +62,7 @@ If API endpoints or add-on configuration are added/changed:
 - [ ] [CLI][cli-repository] updated (if necessary)
 - [ ] [Client library][client-library-repository] updated (if necessary)
 
-If this PR changes **HTTP paths, headers, env vars, DNS, or on-disk JSON** (mcio / muthurcommand / mcos naming train), confirm coordinated updates for **version** feed, **plugin-dns**, **docker**/Core, and **operating-system** where applicable.
+If this PR changes **HTTP paths, headers, env vars, DNS, or on-disk JSON** (mcos / muthurcommand / mcos naming train), confirm coordinated updates for **version** feed, **plugin-dns**, **docker**/Core, and **operating-system** where applicable.
 
 <!--
   Thank you for contributing <3

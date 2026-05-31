@@ -130,15 +130,15 @@ async def docker() -> DockerAPI:
         "Os": "linux",
         "Architecture": "amd64",
         "Id": "test123",
-        "RepoTags": ["ghcr.io/muthur-command/amd64-mcio-supervisor:latest"],
+        "RepoTags": ["ghcr.io/muthur-command/amd64-mcos-supervisor:latest"],
     }
     container_inspect = image_inspect | {
         "State": {"ExitCode": 0, "Status": "stopped", "Running": False},
         "Image": "abc123",
     }
     network_inspect = {
-        "Name": "mcio",
-        "Id": "mcio123",
+        "Name": "mcos",
+        "Id": "mcos123",
         "EnableIPv4": True,
         "EnableIPv6": False,
         "IPAM": {
@@ -516,7 +516,7 @@ async def coresys(
 
     # Mock test client
     coresys_obj._supervisor.instance._meta = {
-        "Config": {"Labels": {"io.mcio.arch": "amd64"}},
+        "Config": {"Labels": {"io.mcos.arch": "amd64"}},
         "HostConfig": {"Privileged": True},
     }
     coresys_obj.arch._default_arch = CpuArch.AMD64

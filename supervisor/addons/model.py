@@ -44,8 +44,8 @@ from ..const import (
     ATTR_LOCATION,
     ATTR_MACHINE,
     ATTR_MAP,
-    ATTR_MCIO_API,
-    ATTR_MCIO_ROLE,
+    ATTR_MCOS_API,
+    ATTR_MCOS_ROLE,
     ATTR_MUTHURCOMMAND,
     ATTR_MUTHURCOMMAND_API,
     ATTR_NAME,
@@ -95,7 +95,7 @@ from ..exceptions import (
     AddonNotSupportedError,
     AddonNotSupportedMachineTypeError,
     AddonNotSupportedMuthurCommandVersionError,
-    McioArchNotFound,
+    McosArchNotFound,
 )
 from ..jobs.const import JOB_GROUP_ADDON
 from ..jobs.job_group import JobGroup
@@ -387,9 +387,9 @@ class AddonModel(JobGroup, ABC):
         return self.data[ATTR_DOCKER_API]
 
     @property
-    def access_mcio_api(self) -> bool:
+    def access_mcos_api(self) -> bool:
         """Return True if the add-on access to Supervisor REASTful API."""
-        return self.data[ATTR_MCIO_API]
+        return self.data[ATTR_MCOS_API]
 
     @property
     def access_muthurcommand_api(self) -> bool:
@@ -397,9 +397,9 @@ class AddonModel(JobGroup, ABC):
         return self.data[ATTR_MUTHURCOMMAND_API]
 
     @property
-    def mcio_role(self) -> str:
+    def mcos_role(self) -> str:
         """Return Supervisor role for API."""
-        return self.data[ATTR_MCIO_ROLE]
+        return self.data[ATTR_MCOS_ROLE]
 
     @property
     def backup_exclude(self) -> list[str]:
@@ -753,7 +753,7 @@ class AddonModel(JobGroup, ABC):
         if ATTR_IMAGE in config:
             try:
                 arch = self.sys_arch.match(config[ATTR_ARCH])
-            except McioArchNotFound:
+            except McosArchNotFound:
                 arch = self.sys_arch.default
             return config[ATTR_IMAGE].format(arch=arch)
 

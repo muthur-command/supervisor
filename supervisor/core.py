@@ -18,7 +18,7 @@ from .const import (
 from .coresys import CoreSys, CoreSysAttributes
 from .dbus.const import StopUnitMode, UnitActiveState
 from .exceptions import (
-    McioError,
+    McosRuntimeError,
     MCStackError,
     MuthurCommandCrashError,
     MuthurCommandError,
@@ -26,7 +26,7 @@ from .exceptions import (
     WhoamiError,
     WhoamiSSLError,
 )
-from .muthurcommand.core import LANDINGPAGE
+from .muthurcommand.const import is_landingpage
 from .resolution.const import ContextType, IssueType, SuggestionType, UnhealthyReason
 from .utils.dt import utcnow
 from .utils.sentry import async_capture_exception
@@ -154,16 +154,16 @@ class Core(CoreSysAttributes):
             self.sys_host.load(),
             # Load MCOS
             self.sys_os.load(),
-            # Adjust timezone / time settings
-            self._adjust_system_datetime(),
             # Load mounts
             self.sys_mounts.load(),
             # Load Docker manager
             self.sys_docker.load(),
             # load last available data
             self.sys_updater.load(),
-            # Load Plugins container
+            # Load Plugins container (DNS re-inits websession — see #5857)
             self.sys_plugins.load(),
+            # Adjust timezone / time settings (after DNS is available)
+            self._adjust_system_datetime(),
             # Load Muthur Command
             self.sys_muthurcommand.load(),
             # Load MC application stack (PostgreSQL → Redis → mc_bd → mc_fd)
@@ -272,7 +272,8 @@ class Core(CoreSysAttributes):
 
             # run MuthurCommand
             if (
-                self.sys_muthurcommand.boot
+                not self.sys_muthurcommand.unused
+                and self.sys_muthurcommand.boot
                 and not await self.sys_muthurcommand.core.is_running()
             ):
                 _LOGGER.info("Start Muthur Command Core")
@@ -308,7 +309,7 @@ class Core(CoreSysAttributes):
             await self.sys_tasks.load()
 
             # If landingpage / run upgrade in background
-            if self.sys_muthurcommand.version == LANDINGPAGE:
+            if is_landingpage(self.sys_muthurcommand.version):
                 self.sys_create_task(self.sys_muthurcommand.core.install())
 
             # Upate Host/Deivce information
@@ -379,7 +380,7 @@ class Core(CoreSysAttributes):
         await self.sys_addons.shutdown(AddonStartup.APPLICATION)
 
         # Close Muthur Command
-        with suppress(McioError):
+        with suppress(McosRuntimeError):
             await self.sys_muthurcommand.core.stop(
                 remove_container=remove_muthurcommand_container
             )
@@ -388,7 +389,7 @@ class Core(CoreSysAttributes):
         # after stopping the legacy Core path so any add-ons that talked to
         # mc_bd had a chance to drain through HA's shutdown signalling.
         if self.sys_mc_stack.enabled:
-            with suppress(McioError):
+            with suppress(McosRuntimeError):
                 await self.sys_mc_stack.stop()
 
         # Shutdown System Add-ons

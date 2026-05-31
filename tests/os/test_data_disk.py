@@ -11,7 +11,7 @@ import pytest
 from supervisor.const import CoreState
 from supervisor.core import Core
 from supervisor.coresys import CoreSys
-from supervisor.exceptions import McosDataDiskError, McosError
+from supervisor.exceptions import McosDataDiskError, McosOsError
 from supervisor.os.data_disk import Disk
 from supervisor.resolution.const import ContextType, IssueType
 from supervisor.resolution.data import Issue
@@ -314,7 +314,7 @@ async def test_datadisk_wipe_errors(
     logind_service.side_effect_reboot = DBusError(ErrorType.FAILED, "fail")
     with (
         patch.object(Core, "shutdown"),
-        pytest.raises(McosError, match="Can't restart device"),
+        pytest.raises(McosOsError, match="Can't restart device"),
     ):
         await coresys.os.datadisk.wipe_disk()
 

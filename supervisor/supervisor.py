@@ -15,7 +15,7 @@ from awesomeversion import AwesomeVersion, AwesomeVersionException
 from .const import (
     ATTR_SUPERVISOR_INTERNET,
     SUPERVISOR_VERSION,
-    URL_MCIO_APPARMOR,
+    URL_MCOS_APPARMOR,
     BusEvent,
 )
 from .coresys import CoreSys, CoreSysAttributes
@@ -110,7 +110,7 @@ class Supervisor(CoreSysAttributes):
     @property
     def default_image(self) -> str:
         """Return the default image for this system."""
-        return f"ghcr.io/muthur-command/{self.sys_arch.supervisor}-mcio-supervisor"
+        return f"ghcr.io/muthur-command/{self.sys_arch.supervisor}-mcos-supervisor"
 
     @property
     def image(self) -> str | None:
@@ -124,7 +124,7 @@ class Supervisor(CoreSysAttributes):
 
     async def update_apparmor(self) -> None:
         """Fetch last version and update profile."""
-        url = URL_MCIO_APPARMOR.format(channel=self.sys_updater.channel)
+        url = URL_MCOS_APPARMOR.format(channel=self.sys_updater.channel)
 
         # Fetch
         try:
@@ -158,7 +158,7 @@ class Supervisor(CoreSysAttributes):
         try:
             profile_file = await self.sys_run_in_executor(write_profile)
 
-            await self.sys_host.apparmor.load_profile("mcio-supervisor", profile_file)
+            await self.sys_host.apparmor.load_profile("mcos-supervisor", profile_file)
 
         except OSError as err:
             self.sys_resolution.check_oserror(err)

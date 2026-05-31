@@ -182,7 +182,7 @@ class Resolved(DBusServiceMock):
     @dbus_property(access=PropertyAccess.READ)
     def Domains(self) -> "a(isb)":
         """Get Domains."""
-        return [(0, "local.mcio", False)]
+        return [(0, "local.mcos", False)]
 
     @dbus_property(access=PropertyAccess.READ)
     def TransactionStatistics(self) -> "(tt)":

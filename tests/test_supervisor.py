@@ -78,7 +78,7 @@ async def test_update_failed(coresys: CoreSys, capture_exception: Mock):
     """Test update failure."""
     # pylint: disable-next=protected-access
     coresys.updater._data.setdefault("image", {})["supervisor"] = (
-        "ghcr.io/muthur-command/aarch64-mcio-supervisor"
+        "ghcr.io/muthur-command/aarch64-mcos-supervisor"
     )
     err = DockerError()
     with (

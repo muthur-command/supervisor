@@ -1,7 +1,7 @@
 """Docker wrapper for the MC stack Redis container.
 
 Redis sits between PostgreSQL and ``mc_bd`` in the start order and is
-reachable inside the ``mcio`` Docker network under the alias ``mc_redis``
+reachable inside the ``mcos`` Docker network under the alias ``mc_redis``
 (matches ``mc_bd``'s ``REDIS_HOST='mc_redis'`` default). AOF persistence
 is enabled by default so cached values survive container restarts; the
 ``mc_stack/redis`` data dir is bind-mounted to the standard ``/data``
@@ -97,7 +97,7 @@ class DockerMcRedis(DockerInterface, CoreSysAttributes):
 
     @property
     def networking_config(self) -> dict[str, dict[str, dict]]:
-        """Network endpoint config attaching to ``mcio`` with stack alias."""
+        """Network endpoint config attaching to ``mcos`` with stack alias."""
         return mc_stack_networking_config(_REDIS_ALIAS_PRIMARY, _REDIS_ALIAS_DNS)
 
     @Job(

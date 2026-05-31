@@ -61,7 +61,7 @@ WORKDIR /
 COPY rootfs /
 
 LABEL \
-    io.mcio.type="supervisor" \
+    io.mcos.type="supervisor" \
     org.opencontainers.image.title="Muthur Command Supervisor" \
     org.opencontainers.image.description="Container-based system for managing Muthur Command OS and Core installation" \
     org.opencontainers.image.authors="The Muthur Command Authors" \

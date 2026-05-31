@@ -80,8 +80,8 @@ async def test_docker_image_default_platform(
 @pytest.mark.parametrize(
     "image,registry_key",
     [
-        ("muthur-command/amd64-mcio-supervisor", DOCKER_HUB),
-        ("ghcr.io/muthur-command/amd64-mcio-supervisor", "ghcr.io"),
+        ("muthur-command/amd64-mcos-supervisor", DOCKER_HUB),
+        ("ghcr.io/muthur-command/amd64-mcos-supervisor", "ghcr.io"),
     ],
 )
 async def test_private_registry_credentials_passed_to_pull(
@@ -135,7 +135,7 @@ async def test_pull_401_with_credentials_raises_auth_error(
     test_docker_interface: DockerInterface,
 ):
     """Test that a 401 during pull with credentials raises DockerRegistryAuthError."""
-    image = "muthur-command/amd64-mcio-supervisor"
+    image = "muthur-command/amd64-mcos-supervisor"
 
     # Configure registry credentials
     coresys.docker.config._data["registries"] = {  # pylint: disable=protected-access
@@ -164,7 +164,7 @@ async def test_pull_401_without_credentials_raises_docker_error(
     test_docker_interface: DockerInterface,
 ):
     """Test that a 401 during pull without credentials raises generic DockerError."""
-    image = "muthur-command/amd64-mcio-supervisor"
+    image = "muthur-command/amd64-mcos-supervisor"
 
     # No registry credentials configured
 

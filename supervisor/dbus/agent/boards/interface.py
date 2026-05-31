@@ -2,7 +2,7 @@
 
 from voluptuous import Schema
 
-from ....const import FILE_MCIO_BOARD
+from ....const import FILE_MCOS_BOARD
 from ....utils.common import FileConfiguration
 from ...const import DBUS_IFACE_MCOS_BOARDS, DBUS_NAME_MCOS, DBUS_OBJECT_MCOS_BOARDS
 from ...interface import DBusInterfaceProxy
@@ -19,7 +19,7 @@ class BoardProxy(FileConfiguration, DBusInterfaceProxy):
         self._board_name: str = board_name
         self._object_path: str = f"{DBUS_OBJECT_MCOS_BOARDS}/{board_name}"
         self._properties_interface: str = f"{DBUS_IFACE_MCOS_BOARDS}.{board_name}"
-        super().__init__(FILE_MCIO_BOARD, file_schema or SCHEMA_BASE_BOARD)
+        super().__init__(FILE_MCOS_BOARD, file_schema or SCHEMA_BASE_BOARD)
         super(FileConfiguration, self).__init__()
 
     @property

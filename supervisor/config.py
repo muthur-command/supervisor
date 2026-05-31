@@ -22,7 +22,7 @@ from .const import (
     ATTR_VERSION,
     ATTR_WAIT_BOOT,
     ENV_SUPERVISOR_SHARE,
-    FILE_MCIO_CONFIG,
+    FILE_MCOS_CONFIG,
     SUPERVISOR_DATA,
     LogLevel,
 )
@@ -34,7 +34,7 @@ _LOGGER: logging.Logger = logging.getLogger(__name__)
 
 MUTHURCOMMAND_CONFIG = PurePath("muthurcommand")
 
-MCIO_SSL = PurePath("ssl")
+MCOS_SSL = PurePath("ssl")
 
 ADDONS_CORE = PurePath("addons/core")
 ADDONS_LOCAL = PurePath("addons/local")
@@ -74,7 +74,7 @@ class CoreConfig(FileConfiguration):
 
     def __init__(self) -> None:
         """Initialize config object."""
-        super().__init__(FILE_MCIO_CONFIG, SCHEMA_SUPERVISOR_CONFIG)
+        super().__init__(FILE_MCOS_CONFIG, SCHEMA_SUPERVISOR_CONFIG)
         self._timezone_tzinfo: tzinfo | None = None
 
     @property
@@ -238,12 +238,12 @@ class CoreConfig(FileConfiguration):
     @property
     def path_extern_ssl(self) -> PurePath:
         """Return SSL path external for Docker."""
-        return PurePath(self.path_extern_supervisor, MCIO_SSL)
+        return PurePath(self.path_extern_supervisor, MCOS_SSL)
 
     @property
     def path_ssl(self) -> Path:
         """Return SSL path inside supervisor."""
-        return self.path_supervisor / MCIO_SSL
+        return self.path_supervisor / MCOS_SSL
 
     @property
     def path_addons_core(self) -> Path:

@@ -29,7 +29,7 @@ from ..utils.json import write_json_file
 from ..utils.sentry import async_capture_exception
 from .base import PluginBase
 from .const import (
-    FILE_MCIO_AUDIO,
+    FILE_MCOS_AUDIO,
     PLUGIN_UPDATE_CONDITIONS,
     WATCHDOG_THROTTLE_MAX_CALLS,
     WATCHDOG_THROTTLE_PERIOD,
@@ -49,7 +49,7 @@ class PluginAudio(PluginBase):
 
     def __init__(self, coresys: CoreSys):
         """Initialize hass object."""
-        super().__init__(FILE_MCIO_AUDIO, SCHEMA_AUDIO_CONFIG)
+        super().__init__(FILE_MCOS_AUDIO, SCHEMA_AUDIO_CONFIG)
         self.slug = "audio"
         self.coresys: CoreSys = coresys
         self.instance: DockerAudio = DockerAudio(coresys)

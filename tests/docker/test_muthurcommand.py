@@ -22,6 +22,15 @@ from . import DEV_MOUNT
 
 
 @pytest.mark.usefixtures("tmp_supervisor_data", "path_extern")
+async def test_docker_run_none_version_does_not_crash(coresys: CoreSys) -> None:
+    """Privileged/mount logic must tolerate version=None (unused MCOS images)."""
+    coresys.muthurcommand.version = None
+    instance = DockerMuthurCommand(coresys)
+    assert instance.mounts
+    assert instance.cgroups_rules is not None
+
+
+@pytest.mark.usefixtures("tmp_supervisor_data", "path_extern")
 async def test_muthurcommand_start(coresys: CoreSys, container: DockerContainer):
     """Test starting muthurcommand."""
     coresys.muthurcommand.version = AwesomeVersion("2023.8.1")

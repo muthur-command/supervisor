@@ -46,7 +46,7 @@ async def test_default_load(coresys: CoreSys):
 
     assert len(store_manager.repository_urls) == 3
     assert (
-        "https://github.com/mcio-addons/addons-repository"
+        "https://github.com/mcos-addons/addons-repository"
         in store_manager.repository_urls
     )
     assert (
@@ -100,7 +100,7 @@ async def test_load_with_custom_repository(coresys: CoreSys):
 
     assert len(store_manager.repository_urls) == 4
     assert (
-        "https://github.com/mcio-addons/addons-repository"
+        "https://github.com/mcos-addons/addons-repository"
         in store_manager.repository_urls
     )
     assert (

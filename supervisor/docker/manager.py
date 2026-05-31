@@ -32,7 +32,7 @@ from ..const import (
     DNS_SUFFIX,
     DOCKER_NETWORK,
     ENV_SUPERVISOR_CPU_RT,
-    FILE_MCIO_DOCKER,
+    FILE_MCOS_DOCKER,
     SOCKET_DOCKER,
     BusEvent,
 )
@@ -199,7 +199,7 @@ class DockerConfig(FileConfiguration):
 
     def __init__(self):
         """Initialize the JSON configuration."""
-        super().__init__(FILE_MCIO_DOCKER, SCHEMA_DOCKER_CONFIG)
+        super().__init__(FILE_MCOS_DOCKER, SCHEMA_DOCKER_CONFIG)
 
     @property
     def enable_ipv6(self) -> bool | None:
@@ -558,7 +558,7 @@ class DockerAPI(CoreSysAttributes):
                     )
                 except DockerError:
                     _LOGGER.warning(
-                        "Can't attach %s to mcio-network!", name or container.id
+                        "Can't attach %s to mcos-network!", name or container.id
                     )
                 else:
                     with suppress(DockerError):
@@ -740,11 +740,11 @@ class DockerAPI(CoreSysAttributes):
         except aiodocker.DockerError as err:
             _LOGGER.warning("Error for networks prune: %s", err)
 
-        _LOGGER.info("Fix stale container on mcio network")
+        _LOGGER.info("Fix stale container on mcos network")
         try:
             await self.prune_networks(DOCKER_NETWORK)
         except aiodocker.DockerError as err:
-            _LOGGER.warning("Error for networks mcio prune: %s", err)
+            _LOGGER.warning("Error for networks mcos prune: %s", err)
 
         _LOGGER.info("Fix stale container on host network")
         try:

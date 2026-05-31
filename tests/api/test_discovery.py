@@ -101,7 +101,7 @@ async def test_api_send_del_discovery(
     assert coresys.websession.request.call_args.args[0] == "post"
     assert (
         coresys.websession.request.call_args.args[1]
-        == f"http://172.30.32.1:8123/api/mcio_push/discovery/{uuid}"
+        == f"http://172.30.32.1:8123/api/mcos_push/discovery/{uuid}"
     )
     assert coresys.websession.request.call_args.kwargs["json"] == {
         "addon": TEST_ADDON_SLUG,
@@ -121,7 +121,7 @@ async def test_api_send_del_discovery(
     assert coresys.websession.request.call_args.args[0] == "delete"
     assert (
         coresys.websession.request.call_args.args[1]
-        == f"http://172.30.32.1:8123/api/mcio_push/discovery/{uuid}"
+        == f"http://172.30.32.1:8123/api/mcos_push/discovery/{uuid}"
     )
     assert coresys.websession.request.call_args.kwargs["json"] == {
         "addon": TEST_ADDON_SLUG,

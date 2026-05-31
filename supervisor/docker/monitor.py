@@ -10,7 +10,7 @@ from aiodocker.channel import ChannelSubscriber
 
 from ..const import BusEvent
 from ..coresys import CoreSys, CoreSysAttributes
-from ..exceptions import McioError
+from ..exceptions import McosRuntimeError
 from ..utils.sentry import async_capture_exception, capture_exception
 from .const import LABEL_MANAGED, ContainerState
 
@@ -171,9 +171,9 @@ class DockerMonitor(CoreSysAttributes):
         while (event := await self._event_tasks.get()) is not None:
             try:
                 await event.task
-            # Exceptions which inherit from McioError are already handled
+            # Exceptions which inherit from McosRuntimeError are already handled
             # We can safely ignore these, we only track the unhandled ones here
-            except McioError:
+            except McosRuntimeError:
                 pass
             except Exception as err:  # pylint: disable=broad-exception-caught
                 capture_exception(err)

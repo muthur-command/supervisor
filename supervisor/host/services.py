@@ -7,7 +7,7 @@ import attr
 
 from ..coresys import CoreSysAttributes
 from ..dbus.const import StartUnitMode, StopUnitMode
-from ..exceptions import HostNotSupportedError, HostServiceError, McioError
+from ..exceptions import HostNotSupportedError, HostServiceError, McosRuntimeError
 
 _LOGGER: logging.Logger = logging.getLogger(__name__)
 
@@ -98,7 +98,7 @@ class ServiceManager(CoreSysAttributes):
                 ):
                     continue
                 self._services.add(ServiceInfo.read_from(service_data))
-        except (McioError, IndexError):
+        except (McosRuntimeError, IndexError):
             _LOGGER.warning("Can't update host service information!")
 
 

@@ -204,16 +204,16 @@ async def test_token_validation(
 ):
     """Test token validation paths."""
     install_addon_example.persist["access_token"] = "abc123"
-    install_addon_example.data["mcio_api"] = True
+    install_addon_example.data["mcos_api"] = True
     for role in success_roles:
-        install_addon_example.data["mcio_role"] = role
+        install_addon_example.data["mcos_role"] = role
         resp = await getattr(api_token_validation, request_method)(
             request_path, headers={"Authorization": "Bearer abc123"}
         )
         assert resp.status == 200
 
     for role in set(ROLE_ALL) - success_roles:
-        install_addon_example.data["mcio_role"] = role
+        install_addon_example.data["mcos_role"] = role
         resp = await getattr(api_token_validation, request_method)(
             request_path, headers={"Authorization": "Bearer abc123"}
         )

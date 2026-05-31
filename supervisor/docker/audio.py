@@ -24,7 +24,7 @@ from .interface import DockerInterface
 
 _LOGGER: logging.Logger = logging.getLogger(__name__)
 
-AUDIO_DOCKER_NAME: str = "mcio_audio"
+AUDIO_DOCKER_NAME: str = "mcos_audio"
 
 
 class DockerAudio(DockerInterface, CoreSysAttributes):

@@ -20,7 +20,7 @@ from ..jobs.decorator import Job
 from ..utils.sentry import async_capture_exception
 from .base import PluginBase
 from .const import (
-    FILE_MCIO_CLI,
+    FILE_MCOS_CLI,
     PLUGIN_UPDATE_CONDITIONS,
     WATCHDOG_THROTTLE_MAX_CALLS,
     WATCHDOG_THROTTLE_PERIOD,
@@ -35,7 +35,7 @@ class PluginCli(PluginBase):
 
     def __init__(self, coresys: CoreSys):
         """Initialize cli handler."""
-        super().__init__(FILE_MCIO_CLI, SCHEMA_CLI_CONFIG)
+        super().__init__(FILE_MCOS_CLI, SCHEMA_CLI_CONFIG)
         self.slug = "cli"
         self.coresys: CoreSys = coresys
         self.instance: DockerCli = DockerCli(coresys)

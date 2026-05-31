@@ -14,7 +14,7 @@ from supervisor.coresys import CoreSys
 from supervisor.exceptions import (
     AudioUpdateError,
     JobException,
-    McioError,
+    McosRuntimeError,
     PluginJobError,
 )
 from supervisor.host.const import HostFeature
@@ -188,11 +188,11 @@ async def test_exception(coresys: CoreSys, capture_exception: Mock):
         @Job(name="test_exception_execute", conditions=[JobCondition.HEALTHY])
         async def execute(self):
             """Execute the class method."""
-            raise McioError()
+            raise McosRuntimeError()
 
     test = TestClass(coresys)
 
-    with pytest.raises(McioError):
+    with pytest.raises(McosRuntimeError):
         assert await test.execute()
 
     capture_exception.assert_not_called()
@@ -264,7 +264,7 @@ async def test_exception_conditions(coresys: CoreSys):
         @Job(
             name="test_exception_conditions_execute",
             conditions=[JobCondition.RUNNING],
-            on_condition=McioError,
+            on_condition=McosRuntimeError,
         )
         async def execute(self):
             """Execute the class method."""
@@ -276,7 +276,7 @@ async def test_exception_conditions(coresys: CoreSys):
     assert await test.execute()
 
     await coresys.core.set_state(CoreState.FREEZE)
-    with pytest.raises(McioError):
+    with pytest.raises(McosRuntimeError):
         await test.execute()
 
 

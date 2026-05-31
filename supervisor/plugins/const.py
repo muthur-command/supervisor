@@ -6,11 +6,11 @@ from pathlib import Path
 from ..const import SUPERVISOR_DATA
 from ..jobs.const import JobCondition
 
-FILE_MCIO_AUDIO = Path(SUPERVISOR_DATA, "audio.json")
-FILE_MCIO_CLI = Path(SUPERVISOR_DATA, "cli.json")
-FILE_MCIO_DNS = Path(SUPERVISOR_DATA, "dns.json")
-FILE_MCIO_OBSERVER = Path(SUPERVISOR_DATA, "observer.json")
-FILE_MCIO_MULTICAST = Path(SUPERVISOR_DATA, "multicast.json")
+FILE_MCOS_AUDIO = Path(SUPERVISOR_DATA, "audio.json")
+FILE_MCOS_CLI = Path(SUPERVISOR_DATA, "cli.json")
+FILE_MCOS_DNS = Path(SUPERVISOR_DATA, "dns.json")
+FILE_MCOS_OBSERVER = Path(SUPERVISOR_DATA, "observer.json")
+FILE_MCOS_MULTICAST = Path(SUPERVISOR_DATA, "multicast.json")
 
 ATTR_FALLBACK = "fallback"
 WATCHDOG_RETRY_SECONDS = 10

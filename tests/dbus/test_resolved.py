@@ -80,7 +80,7 @@ async def test_dbus_resolved_info(
     )
 
     assert len(resolved.domains) == 1
-    assert resolved.domains[0] == (0, "local.mcio", False)
+    assert resolved.domains[0] == (0, "local.mcos", False)
 
     assert resolved.transaction_statistics == (0, 100000)
     assert resolved.cache_statistics == (10, 50000, 10000)

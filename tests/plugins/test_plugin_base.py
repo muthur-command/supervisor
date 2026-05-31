@@ -352,8 +352,8 @@ async def test_load_with_incorrect_image(
     coresys: CoreSys, container: DockerContainer, plugin: PluginBase
 ):
     """Test plugin loads with the incorrect image."""
-    plugin.image = old_image = f"ghcr.io/muthur-command/aarch64-mcio-{plugin.slug}"
-    correct_image = f"ghcr.io/muthur-command/amd64-mcio-{plugin.slug}"
+    plugin.image = old_image = f"ghcr.io/muthur-command/aarch64-mcos-{plugin.slug}"
+    correct_image = f"ghcr.io/muthur-command/amd64-mcos-{plugin.slug}"
     coresys.updater._data["image"][plugin.slug] = correct_image  # pylint: disable=protected-access
     plugin.version = AwesomeVersion("2024.4.0")
 
@@ -361,7 +361,7 @@ async def test_load_with_incorrect_image(
     container.show.return_value["State"]["Running"] = True
     coresys.docker.images.inspect.return_value = img_data = (
         coresys.docker.images.inspect.return_value
-        | {"Config": {"Labels": {"io.mcio.version": "2024.4.0"}}}
+        | {"Config": {"Labels": {"io.mcos.version": "2024.4.0"}}}
     )
     container.show.return_value |= img_data
 
@@ -391,4 +391,4 @@ async def test_load_with_incorrect_image(
 async def test_default_image_fallback(coresys: CoreSys, plugin: PluginBase):
     """Test default image falls back to hard-coded constant if we fail to fetch version file."""
     assert getattr(coresys.updater, f"image_{plugin.slug}") is None
-    assert plugin.default_image == f"ghcr.io/muthur-command/amd64-mcio-{plugin.slug}"
+    assert plugin.default_image == f"ghcr.io/muthur-command/amd64-mcos-{plugin.slug}"

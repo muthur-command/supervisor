@@ -9,7 +9,7 @@ from awesomeversion import AwesomeVersion
 
 from ..const import BusEvent
 from ..coresys import CoreSys, CoreSysAttributes
-from ..exceptions import HostLogError, McioError, PulseAudioError
+from ..exceptions import HostLogError, McosRuntimeError, PulseAudioError
 from ..hardware.const import PolicyGroup
 from ..hardware.data import Device
 from .apparmor import AppArmorControl
@@ -163,7 +163,7 @@ class HostManager(CoreSysAttributes):
 
     async def load(self):
         """Load host information."""
-        with suppress(McioError):
+        with suppress(McosRuntimeError):
             if self.sys_dbus.systemd.is_connected:
                 await self.services.update()
 
@@ -187,7 +187,7 @@ class HostManager(CoreSysAttributes):
         # Load profile data
         try:
             await self.apparmor.load()
-        except McioError as err:
+        except McosRuntimeError as err:
             _LOGGER.warning("Loading host AppArmor on start failed: %s", err)
 
     async def _hardware_events(self, device: Device) -> None:

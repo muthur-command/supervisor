@@ -19,8 +19,8 @@ async def test_start(coresys: CoreSys, container: DockerContainer):
 
         run.assert_called_once()
         assert run.call_args.kwargs["ipv4"] == IPv4Address("172.30.32.6")
-        assert run.call_args.kwargs["name"] == "mcio_observer"
-        assert run.call_args.kwargs["hostname"] == "mcio-observer"
+        assert run.call_args.kwargs["name"] == "mcos_observer"
+        assert run.call_args.kwargs["hostname"] == "mcos-observer"
         assert run.call_args.kwargs["restart_policy"] == {"Name": "always"}
         assert run.call_args.kwargs["extra_hosts"] == {
             "supervisor": IPv4Address("172.30.32.2")

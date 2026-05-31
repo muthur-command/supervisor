@@ -39,7 +39,7 @@ from ..validate import dns_url
 from .base import PluginBase
 from .const import (
     ATTR_FALLBACK,
-    FILE_MCIO_DNS,
+    FILE_MCOS_DNS,
     PLUGIN_UPDATE_CONDITIONS,
     WATCHDOG_THROTTLE_MAX_CALLS,
     WATCHDOG_THROTTLE_PERIOD,
@@ -68,7 +68,7 @@ class PluginDns(PluginBase):
 
     def __init__(self, coresys: CoreSys):
         """Initialize hass object."""
-        super().__init__(FILE_MCIO_DNS, SCHEMA_DNS_CONFIG)
+        super().__init__(FILE_MCOS_DNS, SCHEMA_DNS_CONFIG)
         self.slug = "dns"
         self.coresys: CoreSys = coresys
         self.instance: DockerDNS = DockerDNS(coresys)
@@ -419,7 +419,7 @@ class PluginDns(PluginBase):
             self.add_host(IPv4Address("127.0.0.1"), ["localhost"], write=False),
             self.add_host(
                 self.sys_docker.network.supervisor,
-                ["mcio", "supervisor"],
+                ["mcos", "supervisor"],
                 write=False,
             ),
             self.add_host(

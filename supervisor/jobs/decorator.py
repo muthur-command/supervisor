@@ -14,7 +14,7 @@ from ..exceptions import (
     JobConditionException,
     JobException,
     JobGroupExecutionLimitExceeded,
-    McioError,
+    McosRuntimeError,
 )
 from ..host.const import HostFeature
 from ..resolution.const import (
@@ -302,7 +302,7 @@ class Job(CoreSysAttributes):
                         # These should be handled like normal JobConditions as much as possible
                         except JobConditionException as err:
                             return self._handle_job_condition_exception(err)
-                        except McioError as err:
+                        except McosRuntimeError as err:
                             job.capture_error(err)
                             raise err
                         except Exception as err:

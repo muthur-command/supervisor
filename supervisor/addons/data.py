@@ -9,7 +9,7 @@ from ..const import (
     ATTR_SYSTEM,
     ATTR_USER,
     ATTR_VERSION,
-    FILE_MCIO_ADDONS,
+    FILE_MCOS_ADDONS,
 )
 from ..coresys import CoreSys, CoreSysAttributes
 from ..store.addon import AddonStore
@@ -25,7 +25,7 @@ class AddonsData(FileConfiguration, CoreSysAttributes):
 
     def __init__(self, coresys: CoreSys):
         """Initialize data holder."""
-        super().__init__(FILE_MCIO_ADDONS, SCHEMA_ADDONS_FILE)
+        super().__init__(FILE_MCOS_ADDONS, SCHEMA_ADDONS_FILE)
         self.coresys: CoreSys = coresys
 
     @property

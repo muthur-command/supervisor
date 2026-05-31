@@ -37,7 +37,7 @@ env:
   COSIGN_VERSION: "v3.0.5"
   BUILD_NAME: supervisor
   BUILD_TYPE: supervisor
-  IMAGE_NAME: mcio-supervisor
+  IMAGE_NAME: mcos-supervisor
   ARCHITECTURES: '["amd64", "aarch64"]'
 
 concurrency:
@@ -100,7 +100,7 @@ jobs:
         id: matrix_fallback
         if: github.actor == 'nektos/act'
         run: |
-          echo 'matrix={"include":[{"arch":"amd64","os":"ubuntu-latest","image":"ghcr.io/muthur-command/amd64-mcio-supervisor"},{"arch":"aarch64","os":"ubuntu-latest","image":"ghcr.io/muthur-command/aarch64-mcio-supervisor"}]}' >> "$GITHUB_OUTPUT"
+          echo 'matrix={"include":[{"arch":"amd64","os":"ubuntu-latest","image":"ghcr.io/muthur-command/amd64-mcos-supervisor"},{"arch":"aarch64","os":"ubuntu-latest","image":"ghcr.io/muthur-command/aarch64-mcos-supervisor"}]}' >> "$GITHUB_OUTPUT"
 
   build:
     name: Build ${{ matrix.arch }} supervisor
@@ -111,7 +111,7 @@ jobs:
       id-token: write
       packages: write
     strategy:
-      matrix: ${{ fromJSON(needs.init.outputs.matrix || '{"include":[{"arch":"amd64","os":"ubuntu-latest","image":"ghcr.io/muthur-command/amd64-mcio-supervisor"},{"arch":"aarch64","os":"ubuntu-latest","image":"ghcr.io/muthur-command/aarch64-mcio-supervisor"}]}') }}
+      matrix: ${{ fromJSON(needs.init.outputs.matrix || '{"include":[{"arch":"amd64","os":"ubuntu-latest","image":"ghcr.io/muthur-command/amd64-mcos-supervisor"},{"arch":"aarch64","os":"ubuntu-latest","image":"ghcr.io/muthur-command/aarch64-mcos-supervisor"}]}') }}
     env:
       WHEELS_ABI: cp314
       WHEELS_TAG: musllinux_1_2
@@ -367,7 +367,7 @@ jobs:
   #       with:
   #         arch: amd64
   #         container-registry-password: ${{ secrets.GITHUB_TOKEN }}
-  #         image: ghcr.io/muthur-command/amd64-mcio-supervisor
+  #         image: ghcr.io/muthur-command/amd64-mcos-supervisor
   #         image-tags: runner
   #         load: true
   #         version: ${{ needs.init.outputs.version }}
@@ -376,13 +376,13 @@ jobs:
   #     - name: Pull Supervisor
   #       if: needs.init.outputs.publish == 'true'
   #       run: |
-  #         docker pull ghcr.io/muthur-command/amd64-mcio-supervisor:${{ needs.init.outputs.version }}
-  #         docker tag ghcr.io/muthur-command/amd64-mcio-supervisor:${{ needs.init.outputs.version }} ghcr.io/muthur-command/amd64-mcio-supervisor:runner
+  #         docker pull ghcr.io/muthur-command/amd64-mcos-supervisor:${{ needs.init.outputs.version }}
+  #         docker tag ghcr.io/muthur-command/amd64-mcos-supervisor:${{ needs.init.outputs.version }} ghcr.io/muthur-command/amd64-mcos-supervisor:runner
 
   #     - name: Create the Supervisor
   #       run: |
   #         mkdir -p /tmp/supervisor/data
-  #         docker create --name mcio_supervisor \
+  #         docker create --name mcos_supervisor \
   #           --privileged \
   #           --security-opt seccomp=unconfined \
   #           --security-opt apparmor=unconfined \
@@ -391,18 +391,18 @@ jobs:
   #           -v /tmp/supervisor/data:/data \
   #           -v /etc/machine-id:/etc/machine-id:ro \
   #           -e SUPERVISOR_SHARE="/tmp/supervisor/data" \
-  #           -e SUPERVISOR_NAME=mcio_supervisor \
+  #           -e SUPERVISOR_NAME=mcos_supervisor \
   #           -e SUPERVISOR_DEV=1 \
   #           -e SUPERVISOR_MACHINE="qemux86-64" \
-  #         ghcr.io/muthur-command/amd64-mcio-supervisor:runner
+  #         ghcr.io/muthur-command/amd64-mcos-supervisor:runner
 
   #     - name: Start the Supervisor
-  #       run: docker start mcio_supervisor
+  #       run: docker start mcos_supervisor
 
   #     - &wait_for_supervisor
   #       name: Wait for Supervisor to come up
   #       run: |
-  #         until SUPERVISOR=$(docker inspect --format='{{.NetworkSettings.Networks.mcio.IPAddress}}' mcio_supervisor 2>/dev/null) && \
+  #         until SUPERVISOR=$(docker inspect --format='{{.NetworkSettings.Networks.mcos.IPAddress}}' mcos_supervisor 2>/dev/null) && \
   #               [ -n "$SUPERVISOR" ] && [ "$SUPERVISOR" != "<no value>" ]; do
   #           echo "Waiting for network configuration..."
   #           sleep 1
@@ -430,7 +430,7 @@ jobs:
   #         echo "ERROR: Supervisor failed to start within ${timeout}s"
   #         echo "Last response: $response"
   #         echo "Checking supervisor logs..."
-  #         docker logs --tail 50 mcio_supervisor
+  #         docker logs --tail 50 mcos_supervisor
   #         exit 1
 
   #     # Wait for Core to come up so subsequent steps (backup, addon install) succeed.
@@ -444,7 +444,7 @@ jobs:
   #         elapsed=0
 
   #         while [ $elapsed -lt $timeout ]; do
-  #           jobs=$(docker exec mcio_cli ha jobs info --no-progress --raw-json | jq -r '.data.jobs[] | select(.name == "muthur_command_core_install" and .done == false) | .name' 2>/dev/null)
+  #           jobs=$(docker exec mcos_cli mc jobs info --no-progress --raw-json | jq -r '.data.jobs[] | select(.name == "muthur_command_core_install" and .done == false) | .name' 2>/dev/null)
   #           if [ -z "$jobs" ]; then
   #             echo "Core install/start complete (took ${elapsed}s)"
   #             exit 0
@@ -459,19 +459,19 @@ jobs:
   #         done
 
   #         echo "ERROR: Core failed to install/start within ${timeout}s"
-  #         docker logs --tail 50 mcio_supervisor
+  #         docker logs --tail 50 mcos_supervisor
   #         exit 1
 
   #     - name: Check the Supervisor
   #       run: |
   #         echo "Checking supervisor info"
-  #         test=$(docker exec mcio_cli ha supervisor info --no-progress --raw-json | jq -r '.result')
+  #         test=$(docker exec mcos_cli mc supervisor info --no-progress --raw-json | jq -r '.result')
   #         if [ "$test" != "ok" ]; then
   #           exit 1
   #         fi
 
   #         echo "Checking supervisor network info"
-  #         test=$(docker exec mcio_cli ha network info --no-progress --raw-json | jq -r '.result')
+  #         test=$(docker exec mcos_cli mc network info --no-progress --raw-json | jq -r '.result')
   #         if [ "$test" != "ok" ]; then
   #           exit 1
   #         fi
@@ -479,25 +479,25 @@ jobs:
   #     - name: Check the Store / App
   #       run: |
   #         echo "Install Core SSH app"
-  #         test=$(docker exec mcio_cli ha apps install core_ssh --no-progress --raw-json | jq -r '.result')
+  #         test=$(docker exec mcos_cli mc apps install core_ssh --no-progress --raw-json | jq -r '.result')
   #         if [ "$test" != "ok" ]; then
   #           exit 1
   #         fi
 
   #         # Make sure it actually installed
-  #         test=$(docker exec mcio_cli ha apps info core_ssh --no-progress --raw-json | jq -r '.data.version')
+  #         test=$(docker exec mcos_cli mc apps info core_ssh --no-progress --raw-json | jq -r '.data.version')
   #         if [[ "$test" == "null" ]]; then
   #           exit 1
   #         fi
 
   #         echo "Start Core SSH app"
-  #         test=$(docker exec mcio_cli ha apps start core_ssh --no-progress --raw-json | jq -r '.result')
+  #         test=$(docker exec mcos_cli mc apps start core_ssh --no-progress --raw-json | jq -r '.result')
   #         if [ "$test" != "ok" ]; then
   #           exit 1
   #         fi
 
   #         # Make sure its state is started
-  #         test="$(docker exec mcio_cli ha apps info core_ssh --no-progress --raw-json | jq -r '.data.state')"
+  #         test="$(docker exec mcos_cli mc apps info core_ssh --no-progress --raw-json | jq -r '.data.state')"
   #         if [ "$test" != "started" ]; then
   #           exit 1
   #         fi
@@ -505,7 +505,7 @@ jobs:
   #     - name: Create full backup
   #       id: backup
   #       run: |
-  #         test=$(docker exec mcio_cli ha backups new --no-progress --raw-json)
+  #         test=$(docker exec mcos_cli mc backups new --no-progress --raw-json)
   #         if [ "$(echo $test | jq -r '.result')" != "ok" ]; then
   #           exit 1
   #         fi
@@ -513,14 +513,14 @@ jobs:
 
   #     - name: Uninstall SSH app
   #       run: |
-  #         test=$(docker exec mcio_cli ha apps uninstall core_ssh --no-progress --raw-json | jq -r '.result')
+  #         test=$(docker exec mcos_cli mc apps uninstall core_ssh --no-progress --raw-json | jq -r '.result')
   #         if [ "$test" != "ok" ]; then
   #           exit 1
   #         fi
 
   #     - name: Restart supervisor
   #       run: |
-  #         test=$(docker exec mcio_cli ha supervisor restart --no-progress --raw-json | jq -r '.result')
+  #         test=$(docker exec mcos_cli mc supervisor restart --no-progress --raw-json | jq -r '.result')
   #         if [ "$test" != "ok" ]; then
   #           exit 1
   #         fi
@@ -529,30 +529,30 @@ jobs:
 
   #     - name: Restore SSH app from backup
   #       run: |
-  #         test=$(docker exec mcio_cli ha backups restore ${{ steps.backup.outputs.slug }} --app core_ssh --no-progress --raw-json | jq -r '.result')
+  #         test=$(docker exec mcos_cli mc backups restore ${{ steps.backup.outputs.slug }} --app core_ssh --no-progress --raw-json | jq -r '.result')
   #         if [ "$test" != "ok" ]; then
   #           exit 1
   #         fi
 
   #         # Make sure it actually installed
-  #         test=$(docker exec mcio_cli ha apps info core_ssh --no-progress --raw-json | jq -r '.data.version')
+  #         test=$(docker exec mcos_cli mc apps info core_ssh --no-progress --raw-json | jq -r '.data.version')
   #         if [[ "$test" == "null" ]]; then
   #           exit 1
   #         fi
 
   #         # Make sure its state is started
-  #         test="$(docker exec mcio_cli ha apps info core_ssh --no-progress --raw-json | jq -r '.data.state')"
+  #         test="$(docker exec mcos_cli mc apps info core_ssh --no-progress --raw-json | jq -r '.data.state')"
   #         if [ "$test" != "started" ]; then
   #           exit 1
   #         fi
 
   #     - name: Restore SSL directory from backup
   #       run: |
-  #         test=$(docker exec mcio_cli ha backups restore ${{ steps.backup.outputs.slug }} --folders ssl --no-progress --raw-json | jq -r '.result')
+  #         test=$(docker exec mcos_cli mc backups restore ${{ steps.backup.outputs.slug }} --folders ssl --no-progress --raw-json | jq -r '.result')
   #         if [ "$test" != "ok" ]; then
   #           exit 1
   #         fi
 
   #     - name: Get supervisor logs on failure
   #       if: ${{ cancelled() || failure() }}
-  #       run: docker logs mcio_supervisor
+  #       run: docker logs mcos_supervisor

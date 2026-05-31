@@ -11,7 +11,7 @@ from .interface import DockerInterface
 
 _LOGGER: logging.Logger = logging.getLogger(__name__)
 
-DNS_DOCKER_NAME: str = "mcio_dns"
+DNS_DOCKER_NAME: str = "mcos_dns"
 
 
 class DockerDNS(DockerInterface, CoreSysAttributes):

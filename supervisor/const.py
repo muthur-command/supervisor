@@ -17,7 +17,7 @@ SERVER_SOFTWARE = (
     f"aiohttp/{aiohttpversion} Python/{systemversion[0]}.{systemversion[1]}"
 )
 
-DOCKER_PREFIX: str = "mcio"
+DOCKER_PREFIX: str = "mcos"
 OBSERVER_DOCKER_NAME: str = f"{DOCKER_PREFIX}_observer"
 SUPERVISOR_DOCKER_NAME: str = "mcos_supervisor"
 ENV_SUPERVISOR_NAME = "SUPERVISOR_NAME"
@@ -42,26 +42,26 @@ MC_BACKEND_PORT: int = 8001
 MC_FRONTEND_PORT: int = 80
 MC_BACKEND_HEALTH_PATH: str = "/v1/health/ping"
 
-URL_MCIO_ADDONS = "https://github.com/muthur-command/addons"
-URL_MCIO_APPARMOR = "https://version.muthur-command.com/apparmor_{channel}.txt"
-URL_MCIO_VERSION = "https://version.muthur-command.com/{channel}.json"
+URL_MCOS_ADDONS = "https://github.com/muthur-command/addons"
+URL_MCOS_APPARMOR = "https://version.muthur-command.com/apparmor_{channel}.txt"
+URL_MCOS_VERSION = "https://version.muthur-command.com/{channel}.json"
 
 SUPERVISOR_DATA = Path("/data")
 
-FILE_MCIO_ADDONS = Path(SUPERVISOR_DATA, "addons.json")
-FILE_MCIO_AUTH = Path(SUPERVISOR_DATA, "auth.json")
-FILE_MCIO_BACKUPS = Path(SUPERVISOR_DATA, "backups.json")
-FILE_MCIO_BOARD = Path(SUPERVISOR_DATA, "board.json")
-FILE_MCIO_CONFIG = Path(SUPERVISOR_DATA, "config.json")
-FILE_MCIO_DISCOVERY = Path(SUPERVISOR_DATA, "discovery.json")
-FILE_MCIO_DOCKER = Path(SUPERVISOR_DATA, "docker.json")
+FILE_MCOS_ADDONS = Path(SUPERVISOR_DATA, "addons.json")
+FILE_MCOS_AUTH = Path(SUPERVISOR_DATA, "auth.json")
+FILE_MCOS_BACKUPS = Path(SUPERVISOR_DATA, "backups.json")
+FILE_MCOS_BOARD = Path(SUPERVISOR_DATA, "board.json")
+FILE_MCOS_CONFIG = Path(SUPERVISOR_DATA, "config.json")
+FILE_MCOS_DISCOVERY = Path(SUPERVISOR_DATA, "discovery.json")
+FILE_MCOS_DOCKER = Path(SUPERVISOR_DATA, "docker.json")
 FILE_MUTHURCOMMAND = Path(SUPERVISOR_DATA, "muthurcommand.json")
 FILE_MC_STACK = Path(SUPERVISOR_DATA, "mc_stack.json")
 FILE_MC_STACK_SECRETS = Path(SUPERVISOR_DATA, "mc_stack_secrets.json")
-FILE_MCIO_INGRESS = Path(SUPERVISOR_DATA, "ingress.json")
-FILE_MCIO_SERVICES = Path(SUPERVISOR_DATA, "services.json")
-FILE_MCIO_UPDATER = Path(SUPERVISOR_DATA, "updater.json")
-FILE_MCIO_SECURITY = Path(SUPERVISOR_DATA, "security.json")
+FILE_MCOS_INGRESS = Path(SUPERVISOR_DATA, "ingress.json")
+FILE_MCOS_SERVICES = Path(SUPERVISOR_DATA, "services.json")
+FILE_MCOS_UPDATER = Path(SUPERVISOR_DATA, "updater.json")
+FILE_MCOS_SECURITY = Path(SUPERVISOR_DATA, "security.json")
 
 FILE_SUFFIX_CONFIGURATION = [".yaml", ".yml", ".json"]
 
@@ -72,7 +72,7 @@ RUN_SUPERVISOR_STATE = Path("/run/supervisor")
 SYSTEMD_JOURNAL_PERSISTENT = Path("/var/log/journal")
 SYSTEMD_JOURNAL_VOLATILE = Path("/run/log/journal")
 
-DOCKER_NETWORK = "mcio"
+DOCKER_NETWORK = "mcos"
 DOCKER_NETWORK_DRIVER = "bridge"
 DOCKER_IPV6_NETWORK_MASK = IPv6Network("fd0c:ac1e:2100::/48")
 DOCKER_IPV4_NETWORK_MASK = IPv4Network("172.30.32.0/23")
@@ -89,15 +89,15 @@ DOCKER_CPU_RUNTIME_TOTAL = 950_000
 # on a quad core system.
 DOCKER_CPU_RUNTIME_ALLOCATION = int(DOCKER_CPU_RUNTIME_TOTAL / 5)
 
-DNS_SUFFIX = "local.mcio"
+DNS_SUFFIX = "local.mcos"
 
-LABEL_ARCH = "io.mcio.arch"
-LABEL_DESCRIPTION = "io.mcio.description"
-LABEL_MACHINE = "io.mcio.machine"
-LABEL_NAME = "io.mcio.name"
-LABEL_TYPE = "io.mcio.type"
-LABEL_URL = "io.mcio.url"
-LABEL_VERSION = "io.mcio.version"
+LABEL_ARCH = "io.mcos.arch"
+LABEL_DESCRIPTION = "io.mcos.description"
+LABEL_MACHINE = "io.mcos.machine"
+LABEL_NAME = "io.mcos.name"
+LABEL_TYPE = "io.mcos.type"
+LABEL_URL = "io.mcos.url"
+LABEL_VERSION = "io.mcos.version"
 
 # Runtime labels added to MC application stack containers so Observer /
 # external monitoring can filter them by stack and component role.
@@ -131,7 +131,7 @@ RESULT_OK = "ok"
 HEADER_REMOTE_USER_ID = "X-Remote-User-Id"
 HEADER_REMOTE_USER_NAME = "X-Remote-User-Name"
 HEADER_REMOTE_USER_DISPLAY_NAME = "X-Remote-User-Display-Name"
-HEADER_MCIO_KEY = "X-Mcio-Key"
+HEADER_MCOS_KEY = "X-Mcos-Key"
 HEADER_TOKEN = "X-Supervisor-Token"
 
 ENV_MUTHURCOMMAND_REPOSITORY = "MUTHURCOMMAND_REPOSITORY"
@@ -140,7 +140,7 @@ ENV_SUPERVISOR_MACHINE = "SUPERVISOR_MACHINE"
 ENV_SUPERVISOR_SHARE = "SUPERVISOR_SHARE"
 ENV_SUPERVISOR_CPU_RT = "SUPERVISOR_CPU_RT"
 
-REQUEST_FROM = "MCIO_FROM"
+REQUEST_FROM = "MCOS_FROM"
 
 ATTR_ACCESS_TOKEN = "access_token"
 ATTR_ACCESSPOINTS = "accesspoints"
@@ -243,8 +243,8 @@ ATTR_FREQUENCY = "frequency"
 ATTR_FULL_ACCESS = "full_access"
 ATTR_GATEWAY = "gateway"
 ATTR_GPIO = "gpio"
-ATTR_MCIO_API = "mcio_api"
-ATTR_MCIO_ROLE = "mcio_role"
+ATTR_MCOS_API = "mcos_api"
+ATTR_MCOS_ROLE = "mcos_role"
 ATTR_MCOS = "mcos"
 ATTR_MCOS_UNRESTRICTED = "mcos_unrestricted"
 ATTR_MCOS_UPGRADE = "mcos_upgrade"

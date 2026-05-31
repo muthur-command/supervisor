@@ -10,7 +10,7 @@ from .const import (
     ATTR_PORTS,
     ATTR_SESSION,
     ATTR_SESSION_DATA,
-    FILE_MCIO_INGRESS,
+    FILE_MCOS_INGRESS,
     IngressSessionData,
     IngressSessionDataDict,
 )
@@ -29,7 +29,7 @@ class Ingress(FileConfiguration, CoreSysAttributes):
 
     def __init__(self, coresys: CoreSys):
         """Initialize updater."""
-        super().__init__(FILE_MCIO_INGRESS, SCHEMA_INGRESS_CONFIG)
+        super().__init__(FILE_MCOS_INGRESS, SCHEMA_INGRESS_CONFIG)
         self.coresys: CoreSys = coresys
         self.tokens: dict[str, str] = {}
 
@@ -202,7 +202,7 @@ class Ingress(FileConfiguration, CoreSysAttributes):
         method = "post" if addon.ingress_panel else "delete"
         try:
             async with self.sys_muthurcommand.api.make_request(
-                method, f"api/mcio_push/panel/{addon.slug}"
+                method, f"api/mcos_push/panel/{addon.slug}"
             ) as resp:
                 if resp.status in (200, 201):
                     _LOGGER.info("Update Ingress as panel for %s", addon.slug)

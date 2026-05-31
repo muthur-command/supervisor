@@ -6,7 +6,7 @@ import platform
 
 from .const import CpuArch
 from .coresys import CoreSys, CoreSysAttributes
-from .exceptions import ConfigurationFileError, McioArchNotFound
+from .exceptions import ConfigurationFileError, McosArchNotFound
 from .utils.json import read_json_file
 
 _LOGGER: logging.Logger = logging.getLogger(__name__)
@@ -84,7 +84,7 @@ class CpuArchManager(CoreSysAttributes):
         for self_arch in self.supported:
             if self_arch in arch_list:
                 return CpuArch(self_arch)
-        raise McioArchNotFound()
+        raise McosArchNotFound()
 
     def detect_cpu(self) -> CpuArch:
         """Return the arch type of local CPU."""

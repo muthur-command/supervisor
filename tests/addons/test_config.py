@@ -25,7 +25,7 @@ def test_basic_config():
     assert not valid_config["host_pid"]
     assert not valid_config["host_uts"]
 
-    assert not valid_config["mcio_api"]
+    assert not valid_config["mcos_api"]
     assert not valid_config["muthurcommand_api"]
     assert not valid_config["docker_api"]
 
@@ -357,7 +357,7 @@ def test_valid_slug():
     config["slug"] = "uptime-kuma"
     assert vd.SCHEMA_ADDON_CONFIG(config)
 
-    config["slug"] = "mcio_google_drive_backup"
+    config["slug"] = "mcos_google_drive_backup"
     assert vd.SCHEMA_ADDON_CONFIG(config)
 
     config["slug"] = "paradox_alarm_interface_3.x"

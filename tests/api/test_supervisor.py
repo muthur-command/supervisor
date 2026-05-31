@@ -14,7 +14,7 @@ import pytest
 from supervisor.const import CoreState
 from supervisor.core import Core
 from supervisor.coresys import CoreSys
-from supervisor.exceptions import HostNotSupportedError, McioError, StoreGitError
+from supervisor.exceptions import HostNotSupportedError, McosRuntimeError, StoreGitError
 from supervisor.muthurcommand.const import WSEvent
 from supervisor.store.repository import Repository
 from supervisor.supervisor import Supervisor
@@ -165,7 +165,7 @@ async def test_api_supervisor_fallback(
     api_client: TestClient, journald_logs: MagicMock, docker_logs: MagicMock
 ):
     """Check that supervisor logs read from container logs if reading from journald gateway fails badly."""
-    journald_logs.side_effect = McioError("Something bad happened!")
+    journald_logs.side_effect = McosRuntimeError("Something bad happened!")
 
     with patch("supervisor.api._LOGGER.exception") as logger:
         resp = await api_client.get("/supervisor/logs")
@@ -229,7 +229,7 @@ async def test_api_supervisor_fallback_log_capture(
 
     journald_logs.reset_mock()
 
-    journald_logs.side_effect = McioError("Something bad happened!")
+    journald_logs.side_effect = McosRuntimeError("Something bad happened!")
 
     with patch("supervisor.api.async_capture_exception") as capture_exception:
         await api_client.get("/supervisor/logs")

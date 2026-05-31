@@ -87,7 +87,7 @@ async def test_base(coresys: CoreSys):
 async def test_check(docker: DockerAPI, coresys: CoreSys, folder: str):
     """Test check reports issue when containers have incorrect config."""
     docker.containers.get = _make_mock_container_get(
-        ["muthurcommand", "mcio_audio", "addon_local_ssh"], folder
+        ["muthurcommand", "mcos_audio", "addon_local_ssh"], folder
     )
     # Use state used in setup()
     await coresys.core.set_state(CoreState.SETUP)

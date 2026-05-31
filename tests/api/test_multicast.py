@@ -5,4 +5,4 @@ from supervisor.host.const import LogFormatter
 
 async def test_api_multicast_logs(advanced_logs_tester):
     """Test multicast logs."""
-    await advanced_logs_tester("/multicast", "mcio_multicast", LogFormatter.VERBOSE)
+    await advanced_logs_tester("/multicast", "mcos_multicast", LogFormatter.VERBOSE)

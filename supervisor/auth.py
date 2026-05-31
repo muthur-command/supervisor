@@ -6,7 +6,7 @@ import logging
 from typing import Any, TypedDict, cast
 
 from .addons.addon import Addon
-from .const import ATTR_PASSWORD, ATTR_USERNAME, FILE_MCIO_AUTH, MuthurCommandUser
+from .const import ATTR_PASSWORD, ATTR_USERNAME, FILE_MCOS_AUTH, MuthurCommandUser
 from .coresys import CoreSys, CoreSysAttributes
 from .exceptions import (
     AuthInvalidNonStringValueError,
@@ -38,7 +38,7 @@ class Auth(FileConfiguration, CoreSysAttributes):
 
     def __init__(self, coresys: CoreSys) -> None:
         """Initialize updater."""
-        super().__init__(FILE_MCIO_AUTH, SCHEMA_AUTH_CONFIG)
+        super().__init__(FILE_MCOS_AUTH, SCHEMA_AUTH_CONFIG)
         self.coresys: CoreSys = coresys
 
         self._running: dict[str, asyncio.Task] = {}
@@ -115,7 +115,7 @@ class Auth(FileConfiguration, CoreSysAttributes):
         try:
             async with self.sys_muthurcommand.api.make_request(
                 "post",
-                "api/mcio_auth",
+                "api/mcos_auth",
                 json=cast(
                     dict[str, Any],
                     BackendAuthRequest(
@@ -143,7 +143,7 @@ class Auth(FileConfiguration, CoreSysAttributes):
         try:
             async with self.sys_muthurcommand.api.make_request(
                 "post",
-                "api/mcio_auth/password_reset",
+                "api/mcos_auth/password_reset",
                 json={ATTR_USERNAME: username, ATTR_PASSWORD: password},
             ) as req:
                 if req.status == 200:

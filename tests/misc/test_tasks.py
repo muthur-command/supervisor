@@ -326,7 +326,7 @@ async def test_update_addons_auto_update_success(
 
         ha_ws_client.async_send_command.assert_any_call(
             {
-                "type": "mcio/update/addon",
+                "type": "mcos/update/addon",
                 "addon": install_addon_example.slug,
                 "backup": True,
             }

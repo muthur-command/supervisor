@@ -39,6 +39,7 @@ from ..resolution.const import ContextType, IssueType
 from ..utils.sentry import async_capture_exception
 from .const import (
     LANDINGPAGE,
+    is_landingpage,
     SAFE_MODE_FILENAME,
     WATCHDOG_MAX_ATTEMPTS,
     WATCHDOG_RETRY_SECONDS,
@@ -127,7 +128,7 @@ class MuthurCommandCore(JobGroup):
             await self.sys_muthurcommand.save_data()
 
         # Start landingpage
-        if self.instance.version != LANDINGPAGE:
+        if not is_landingpage(self.instance.version):
             return
 
         _LOGGER.info("Starting MuthurCommand landingpage")
@@ -386,6 +387,12 @@ class MuthurCommandCore(JobGroup):
     )
     async def start(self) -> None:
         """Run Muthur Command docker."""
+        if self.sys_muthurcommand.unused:
+            _LOGGER.info(
+                "Muthur Command Core is not used on this MCOS image; skipping start"
+            )
+            return
+
         if await self.instance.is_running():
             _LOGGER.warning("Muthur Command is already running!")
             return
@@ -527,7 +534,7 @@ class MuthurCommandCore(JobGroup):
     async def _block_till_run(self) -> None:
         """Block until Home-Assistant is booting up or startup timeout."""
         # Skip landingpage
-        if self.sys_muthurcommand.version == LANDINGPAGE:
+        if is_landingpage(self.sys_muthurcommand.version):
             return
         _LOGGER.info("Wait until Muthur Command is ready")
 

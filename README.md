@@ -35,10 +35,10 @@ Releases use three channels:
 The following must move in lockstep with **cli**, **version**, **plugin-dns**, **docker**/mc_bd images, and optional **operating-system** releases:
 
 - HTTP routes under **`/mc_bd/*`** and **`/muthurcommand/*`** for the application slot (legacy **`/muthurcommand/*`** and **`/core/*`** are not part of this tree’s contract).
-- Headers **`X-Mcio-Key`** and request context **`MCIO_FROM`** (no **`X-Hassio-Key`** / **`HASSIO_FROM`**).
+- Headers **`X-Mcos-Key`** and request context **`MCOS_FROM`** (no **`X-Hassio-Key`** / **`HASSIO_FROM`**).
 - On-disk paths **`muthurcommand.json`**, data directory **`/data/muthurcommand`**.
-- Environment **`MUTHURCOMMAND_REPOSITORY`**; **`version`** JSON keys **`muthurcommand`**, **`mcos`** / **`mcos_upgrade`**; add-on manifest keys **`mcio_api`**, **`mcio_role`**, **`muthurcommand_api`**, **`muthurcommand`** version pin.
-- DNS search suffix **`local.mcio`**.
+- Environment **`MUTHURCOMMAND_REPOSITORY`**; **`version`** JSON keys **`muthurcommand`**, **`mcos`** / **`mcos_upgrade`**; add-on manifest keys **`mcos_api`**, **`mcos_role`**, **`muthurcommand_api`**, **`muthurcommand`** version pin.
+- DNS search suffix **`local.mcos`**.
 
 ## Origin
 

@@ -43,8 +43,8 @@ CORE_FRONTEND: Final = re.compile(
 # Block Anytime
 BLACKLIST: Final = re.compile(
     r"^(?:"
-    r"|/muthurcommand/api/mcio/.*"
-    r"|/mc_bd/api/mcio/.*"
+    r"|/muthurcommand/api/mcos/.*"
+    r"|/mc_bd/api/mcos/.*"
     r")$"
 )
 
@@ -268,9 +268,9 @@ class SecurityMiddleware(CoreSysAttributes):
         if addon and ADDONS_API_BYPASS.match(request.path):
             _LOGGER.debug("Passthrough %s from %s", request.path, addon.slug)
             request_from = addon
-        elif addon and addon.access_mcio_api:
+        elif addon and addon.access_mcos_api:
             # Check Role
-            if ADDONS_ROLE_ACCESS[addon.mcio_role].match(request.path):
+            if ADDONS_ROLE_ACCESS[addon.mcos_role].match(request.path):
                 _LOGGER.info("%s access from %s", request.path, addon.slug)
                 request_from = addon
             else:
@@ -306,7 +306,7 @@ class SecurityMiddleware(CoreSysAttributes):
         ingress_request: bool = False
 
         for idx, (key, value) in enumerate(request.raw_headers):
-            if key in (b"Authorization", b"X-Mcio-Key"):
+            if key in (b"Authorization", b"X-Mcos-Key"):
                 authorization_index = idx
             elif key == b"Content-Type":
                 content_type_index = idx

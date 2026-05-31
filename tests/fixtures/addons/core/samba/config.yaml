@@ -8,7 +8,7 @@ arch:
   - amd64
 startup: services
 init: false
-mcio_api: true
+mcos_api: true
 host_network: true
 map:
   - "config:rw"

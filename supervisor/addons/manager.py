@@ -17,7 +17,7 @@ from ..exceptions import (
     AddonsJobError,
     CoreDNSError,
     DockerError,
-    McioError,
+    McosRuntimeError,
 )
 from ..jobs import ChildJobSyncFilter
 from ..jobs.const import JobConcurrency
@@ -137,7 +137,7 @@ class AddonManager(CoreSysAttributes):
             try:
                 if start_task := await addon.start():
                     wait_boot.append(start_task)
-            except McioError:
+            except McosRuntimeError:
                 self.sys_resolution.add_issue(
                     evolve(addon.boot_failed_issue),
                     suggestions=[

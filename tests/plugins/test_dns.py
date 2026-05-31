@@ -115,33 +115,33 @@ async def test_reset(coresys: CoreSys):
         assert coresys.plugins.dns._hosts == [
             HostEntry(
                 ip_address=IPv4Address("127.0.0.1"),
-                names=["localhost", "localhost.local.mcio"],
+                names=["localhost", "localhost.local.mcos"],
             ),
             HostEntry(
                 ip_address=IPv4Address("172.30.32.2"),
                 names=[
-                    "mcio",
-                    "mcio.local.mcio",
+                    "mcos",
+                    "mcos.local.mcos",
                     "supervisor",
-                    "supervisor.local.mcio",
+                    "supervisor.local.mcos",
                 ],
             ),
             HostEntry(
                 ip_address=IPv4Address("172.30.32.1"),
                 names=[
                     "muthurcommand",
-                    "muthurcommand.local.mcio",
+                    "muthurcommand.local.mcos",
                     "muthur-command",
-                    "muthur-command.local.mcio",
+                    "muthur-command.local.mcos",
                 ],
             ),
             HostEntry(
                 ip_address=IPv4Address("172.30.32.3"),
-                names=["dns", "dns.local.mcio"],
+                names=["dns", "dns.local.mcos"],
             ),
             HostEntry(
                 ip_address=IPv4Address("172.30.32.6"),
-                names=["observer", "observer.local.mcio"],
+                names=["observer", "observer.local.mcos"],
             ),
         ]
 
@@ -171,7 +171,7 @@ async def test_loop_detection_on_failure(coresys: CoreSys, container: DockerCont
         coresys.bus.fire_event(
             BusEvent.DOCKER_CONTAINER_STATE_CHANGE,
             DockerContainerStateEvent(
-                name="mcio_dns",
+                name="mcos_dns",
                 state=ContainerState.FAILED,
                 id="abc123",
                 time=1,
@@ -187,7 +187,7 @@ async def test_loop_detection_on_failure(coresys: CoreSys, container: DockerCont
         coresys.bus.fire_event(
             BusEvent.DOCKER_CONTAINER_STATE_CHANGE,
             DockerContainerStateEvent(
-                name="mcio_dns",
+                name="mcos_dns",
                 state=ContainerState.FAILED,
                 id="abc123",
                 time=1,
@@ -436,7 +436,7 @@ async def test_dns_restart_triggers_connectivity_check(coresys: CoreSys):
         coresys.bus.fire_event(
             BusEvent.DOCKER_CONTAINER_STATE_CHANGE,
             DockerContainerStateEvent(
-                name="mcio_dns",
+                name="mcos_dns",
                 state=ContainerState.RUNNING,
                 id="test_id",
                 time=1234567890,

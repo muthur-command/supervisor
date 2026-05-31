@@ -24,6 +24,7 @@ from supervisor.const import CoreState
 from supervisor.coresys import CoreSys
 from supervisor.docker.const import ContainerState
 from supervisor.docker.mc_backend import DockerMcBackend
+from supervisor.docker.muthurcommand import DockerMuthurCommand
 from supervisor.exceptions import DockerError, MCStackUpdateError
 from supervisor.misc.filter import filter_data
 from supervisor.misc.mc_stack import MCStackComponentHealth, MCStackUpdateStrategy
@@ -262,6 +263,18 @@ async def test_ha_watchdog_skipped_when_unused(coresys: CoreSys) -> None:
     probe.assert_not_called()
 
 
+async def test_ha_core_start_skipped_when_unused(coresys: CoreSys) -> None:
+    """``MuthurCommandCore.start`` no-ops when Core is unused on MCOS-only images."""
+    assert coresys.muthurcommand.unused is True
+    with patch.object(
+        DockerMuthurCommand, "run", new=AsyncMock()
+    ) as run, patch.object(
+        DockerMuthurCommand, "is_running", new=AsyncMock(return_value=False)
+    ):
+        await coresys.muthurcommand.core.start()
+    run.assert_not_called()
+
+
 @pytest.mark.usefixtures("stack_versions")
 async def test_mc_stack_watchdog_resets_failure_counter_on_recovery(
     coresys: CoreSys,
@@ -455,17 +468,17 @@ async def test_mc_stack_health_endpoint(api_client, coresys: CoreSys) -> None:
         "healthcheck",
         new=AsyncMock(
             return_value={
-                "mcio_mc_postgres": MCStackComponentHealth(
-                    "mcio_mc_postgres", ContainerState.RUNNING, True
+                "mcos_mc_postgres": MCStackComponentHealth(
+                    "mcos_mc_postgres", ContainerState.RUNNING, True
                 ),
-                "mcio_mc_redis": MCStackComponentHealth(
-                    "mcio_mc_redis", ContainerState.RUNNING, True
+                "mcos_mc_redis": MCStackComponentHealth(
+                    "mcos_mc_redis", ContainerState.RUNNING, True
                 ),
-                "mcio_mc_bd": MCStackComponentHealth(
-                    "mcio_mc_bd", ContainerState.FAILED, False
+                "mcos_mc_bd": MCStackComponentHealth(
+                    "mcos_mc_bd", ContainerState.FAILED, False
                 ),
-                "mcio_mc_fd": MCStackComponentHealth(
-                    "mcio_mc_fd", ContainerState.RUNNING, True
+                "mcos_mc_fd": MCStackComponentHealth(
+                    "mcos_mc_fd", ContainerState.RUNNING, True
                 ),
             }
         ),
@@ -474,8 +487,8 @@ async def test_mc_stack_health_endpoint(api_client, coresys: CoreSys) -> None:
 
     assert resp.status == 200
     data = (await resp.json())["data"]
-    assert data["mcio_mc_bd"]["healthy"] is False
-    assert data["mcio_mc_postgres"]["healthy"] is True
+    assert data["mcos_mc_bd"]["healthy"] is False
+    assert data["mcos_mc_postgres"]["healthy"] is True
 
 
 async def test_resolution_auto_loads_mc_stack_version_eval(coresys: CoreSys) -> None:
@@ -499,7 +512,7 @@ async def test_mc_fd_web_proxy_returns_503_when_disabled(
 async def test_ingress_update_core_panel_skipped_when_unused(coresys: CoreSys) -> None:
     """``Ingress.update_core_panel`` short-circuits when Muthur Command Core is unused.
 
-    The MCOS-only image does not expose HA's ``mcio_push/panel`` API,
+    The MCOS-only image does not expose HA's ``mcos_push/panel`` API,
     so the ingress manager must never attempt the call.
     """
     assert coresys.muthurcommand.unused is True

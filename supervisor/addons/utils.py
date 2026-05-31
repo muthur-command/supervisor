@@ -62,9 +62,9 @@ def rating_security(addon: AddonModel) -> int:
         rating += -1
 
     # API Supervisor role
-    if addon.mcio_role == ROLE_MANAGER:
+    if addon.mcos_role == ROLE_MANAGER:
         rating += -1
-    elif addon.mcio_role == ROLE_ADMIN:
+    elif addon.mcos_role == ROLE_ADMIN:
         rating += -2
 
     # Not secure Networking

@@ -411,10 +411,10 @@ async def test_labels_include_name_and_description(
             build.get_docker_args, AwesomeVersion("1.0.0"), "test-image:1.0.0", None
         )
 
-    assert _is_label_in_command(args["command"], "io.mcio.name", "Terminal & SSH")
+    assert _is_label_in_command(args["command"], "io.mcos.name", "Terminal & SSH")
     assert _is_label_in_command(
         args["command"],
-        "io.mcio.description",
+        "io.mcos.description",
         "Allow logging in remotely to Muthur Command using SSH",
     )
 
@@ -450,9 +450,9 @@ async def test_labels_omit_name_and_description_when_empty(
             build.get_docker_args, AwesomeVersion("1.0.0"), "test-image:1.0.0", None
         )
 
-    assert not _is_label_in_command(args["command"], "io.mcio.name")
-    assert not _is_label_in_command(args["command"], "io.mcio.description")
+    assert not _is_label_in_command(args["command"], "io.mcos.name")
+    assert not _is_label_in_command(args["command"], "io.mcos.description")
     # Core labels should still be present
-    assert _is_label_in_command(args["command"], "io.mcio.version", "1.0.0")
-    assert _is_label_in_command(args["command"], "io.mcio.arch", "amd64")
-    assert _is_label_in_command(args["command"], "io.mcio.type", "app")
+    assert _is_label_in_command(args["command"], "io.mcos.version", "1.0.0")
+    assert _is_label_in_command(args["command"], "io.mcos.arch", "amd64")
+    assert _is_label_in_command(args["command"], "io.mcos.type", "app")

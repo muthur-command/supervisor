@@ -360,7 +360,7 @@ class RestAPI(CoreSysAttributes):
             ]
         )
         self._register_advanced_logs(
-            "/multicast", "mcio_multicast", default_verbose=True
+            "/multicast", "mcos_multicast", default_verbose=True
         )
 
     def _register_hardware(self) -> None:
@@ -751,7 +751,7 @@ class RestAPI(CoreSysAttributes):
             ]
         )
 
-        self._register_advanced_logs("/dns", "mcio_dns", default_verbose=True)
+        self._register_advanced_logs("/dns", "mcos_dns", default_verbose=True)
 
     def _register_audio(self) -> None:
         """Register Audio functions."""
@@ -774,7 +774,7 @@ class RestAPI(CoreSysAttributes):
             ]
         )
 
-        self._register_advanced_logs("/audio", "mcio_audio", default_verbose=True)
+        self._register_advanced_logs("/audio", "mcos_audio", default_verbose=True)
 
     def _register_mounts(self) -> None:
         """Register mounts endpoints."""

@@ -527,7 +527,7 @@ async def test_core_loads_wrong_image_for_machine(
         "pull_image",
         return_value={
             "Id": "abc123",
-            "Config": {"Labels": {"io.mcio.version": "2024.4.0"}},
+            "Config": {"Labels": {"io.mcos.version": "2024.4.0"}},
         },
     ) as pull_image:
         container.show.return_value |= pull_image.return_value
@@ -563,7 +563,7 @@ async def test_core_load_allows_image_override(
         "ghcr.io/muthur-command/aarch64-muthurcommand-odroid-n2"
     )
     coresys.muthurcommand.version = AwesomeVersion("2024.4.0")
-    container.show.return_value["Config"] = {"Labels": {"io.mcio.version": "2024.4.0"}}
+    container.show.return_value["Config"] = {"Labels": {"io.mcos.version": "2024.4.0"}}
 
     coresys.muthurcommand.override_image = True
     await coresys.muthurcommand.core.load()
@@ -586,7 +586,7 @@ async def test_core_loads_wrong_image_for_architecture(
         coresys.docker.images.inspect.return_value
         | {
             "Architecture": "arm64",
-            "Config": {"Labels": {"io.mcio.version": "2024.4.0"}},
+            "Config": {"Labels": {"io.mcos.version": "2024.4.0"}},
         }
     )
     container.show.return_value |= img_data

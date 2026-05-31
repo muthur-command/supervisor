@@ -17,8 +17,8 @@ from supervisor.docker.utils import get_registry_from_image
         ("nginx:latest", None),
         ("library/nginx", None),
         ("library/nginx:latest", None),
-        ("muthur-command/amd64-mcio-supervisor", None),
-        ("muthur-command/amd64-mcio-supervisor:1.2.3", None),
+        ("muthur-command/amd64-mcos-supervisor", None),
+        ("muthur-command/amd64-mcos-supervisor:1.2.3", None),
         # Registry with dot
         ("ghcr.io/muthurcommand/amd64-supervisor", "ghcr.io"),
         ("ghcr.io/muthurcommand/amd64-supervisor:latest", "ghcr.io"),
@@ -98,12 +98,12 @@ def test_matching_credentials(coresys: CoreSys, test_docker_interface: DockerInt
     assert image == "ghcr.io/muthurcommand/amd64-supervisor"
 
     credentials, image = test_docker_interface._get_credentials(
-        "muthur-command/amd64-mcio-supervisor"
+        "muthur-command/amd64-mcos-supervisor"
     )
     assert credentials["username"] == "Spongebob Squarepants"
     assert credentials["registry"] == DOCKER_HUB
     # Docker Hub images should be prefixed with docker.io/ for correct ServerAddress
-    assert image == f"{DOCKER_HUB}/muthur-command/amd64-mcio-supervisor"
+    assert image == f"{DOCKER_HUB}/muthur-command/amd64-mcos-supervisor"
 
 
 def test_legacy_docker_hub_credentials(
@@ -115,11 +115,11 @@ def test_legacy_docker_hub_credentials(
     }
 
     credentials, image = test_docker_interface._get_credentials(
-        "muthur-command/amd64-mcio-supervisor"
+        "muthur-command/amd64-mcos-supervisor"
     )
     assert credentials["username"] == "LegacyUser"
     assert credentials["registry"] == DOCKER_HUB_LEGACY
-    assert image == f"{DOCKER_HUB}/muthur-command/amd64-mcio-supervisor"
+    assert image == f"{DOCKER_HUB}/muthur-command/amd64-mcos-supervisor"
 
 
 def test_docker_hub_preferred_over_legacy(
@@ -132,9 +132,9 @@ def test_docker_hub_preferred_over_legacy(
     }
 
     credentials, image = test_docker_interface._get_credentials(
-        "muthur-command/amd64-mcio-supervisor"
+        "muthur-command/amd64-mcos-supervisor"
     )
     # docker.io should be preferred
     assert credentials["username"] == "NewUser"
     assert credentials["registry"] == DOCKER_HUB
-    assert image == f"{DOCKER_HUB}/muthur-command/amd64-mcio-supervisor"
+    assert image == f"{DOCKER_HUB}/muthur-command/amd64-mcos-supervisor"

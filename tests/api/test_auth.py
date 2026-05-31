@@ -138,12 +138,12 @@ async def test_failed_password_reset(
     body = await resp.json()
     assert (
         body["message"]
-        == "Username 'john' does not exist. Check list of users using 'ha auth list'."
+        == "Username 'john' does not exist. Check list of users using 'mc auth list'."
     )
     assert body["error_key"] == "auth_password_reset_error"
     assert body["extra_fields"] == {
         "user": "john",
-        "auth_list_command": "ha auth list",
+        "auth_list_command": "mc auth list",
     }
     assert expected_log in caplog.text
 

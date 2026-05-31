@@ -40,7 +40,7 @@ class PluginBase(ABC, FileConfiguration, CoreSysAttributes):
     @property
     def default_image(self) -> str:
         """Return default image for plugin."""
-        return f"ghcr.io/muthur-command/{self.sys_arch.supervisor}-mcio-{self.slug}"
+        return f"ghcr.io/muthur-command/{self.sys_arch.supervisor}-mcos-{self.slug}"
 
     @property
     def image(self) -> str:

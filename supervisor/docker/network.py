@@ -237,7 +237,7 @@ class DockerNetwork:
     ) -> bool:
         """Attach a container when it already exists.
 
-        During cold boot the mcio network is created before plugin containers
+        During cold boot the mcos network is created before plugin containers
         exist. Missing containers are expected and must not be logged as errors.
         """
         try:

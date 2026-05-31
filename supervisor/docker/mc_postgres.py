@@ -3,7 +3,7 @@
 The PostgreSQL container is the foundation of the MC application stack and
 must come up before ``mc_redis`` / ``mc_bd``. Image tag, persistent volume
 and credentials are decided by the Supervisor; the container is reachable
-inside the ``mcio`` Docker network under the alias ``mc_postgres`` to match
+inside the ``mcos`` Docker network under the alias ``mc_postgres`` to match
 ``mc_bd``'s ``DATABASE_HOST='mc_postgres'`` default.
 
 Resource notes:
@@ -108,7 +108,7 @@ class DockerMcPostgres(DockerInterface, CoreSysAttributes):
 
     @property
     def networking_config(self) -> dict[str, dict[str, dict]]:
-        """Network endpoint config attaching to ``mcio`` with stack alias."""
+        """Network endpoint config attaching to ``mcos`` with stack alias."""
         return mc_stack_networking_config(_PG_ALIAS_PRIMARY, _PG_ALIAS_DNS)
 
     @Job(

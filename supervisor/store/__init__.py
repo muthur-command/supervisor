@@ -4,7 +4,7 @@ import asyncio
 from collections.abc import Awaitable
 import logging
 
-from ..const import ATTR_REPOSITORIES, REPOSITORY_CORE, URL_MCIO_ADDONS
+from ..const import ATTR_REPOSITORIES, REPOSITORY_CORE, URL_MCOS_ADDONS
 from ..coresys import CoreSys, CoreSysAttributes
 from ..exceptions import (
     StoreError,
@@ -18,7 +18,7 @@ from ..jobs.decorator import Job, JobCondition
 from ..resolution.const import ContextType, IssueType, SuggestionType
 from ..utils.common import FileConfiguration
 from .addon import AddonStore
-from .const import FILE_MCIO_STORE, BuiltinRepository
+from .const import FILE_MCOS_STORE, BuiltinRepository
 from .data import StoreData
 from .repository import Repository
 from .validate import DEFAULT_REPOSITORIES, SCHEMA_STORE_FILE
@@ -31,7 +31,7 @@ class StoreManager(CoreSysAttributes, FileConfiguration):
 
     def __init__(self, coresys: CoreSys):
         """Initialize Docker base wrapper."""
-        super().__init__(FILE_MCIO_STORE, SCHEMA_STORE_FILE)
+        super().__init__(FILE_MCOS_STORE, SCHEMA_STORE_FILE)
         self.coresys: CoreSys = coresys
         self.data = StoreData(coresys)
         self._repositories: dict[str, Repository] = {}
@@ -133,7 +133,7 @@ class StoreManager(CoreSysAttributes, FileConfiguration):
         self, url: str, *, persist: bool = True, issue_on_error: bool = False
     ) -> None:
         """Add a repository."""
-        if url == URL_MCIO_ADDONS:
+        if url == URL_MCOS_ADDONS:
             url = REPOSITORY_CORE
 
         repository = Repository.create(self.coresys, url)

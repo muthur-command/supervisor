@@ -109,7 +109,7 @@ class DockerAddon(DockerInterface):
         # Extract IP-Address
         try:
             return IPv4Address(
-                self._meta["NetworkSettings"]["Networks"]["mcio"]["IPAddress"]
+                self._meta["NetworkSettings"]["Networks"]["mcos"]["IPAddress"]
             )
         except (KeyError, TypeError, ValueError):
             return NO_ADDDRESS
@@ -263,7 +263,7 @@ class DockerAddon(DockerInterface):
         """Return hosts mapping."""
         return {
             "supervisor": self.sys_docker.network.supervisor,
-            "mcio": self.sys_docker.network.supervisor,
+            "mcos": self.sys_docker.network.supervisor,
         }
 
     @property
@@ -716,7 +716,7 @@ class DockerAddon(DockerInterface):
                 if docker_config_content:
                     # Create temporary directory for docker config
                     temp_dir = tempfile.TemporaryDirectory(
-                        prefix="mcio_build_", dir=self.sys_config.path_tmp
+                        prefix="mcos_build_", dir=self.sys_config.path_tmp
                     )
                     docker_config_path = Path(temp_dir.name) / "config.json"
                     docker_config_path.write_text(

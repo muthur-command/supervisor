@@ -18,7 +18,7 @@ DNS_GOOD_V6 = [
 DNS_BAD = ["hello world", "https://foo.bar", "", "dns://example.com"]
 IMAGE_NAME_GOOD = [
     "ghcr.io/muthur-command/{arch}-muthurcommand-{machine}",
-    "ghcr.io/muthur-command/{arch}-mcio-cli",
+    "ghcr.io/muthur-command/{arch}-mcos-cli",
     "muthurcommand/{arch}-muthurcommand",
     "doocker.io/muthurcommand/{arch}-muthurcommand",
     "ghcr.io/muthur-command/amd64-muthurcommand",
