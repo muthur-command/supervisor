@@ -187,7 +187,7 @@ jobs:
 
       - name: Build local wheels for upload
         if: needs.init.outputs.build_wheels == 'true'
-        uses: muthur-command/wheels@2026.05.0
+        uses: muthur-command/wheels@2026.06.0
         with:
           wheels-host: ""
           wheels-user: ""
