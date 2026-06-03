@@ -21,6 +21,8 @@ def is_landingpage(version: AwesomeVersion | None) -> bool:
     ``None != LANDINGPAGE`` both delegate to AwesomeVersion and raise.
     """
     return version is not None and version == LANDINGPAGE
+
+
 WATCHDOG_RETRY_SECONDS = 10
 WATCHDOG_MAX_ATTEMPTS = 5
 WATCHDOG_THROTTLE_PERIOD = timedelta(minutes=30)

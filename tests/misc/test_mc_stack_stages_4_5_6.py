@@ -266,10 +266,11 @@ async def test_ha_watchdog_skipped_when_unused(coresys: CoreSys) -> None:
 async def test_ha_core_start_skipped_when_unused(coresys: CoreSys) -> None:
     """``MuthurCommandCore.start`` no-ops when Core is unused on MCOS-only images."""
     assert coresys.muthurcommand.unused is True
-    with patch.object(
-        DockerMuthurCommand, "run", new=AsyncMock()
-    ) as run, patch.object(
-        DockerMuthurCommand, "is_running", new=AsyncMock(return_value=False)
+    with (
+        patch.object(DockerMuthurCommand, "run", new=AsyncMock()) as run,
+        patch.object(
+            DockerMuthurCommand, "is_running", new=AsyncMock(return_value=False)
+        ),
     ):
         await coresys.muthurcommand.core.start()
     run.assert_not_called()
