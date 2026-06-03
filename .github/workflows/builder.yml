@@ -91,7 +91,7 @@ jobs:
       - name: Get build matrix
         id: matrix
         if: github.actor != 'nektos/act'
-        uses: muthur-command/builder/actions/prepare-multi-arch-matrix@2026.05.0
+        uses: muthur-command/builder/actions/prepare-multi-arch-matrix@2026.06.2
         with:
           architectures: ${{ env.ARCHITECTURES }}
           image-name: ${{ env.IMAGE_NAME }}
@@ -286,7 +286,7 @@ jobs:
           cosign sign-blob --yes rootfs/supervisor.sha256 --bundle rootfs/supervisor.sha256.sig
 
       - name: Build supervisor
-        uses: muthur-command/builder/actions/build-image@2026.05.0
+        uses: muthur-command/builder/actions/build-image@2026.06.2
         with:
           arch: ${{ matrix.arch }}
           container-registry-password: ${{ secrets.GITHUB_TOKEN }}
@@ -309,7 +309,7 @@ jobs:
       packages: write
     steps:
       - name: Publish multi-arch manifest
-        uses: muthur-command/builder/actions/publish-multi-arch-manifest@2026.05.0
+        uses: muthur-command/builder/actions/publish-multi-arch-manifest@2026.06.2
         with:
           architectures: ${{ env.ARCHITECTURES }}
           container-registry-password: ${{ secrets.GITHUB_TOKEN }}
@@ -363,7 +363,7 @@ jobs:
   #     # Build the Supervisor for non-publish runs (e.g. PRs)
   #     - name: Build the Supervisor
   #       if: needs.init.outputs.publish != 'true'
-  #       uses: muthur-command/builder/actions/build-image@2026.05.0
+  #       uses: muthur-command/builder/actions/build-image@2026.06.2
   #       with:
   #         arch: amd64
   #         container-registry-password: ${{ secrets.GITHUB_TOKEN }}
