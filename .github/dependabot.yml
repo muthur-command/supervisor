@@ -19,3 +19,6 @@ updates:
     muthur-command-builder:
       patterns:
         - "muthur-command/builder*"
+    muthur-command-wheels:
+      patterns:
+        - "muthur-command/wheels*"
