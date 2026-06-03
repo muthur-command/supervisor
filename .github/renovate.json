@@ -1,0 +1,36 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "enabledManagers": ["custom.regex"],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "fileMatch": ["^Dockerfile$"],
+      "matchStrings": [
+        "ARG BUILD_FROM=ghcr\\.io/muthur-command/base-python:(?<currentValue>[^\\s]+)"
+      ],
+      "datasourceTemplate": "docker",
+      "packageNameTemplate": "muthur-command/base-python",
+      "registryUrlTemplate": "https://ghcr.io"
+    },
+    {
+      "customType": "regex",
+      "fileMatch": ["^\\.github/workflows/builder\\.yml$"],
+      "matchStrings": [
+        "cosign-base-verify: ghcr\\.io/muthur-command/base-python:(?<currentValue>[^\\s]+)"
+      ],
+      "datasourceTemplate": "docker",
+      "packageNameTemplate": "muthur-command/base-python",
+      "registryUrlTemplate": "https://ghcr.io"
+    }
+  ],
+  "packageRules": [
+    {
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["muthur-command/base-python"],
+      "groupName": "base-python",
+      "commitMessageTopic": "muthur-command/base-python image",
+      "commitMessageExtra": "to {{newVersion}}",
+      "versioning": "loose"
+    }
+  ]
+}
