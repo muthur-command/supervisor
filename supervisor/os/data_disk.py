@@ -19,8 +19,8 @@ from ..exceptions import (
     DBusObjectError,
     HostError,
     McosDataDiskError,
-    McosOsError,
     McosJobError,
+    McosOsError,
 )
 from ..jobs.const import JobConcurrency, JobCondition
 from ..jobs.decorator import Job

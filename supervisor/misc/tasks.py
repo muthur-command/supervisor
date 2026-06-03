@@ -22,7 +22,7 @@ from ..exceptions import (
 )
 from ..jobs.const import JobConcurrency
 from ..jobs.decorator import Job, JobCondition
-from ..muthurcommand.const import LANDINGPAGE, WSType, is_landingpage
+from ..muthurcommand.const import WSType, is_landingpage
 from ..plugins.const import PLUGIN_UPDATE_CONDITIONS
 from ..utils.dt import utcnow
 from ..utils.sentry import async_capture_exception

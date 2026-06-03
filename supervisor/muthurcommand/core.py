@@ -39,12 +39,12 @@ from ..resolution.const import ContextType, IssueType
 from ..utils.sentry import async_capture_exception
 from .const import (
     LANDINGPAGE,
-    is_landingpage,
     SAFE_MODE_FILENAME,
     WATCHDOG_MAX_ATTEMPTS,
     WATCHDOG_RETRY_SECONDS,
     WATCHDOG_THROTTLE_MAX_CALLS,
     WATCHDOG_THROTTLE_PERIOD,
+    is_landingpage,
 )
 
 _LOGGER: logging.Logger = logging.getLogger(__name__)
