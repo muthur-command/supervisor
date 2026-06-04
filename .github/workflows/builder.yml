@@ -291,7 +291,7 @@ jobs:
           arch: ${{ matrix.arch }}
           container-registry-password: ${{ secrets.GITHUB_TOKEN }}
           cosign-base-identity: 'https://github.com/muthur-command/docker-base/.*'
-          cosign-base-verify: ghcr.io/muthur-command/base-python:3.14-alpine3.23-2026.06.0
+          cosign-base-verify: ghcr.io/muthur-command/base-python:3.14-alpine3.23-2026.06.2
           image: ${{ matrix.image }}
           image-tags: |
             ${{ needs.init.outputs.version }}
