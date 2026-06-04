@@ -11,6 +11,7 @@ import urllib3
 
 from supervisor.addons.addon import Addon
 from supervisor.api import RestAPI
+from supervisor.api.middleware.security import SecurityMiddleware
 from supervisor.const import ROLE_ALL, CoreState
 from supervisor.coresys import CoreSys
 
@@ -23,9 +24,18 @@ async def mock_handler(request):
 
 
 def _register_mock_routes(app: web.Application) -> None:
-    """Register catch-all routes for middleware-only API tests."""
-    for method in ("GET", "POST", "DELETE", "PUT", "PATCH"):
-        app.router.add_route(method, "/{path:.+}", mock_handler)
+    """Register catch-all routes so aiohttp can dispatch requests."""
+    app.router.add_route("*", "/{path:.*}", mock_handler)
+
+
+def _token_validation_mock_middleware(security: SecurityMiddleware):
+    """Wrap token_validation to always hit mock_handler, not production routes."""
+
+    @web.middleware
+    async def token_validation_mock(request: web.Request, handler):
+        return await security.token_validation(request, mock_handler)
+
+    return token_validation_mock
 
 
 @pytest.fixture
@@ -47,12 +57,11 @@ async def api_system(aiohttp_client, coresys: CoreSys) -> TestClient:
 @pytest.fixture
 async def api_token_validation(aiohttp_client, coresys: CoreSys) -> TestClient:
     """Fixture for RestAPI client with token validation middleware."""
-    api = RestAPI(coresys)
-    api.webapp = web.Application()
-    api.webapp.middlewares.append(api.security.token_validation)
-    _register_mock_routes(api.webapp)
+    security = SecurityMiddleware(coresys)
+    app = web.Application(middlewares=[_token_validation_mock_middleware(security)])
+    _register_mock_routes(app)
 
-    return await aiohttp_client(api.webapp)
+    return await aiohttp_client(app)
 
 
 @pytest.fixture(name="plugin_tokens")
