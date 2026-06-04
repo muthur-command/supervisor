@@ -10,6 +10,7 @@ from sys import version_info as systemversion
 from typing import Any, NotRequired, Self, TypedDict
 
 from aiohttp import __version__ as aiohttpversion
+from aiohttp.web import RequestKey
 
 SUPERVISOR_VERSION = "9999.09.9.dev9999"
 SERVER_SOFTWARE = (
@@ -140,7 +141,7 @@ ENV_SUPERVISOR_MACHINE = "SUPERVISOR_MACHINE"
 ENV_SUPERVISOR_SHARE = "SUPERVISOR_SHARE"
 ENV_SUPERVISOR_CPU_RT = "SUPERVISOR_CPU_RT"
 
-REQUEST_FROM = "MCOS_FROM"
+REQUEST_FROM: RequestKey[Any] = RequestKey("MCOS_FROM", Any)
 
 ATTR_ACCESS_TOKEN = "access_token"
 ATTR_ACCESSPOINTS = "accesspoints"
