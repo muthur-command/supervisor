@@ -22,6 +22,12 @@ async def mock_handler(request):
     return web.Response(text="OK")
 
 
+def _register_mock_routes(app: web.Application) -> None:
+    """Register catch-all routes for middleware-only API tests."""
+    for method in ("GET", "POST", "DELETE", "PUT", "PATCH"):
+        app.router.add_route(method, "/{path:.+}", mock_handler)
+
+
 @pytest.fixture
 async def api_system(aiohttp_client, coresys: CoreSys) -> TestClient:
     """Fixture for RestAPI client."""
@@ -33,9 +39,9 @@ async def api_system(aiohttp_client, coresys: CoreSys) -> TestClient:
 
     api.webapp.middlewares.append(api.security.block_bad_requests)
     api.webapp.middlewares.append(api.security.system_validation)
-    api.webapp.router.add_get("/{all:.*}", mock_handler)
+    _register_mock_routes(api.webapp)
 
-    yield await aiohttp_client(api.webapp)
+    return await aiohttp_client(api.webapp)
 
 
 @pytest.fixture
@@ -43,16 +49,10 @@ async def api_token_validation(aiohttp_client, coresys: CoreSys) -> TestClient:
     """Fixture for RestAPI client with token validation middleware."""
     api = RestAPI(coresys)
     api.webapp = web.Application()
-    with patch("supervisor.docker.supervisor.os") as os:
-        os.environ = {"SUPERVISOR_NAME": "mcos_supervisor"}
-        await api.start()
-
     api.webapp.middlewares.append(api.security.token_validation)
-    api.webapp.router.add_get("/{all:.*}", mock_handler)
-    api.webapp.router.add_post("/{all:.*}", mock_handler)
-    api.webapp.router.add_delete("/{all:.*}", mock_handler)
+    _register_mock_routes(api.webapp)
 
-    yield await aiohttp_client(api.webapp)
+    return await aiohttp_client(api.webapp)
 
 
 @pytest.fixture(name="plugin_tokens")
