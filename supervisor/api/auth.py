@@ -1,15 +1,13 @@
 """Init file for Supervisor auth/SSO RESTful API."""
 
 import asyncio
-from collections.abc import Awaitable
+from collections.abc import Awaitable, Mapping
 import logging
 from typing import Any, cast
 
 from aiohttp import BasicAuth, web
 from aiohttp.hdrs import AUTHORIZATION, CONTENT_TYPE, WWW_AUTHENTICATE
-from aiohttp.web import FileField
 from aiohttp.web_exceptions import HTTPUnauthorized
-from multidict import MultiDictProxy
 import voluptuous as vol
 
 from ..addons.addon import Addon
@@ -59,7 +57,7 @@ class APIAuth(CoreSysAttributes):
         self,
         request: web.Request,
         addon: Addon,
-        data: dict[str, Any] | MultiDictProxy[str | bytes | FileField],
+        data: Mapping[str, Any],
     ) -> Awaitable[bool]:
         """Process login with dict data.
 
