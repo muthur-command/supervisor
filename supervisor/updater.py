@@ -31,6 +31,7 @@ from .const import (
     URL_MCOS_VERSION,
     BusEvent,
     UpdateChannel,
+    VALID_API_STATES,
 )
 from .coresys import CoreSys, CoreSysAttributes
 from .docker.const import ContainerState
@@ -368,7 +369,8 @@ class Updater(FileConfiguration, CoreSysAttributes):
         if not await self.sys_plugins.dns.is_running():
             return
 
-        await self.coresys.init_websession()
+        if self.coresys.core.state not in VALID_API_STATES:
+            await self.coresys.init_websession()
         await self.reload()
 
     @Job(

@@ -202,15 +202,14 @@ class Core(CoreSysAttributes):
                 await async_capture_exception(err)
 
     async def _refresh_updater_after_dns(self) -> None:
-        """Fetch version.json after the DNS plugin and websession are ready."""
+        """Fetch version.json after the DNS plugin is ready."""
         dns = self.sys_plugins.dns
         if not await dns.is_running():
             with suppress(CoreDNSError):
                 await dns.start()
 
-        if await dns.is_running():
-            await self.coresys.init_websession()
-
+        # DNS plugin.load() already reinitialized the websession during setup (#5857).
+        # Re-init is unsafe once CoreState is STARTUP or later (#5851).
         await self.sys_updater.reload()
 
     async def start(self) -> None:
