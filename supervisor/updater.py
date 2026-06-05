@@ -1,7 +1,6 @@
 """Fetch last versions from webserver."""
 
 import asyncio
-from contextlib import suppress
 from datetime import timedelta
 import json
 import logging
@@ -10,8 +9,6 @@ import aiohttp
 from awesomeversion import AwesomeVersion
 
 from .bus import EventListener
-from .docker.const import ContainerState
-from .docker.monitor import DockerContainerStateEvent
 from .const import (
     ATTR_AUDIO,
     ATTR_AUTO_UPDATE,
@@ -36,6 +33,8 @@ from .const import (
     UpdateChannel,
 )
 from .coresys import CoreSys, CoreSysAttributes
+from .docker.const import ContainerState
+from .docker.monitor import DockerContainerStateEvent
 from .exceptions import UpdaterError, UpdaterJobError
 from .jobs.const import JobConcurrency, JobThrottle
 from .jobs.decorator import Job, JobCondition
@@ -82,9 +81,7 @@ class Updater(FileConfiguration, CoreSysAttributes):
             self._fetch_retry_pending = False
             self._clear_retry_listeners()
         except UpdaterError:
-            _LOGGER.warning(
-                "Version fetch failed, will retry when DNS is ready"
-            )
+            _LOGGER.warning("Version fetch failed, will retry when DNS is ready")
             self._schedule_fetch_retry()
 
     @property

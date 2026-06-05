@@ -10,7 +10,7 @@ import pytest
 from supervisor.const import ATTR_MCOS_UNRESTRICTED, BusEvent
 from supervisor.coresys import CoreSys
 from supervisor.dbus.const import ConnectivityState
-from supervisor.exceptions import UpdaterJobError
+from supervisor.exceptions import UpdaterError, UpdaterJobError
 from supervisor.jobs import SupervisorJob
 from supervisor.resolution.const import UnsupportedReason
 from supervisor.utils.version_image_template import format_version_image_template
@@ -178,9 +178,7 @@ async def test_load_schedules_fetch_retry_when_os_board_without_version(
     coresys.os._board = "rpi4-64"  # pylint: disable=protected-access
     coresys.security.force = True
 
-    with patch.object(
-        coresys.updater, "_schedule_fetch_retry"
-    ) as mock_schedule:
+    with patch.object(coresys.updater, "_schedule_fetch_retry") as mock_schedule:
         await coresys.updater.load()
         mock_schedule.assert_called_once()
 
@@ -228,12 +226,8 @@ async def test_reload_fetch_failure_schedules_dns_retry(
     with patch.object(
         coresys.updater, "fetch_data", new_callable=AsyncMock
     ) as mock_fetch:
-        from supervisor.exceptions import UpdaterError
-
         mock_fetch.side_effect = UpdaterError("timeout")
-        with patch.object(
-            coresys.updater, "_schedule_fetch_retry"
-        ) as mock_schedule:
+        with patch.object(coresys.updater, "_schedule_fetch_retry") as mock_schedule:
             await coresys.updater.reload()
             mock_schedule.assert_called_once()
 
