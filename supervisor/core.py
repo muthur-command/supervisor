@@ -18,6 +18,7 @@ from .const import (
 from .coresys import CoreSys, CoreSysAttributes
 from .dbus.const import StopUnitMode, UnitActiveState
 from .exceptions import (
+    CoreDNSError,
     McosRuntimeError,
     MCStackError,
     MuthurCommandCrashError,
@@ -200,6 +201,18 @@ class Core(CoreSysAttributes):
                 self.sys_resolution.add_unhealthy_reason(UnhealthyReason.SETUP)
                 await async_capture_exception(err)
 
+    async def _refresh_updater_after_dns(self) -> None:
+        """Fetch version.json after the DNS plugin and websession are ready."""
+        dns = self.sys_plugins.dns
+        if not await dns.is_running():
+            with suppress(CoreDNSError):
+                await dns.start()
+
+        if await dns.is_running():
+            await self.coresys.init_websession()
+
+        await self.sys_updater.reload()
+
     async def start(self) -> None:
         """Start Supervisor orchestration."""
         await self.set_state(CoreState.STARTUP)
@@ -225,8 +238,8 @@ class Core(CoreSysAttributes):
         # Mark booted partition as healthy
         await self.sys_os.mark_healthy()
 
-        # Refresh update information
-        await self.sys_updater.reload()
+        # Refresh version metadata after DNS is up and aiohttp uses CoreDNS (#5857).
+        await self._refresh_updater_after_dns()
 
         # On release channel, try update itself if auto update enabled
         if self.sys_supervisor.need_update and self.sys_updater.auto_update:

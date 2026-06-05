@@ -1,5 +1,6 @@
 """Fetch last versions from webserver."""
 
+import asyncio
 from contextlib import suppress
 from datetime import timedelta
 import json
@@ -9,6 +10,8 @@ import aiohttp
 from awesomeversion import AwesomeVersion
 
 from .bus import EventListener
+from .docker.const import ContainerState
+from .docker.monitor import DockerContainerStateEvent
 from .const import (
     ATTR_AUDIO,
     ATTR_AUTO_UPDATE,
@@ -51,6 +54,8 @@ class Updater(FileConfiguration, CoreSysAttributes):
         super().__init__(FILE_MCOS_UPDATER, SCHEMA_UPDATER_CONFIG)
         self.coresys = coresys
         self._connectivity_listener: EventListener | None = None
+        self._dns_retry_listener: EventListener | None = None
+        self._fetch_retry_pending: bool = False
 
     async def load(self) -> None:
         """Update internal data."""
@@ -59,24 +64,28 @@ class Updater(FileConfiguration, CoreSysAttributes):
         # if the operating system version is supported.
         if self.sys_os.board and self.version_mcos_unrestricted is None:
             _LOGGER.info(
-                "No OS update information found, force refreshing updater information"
+                "No OS update information in updater cache, "
+                "will refresh after DNS is ready"
             )
-            await self.reload()
+            self._schedule_fetch_retry()
 
     async def reload(self) -> None:
         """Update internal data."""
         # If there's no connectivity, delay initial version fetch
         if not self.sys_supervisor.connectivity:
-            _LOGGER.debug("No Supervisor connectivity, delaying version fetch")
-            if not self._connectivity_listener:
-                self._connectivity_listener = self.sys_bus.register_event(
-                    BusEvent.SUPERVISOR_CONNECTIVITY_CHANGE, self._check_connectivity
-                )
             _LOGGER.info("No Supervisor connectivity, delaying version fetch")
+            self._schedule_fetch_retry()
             return
 
-        with suppress(UpdaterError):
+        try:
             await self.fetch_data()
+            self._fetch_retry_pending = False
+            self._clear_retry_listeners()
+        except UpdaterError:
+            _LOGGER.warning(
+                "Version fetch failed, will retry when DNS is ready"
+            )
+            self._schedule_fetch_retry()
 
     @property
     def version_muthurcommand(self) -> AwesomeVersion | None:
@@ -304,10 +313,66 @@ class Updater(FileConfiguration, CoreSysAttributes):
         """Set Supervisor auto updates enabled."""
         self._data[ATTR_AUTO_UPDATE] = value
 
-    async def _check_connectivity(self, connectivity: bool):
+    async def _check_connectivity(self, connectivity: bool) -> None:
         """Fetch data once connectivity is true."""
         if connectivity:
             await self.reload()
+
+    def _schedule_fetch_retry(self) -> None:
+        """Register retry hooks and attempt fetch once DNS is running."""
+        was_pending = self._fetch_retry_pending
+        self._fetch_retry_pending = True
+        self._ensure_retry_listeners()
+        if not was_pending:
+            self.sys_create_task(self._try_fetch_when_dns_ready())
+
+    def _ensure_retry_listeners(self) -> None:
+        """Listen for connectivity and DNS container start to retry version fetch."""
+        if not self._connectivity_listener:
+            self._connectivity_listener = self.sys_bus.register_event(
+                BusEvent.SUPERVISOR_CONNECTIVITY_CHANGE, self._check_connectivity
+            )
+        if not self._dns_retry_listener:
+            self._dns_retry_listener = self.sys_bus.register_event(
+                BusEvent.DOCKER_CONTAINER_STATE_CHANGE,
+                self._on_dns_container_state_for_fetch,
+            )
+
+    def _clear_retry_listeners(self) -> None:
+        """Remove pending-fetch listeners after a successful version fetch."""
+        if self._connectivity_listener:
+            self.sys_bus.remove_listener(self._connectivity_listener)
+            self._connectivity_listener = None
+        if self._dns_retry_listener:
+            self.sys_bus.remove_listener(self._dns_retry_listener)
+            self._dns_retry_listener = None
+
+    async def _on_dns_container_state_for_fetch(
+        self, event: DockerContainerStateEvent
+    ) -> None:
+        """Retry version fetch when the DNS plugin container becomes healthy."""
+        if not self._fetch_retry_pending:
+            return
+        if event.name != self.sys_plugins.dns.instance.name:
+            return
+        if event.state != ContainerState.RUNNING:
+            return
+
+        # Brief pause so CoreDNS accepts queries before we hit version.muthur-command.com
+        await asyncio.sleep(2)
+        await self._try_fetch_when_dns_ready()
+
+    async def _try_fetch_when_dns_ready(self) -> None:
+        """Attempt an online version fetch after DNS and connectivity are available."""
+        if not self._fetch_retry_pending:
+            return
+        if not self.sys_supervisor.connectivity:
+            return
+        if not await self.sys_plugins.dns.is_running():
+            return
+
+        await self.coresys.init_websession()
+        await self.reload()
 
     @Job(
         name="updater_fetch_data",
@@ -348,10 +413,9 @@ class Updater(FileConfiguration, CoreSysAttributes):
                 _LOGGER.warning,
             ) from err
 
-        # Fetch was successful. If there's a connectivity listener, time to remove it
-        if self._connectivity_listener:
-            self.sys_bus.remove_listener(self._connectivity_listener)
-            self._connectivity_listener = None
+        # Fetch was successful — drop any pending-fetch listeners.
+        self._fetch_retry_pending = False
+        self._clear_retry_listeners()
 
         # Parse data
         try:

@@ -170,18 +170,19 @@ async def test_delayed_fetch_for_connectivity(
 
 
 @pytest.mark.usefixtures("no_job_throttle")
-async def test_load_calls_reload_when_os_board_without_version(
+async def test_load_schedules_fetch_retry_when_os_board_without_version(
     coresys: CoreSys, mock_update_data: MockResponse, supervisor_internet: AsyncMock
 ) -> None:
-    """Test load calls reload when OS board exists but no version_mcos_unrestricted."""
+    """Test load defers version fetch when OS board exists but no mcos_unrestricted."""
     # Set up OS board but no version data
     coresys.os._board = "rpi4-64"  # pylint: disable=protected-access
     coresys.security.force = True
 
-    # Mock reload to verify it gets called
-    with patch.object(coresys.updater, "reload", new_callable=AsyncMock) as mock_reload:
+    with patch.object(
+        coresys.updater, "_schedule_fetch_retry"
+    ) as mock_schedule:
         await coresys.updater.load()
-        mock_reload.assert_called_once()
+        mock_schedule.assert_called_once()
 
 
 @pytest.mark.usefixtures("no_job_throttle")
@@ -215,6 +216,26 @@ async def test_load_skips_reload_when_no_os_board(
     with patch.object(coresys.updater, "reload", new_callable=AsyncMock) as mock_reload:
         await coresys.updater.load()
         mock_reload.assert_not_called()
+
+
+@pytest.mark.usefixtures("no_job_throttle")
+async def test_reload_fetch_failure_schedules_dns_retry(
+    coresys: CoreSys, supervisor_internet: AsyncMock
+) -> None:
+    """A failed online fetch registers DNS/connectivity retry hooks."""
+    coresys.security.force = True
+
+    with patch.object(
+        coresys.updater, "fetch_data", new_callable=AsyncMock
+    ) as mock_fetch:
+        from supervisor.exceptions import UpdaterError
+
+        mock_fetch.side_effect = UpdaterError("timeout")
+        with patch.object(
+            coresys.updater, "_schedule_fetch_retry"
+        ) as mock_schedule:
+            await coresys.updater.reload()
+            mock_schedule.assert_called_once()
 
 
 async def test_fetch_data_no_update_when_os_unsupported(
