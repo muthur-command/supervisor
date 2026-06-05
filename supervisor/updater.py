@@ -29,9 +29,9 @@ from .const import (
     ATTR_SUPERVISOR,
     FILE_MCOS_UPDATER,
     URL_MCOS_VERSION,
+    VALID_API_STATES,
     BusEvent,
     UpdateChannel,
-    VALID_API_STATES,
 )
 from .coresys import CoreSys, CoreSysAttributes
 from .docker.const import ContainerState
