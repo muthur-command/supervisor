@@ -25,10 +25,12 @@ from contextlib import suppress
 from dataclasses import dataclass
 from datetime import timedelta
 from enum import StrEnum
-import logging
+from http import HTTPStatus
 from ipaddress import IPv4Address
+import logging
 from typing import Any, Final
 
+import aiodocker
 import aiohttp
 from awesomeversion import AwesomeVersion, AwesomeVersionException
 
@@ -237,6 +239,21 @@ class MCStack(CoreSysAttributes):
 
         await self.sync_dns()
 
+    async def inspect_container(
+        self, inst: DockerInterface
+    ) -> dict[str, Any] | None:
+        """Return Docker inspect metadata for a stack container."""
+        try:
+            container = await self.sys_docker.containers.get(inst.name)
+            return await container.show()
+        except aiodocker.DockerError as err:
+            if err.status == HTTPStatus.NOT_FOUND:
+                return None
+            raise DockerError(
+                f"Failed to inspect MC stack container {inst.name}: {err!s}",
+                _LOGGER.error,
+            ) from err
+
     async def sync_dns(self) -> None:
         """Publish MC stack aliases into CoreDNS ``hosts`` (like add-ons).
 
@@ -256,7 +273,8 @@ class MCStack(CoreSysAttributes):
         for inst, aliases in registry:
             if not await inst.is_running():
                 continue
-            ip = mc_stack_container_ip(inst._meta)  # pylint: disable=protected-access
+            metadata = await self.inspect_container(inst)
+            ip = mc_stack_container_ip(metadata)
             if not ip:
                 continue
             add_host_coros.append(
@@ -283,10 +301,7 @@ class MCStack(CoreSysAttributes):
         """
         entries: list[tuple[dict[str, Any] | None, tuple[str, ...]]] = []
         for inst, aliases in dependencies:
-            metadata = inst._meta  # pylint: disable=protected-access
-            if not metadata:
-                metadata = await inst._get_container()
-            entries.append((metadata, aliases))
+            entries.append((await self.inspect_container(inst), aliases))
         return mc_stack_alias_hosts(*entries)
 
     async def start(self) -> None:
@@ -543,10 +558,16 @@ class MCStack(CoreSysAttributes):
         """
         db = MC_POSTGRES_DEFAULT_DB
         user = MC_POSTGRES_DEFAULT_USER
+        if db != "mc" or user != "postgres":
+            raise MCStackStartupError(
+                f"Unsupported MC stack PostgreSQL defaults: db={db!r} user={user!r}",
+                _LOGGER.error,
+            )
+
         try:
             check = await self.postgres.run_inside(
-                f"psql -U {user} -tc "
-                f"\"SELECT 1 FROM pg_database WHERE datname = '{db}'\""
+                'psql -U postgres -tc '
+                '"SELECT 1 FROM pg_database WHERE datname = \'mc\'"'
             )
         except DockerError as err:
             raise MCStackStartupError(
@@ -560,7 +581,7 @@ class MCStack(CoreSysAttributes):
         _LOGGER.info("MC stack: creating PostgreSQL database %s", db)
         try:
             create = await self.postgres.run_inside(
-                f'psql -U {user} -c "CREATE DATABASE {db};"'
+                'psql -U postgres -c "CREATE DATABASE mc;"'
             )
         except DockerError as err:
             raise MCStackStartupError(

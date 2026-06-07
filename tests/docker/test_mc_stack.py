@@ -17,8 +17,8 @@ These tests cover the documented stage-3 deliverables:
 
 from __future__ import annotations
 
-from typing import Any
 from ipaddress import IPv4Address
+from typing import Any
 from unittest.mock import ANY, AsyncMock, patch
 
 from awesomeversion import AwesomeVersion
@@ -170,16 +170,24 @@ async def test_docker_mc_backend_run(coresys: CoreSys) -> None:
         "mc_redis": IPv4Address("172.30.1.2"),
         "mc-redis": IPv4Address("172.30.1.2"),
     }
-    coresys.mc_stack.postgres._meta = {  # pylint: disable=protected-access
+    postgres_meta = {
         "NetworkSettings": {"Networks": {"mcos": {"IPAddress": "172.30.1.1"}}}
     }
-    coresys.mc_stack.redis._meta = {  # pylint: disable=protected-access
+    redis_meta = {
         "NetworkSettings": {"Networks": {"mcos": {"IPAddress": "172.30.1.2"}}}
     }
+
+    async def fake_inspect(inst: DockerInterface) -> dict[str, Any] | None:
+        if inst is coresys.mc_stack.postgres:
+            return postgres_meta
+        if inst is coresys.mc_stack.redis:
+            return redis_meta
+        return None
 
     with (
         patch.object(DockerMcBackend, "is_running", new=AsyncMock(return_value=False)),
         patch.object(DockerMcBackend, "stop", new=AsyncMock()),
+        patch.object(coresys.mc_stack, "inspect_container", side_effect=fake_inspect),
         patch.object(
             coresys.mc_stack,
             "dependency_extra_hosts",

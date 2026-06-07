@@ -20,6 +20,7 @@ from __future__ import annotations
 import inspect
 from ipaddress import IPv4Address
 from pathlib import Path
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import aiohttp
@@ -30,6 +31,7 @@ from supervisor import bootstrap
 from supervisor.const import CoreState
 from supervisor.coresys import CoreSys
 from supervisor.docker.const import ContainerState
+from supervisor.docker.interface import DockerInterface
 from supervisor.docker.mc_backend import DockerMcBackend
 from supervisor.docker.mc_frontend import DockerMcFrontend
 from supervisor.docker.mc_postgres import DockerMcPostgres
@@ -676,12 +678,18 @@ async def test_mc_stack_options_rejects_invalid_payload(
 async def test_mc_stack_sync_dns_registers_running_aliases(coresys: CoreSys) -> None:
     """Running stack containers are published to plugin-dns hosts."""
     stack = coresys.mc_stack
-    stack.redis._meta = {  # pylint: disable=protected-access
+    redis_meta = {
         "NetworkSettings": {"Networks": {"mcos": {"IPAddress": "172.30.232.4"}}}
     }
 
+    async def fake_inspect(inst: DockerInterface) -> dict[str, Any] | None:
+        if inst is stack.redis:
+            return redis_meta
+        return None
+
     with (
         patch.object(DockerMcRedis, "is_running", new=AsyncMock(return_value=True)),
+        patch.object(stack, "inspect_container", side_effect=fake_inspect),
         patch.object(
             type(coresys.plugins.dns), "add_host", new=AsyncMock()
         ) as add_host,
@@ -703,17 +711,25 @@ async def test_mc_stack_sync_dns_registers_running_aliases(coresys: CoreSys) -> 
 async def test_mc_stack_dependency_extra_hosts(coresys: CoreSys) -> None:
     """``dependency_extra_hosts`` maps stack aliases to dependency IPs."""
     stack = coresys.mc_stack
-    stack.postgres._meta = {  # pylint: disable=protected-access
+    postgres_meta = {
         "NetworkSettings": {"Networks": {"mcos": {"IPAddress": "172.30.1.1"}}}
     }
-    stack.redis._meta = {  # pylint: disable=protected-access
+    redis_meta = {
         "NetworkSettings": {"Networks": {"mcos": {"IPAddress": "172.30.1.2"}}}
     }
 
-    hosts = await stack.dependency_extra_hosts(
-        (stack.postgres, ("mc_postgres", "mc-postgres")),
-        (stack.redis, ("mc_redis", "mc-redis")),
-    )
+    async def fake_inspect(inst: DockerMcPostgres | DockerMcRedis) -> dict:
+        if inst is stack.postgres:
+            return postgres_meta
+        if inst is stack.redis:
+            return redis_meta
+        return {}
+
+    with patch.object(stack, "inspect_container", side_effect=fake_inspect):
+        hosts = await stack.dependency_extra_hosts(
+            (stack.postgres, ("mc_postgres", "mc-postgres")),
+            (stack.redis, ("mc_redis", "mc-redis")),
+        )
 
     assert hosts == {
         "mc_postgres": IPv4Address("172.30.1.1"),

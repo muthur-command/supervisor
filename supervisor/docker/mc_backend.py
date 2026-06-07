@@ -116,14 +116,10 @@ class DockerMcBackend(DockerInterface, CoreSysAttributes):
             (self.sys_mc_stack.postgres, "DATABASE_HOST", "mc_postgres"),
             (self.sys_mc_stack.redis, "REDIS_HOST", "mc_redis"),
         ):
-            metadata = inst._meta  # pylint: disable=protected-access
-            if not metadata:
-                metadata = await inst._get_container()
+            metadata = await self.sys_mc_stack.inspect_container(inst)
             if ip := mc_stack_container_ip(metadata):
                 env[host_key] = str(ip)
-                _LOGGER.debug(
-                    "mc_bd %s resolved to %s (alias %s)", host_key, ip, alias
-                )
+                _LOGGER.debug("mc_bd %s resolved to %s (alias %s)", host_key, ip, alias)
         return env
 
     @property

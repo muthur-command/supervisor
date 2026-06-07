@@ -361,6 +361,12 @@ class DockerInterface(JobGroup, ABC):
                 f"Docker API error occurred while getting container information: {err!s}"
             ) from err
 
+    async def container_metadata(self) -> dict[str, Any] | None:
+        """Return cached attach metadata or fetch a live inspect payload."""
+        if self._meta:
+            return self._meta
+        return await self._get_container()
+
     async def is_running(self) -> bool:
         """Return True if Docker is running."""
         return bool(
