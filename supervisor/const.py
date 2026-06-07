@@ -36,7 +36,8 @@ MC_FRONTEND_DOCKER_NAME: str = f"{DOCKER_PREFIX}_mc_fd"
 
 # MC stack defaults (must match mc_bd / mc_fd build expectations).
 MC_POSTGRES_DEFAULT_USER: str = "postgres"
-MC_POSTGRES_DEFAULT_DB: str = "postgres"
+# mc_bd uses ``DATABASE_SCHEMA`` (default ``mc``) as the PostgreSQL database name.
+MC_POSTGRES_DEFAULT_DB: str = "mc"
 MC_POSTGRES_PORT: int = 5432
 MC_REDIS_PORT: int = 6379
 MC_BACKEND_PORT: int = 8001

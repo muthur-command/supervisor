@@ -9,7 +9,8 @@ defaults here keeps the four ``Docker*`` classes from drifting apart.
 
 from __future__ import annotations
 
-from typing import Final
+from ipaddress import IPv4Address
+from typing import Any, Final
 
 from ..const import (
     DOCKER_NETWORK,
@@ -20,6 +21,12 @@ from ..const import (
     MC_STACK_NAME,
 )
 from .const import RestartPolicy
+
+# DNS names exposed on the ``mcos`` network (underscore + hyphen variants).
+MC_POSTGRES_DNS_ALIASES: Final[tuple[str, ...]] = ("mc_postgres", "mc-postgres")
+MC_REDIS_DNS_ALIASES: Final[tuple[str, ...]] = ("mc_redis", "mc-redis")
+MC_BACKEND_DNS_ALIASES: Final[tuple[str, ...]] = ("mc_bd", "mc-bd")
+MC_FRONTEND_DNS_ALIASES: Final[tuple[str, ...]] = ("mc_fd", "mc-fd")
 
 # All stack containers should auto-restart with the daemon but respect a
 # manual ``docker stop`` (so Supervisor's ``MCStack.stop`` truly stops
@@ -55,3 +62,15 @@ def mc_stack_networking_config(*aliases: str) -> dict[str, dict[str, dict]]:
             DOCKER_NETWORK: {"Aliases": list(aliases)},
         }
     }
+
+
+def mc_stack_container_ip(metadata: dict[str, Any] | None) -> IPv4Address | None:
+    """Return the container IPv4 on the ``mcos`` network, if attached."""
+    if not metadata:
+        return None
+    try:
+        return IPv4Address(
+            metadata["NetworkSettings"]["Networks"][DOCKER_NETWORK]["IPAddress"]
+        )
+    except (KeyError, TypeError, ValueError):
+        return None

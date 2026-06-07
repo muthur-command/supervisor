@@ -31,7 +31,13 @@ from typing import Final
 import aiohttp
 from awesomeversion import AwesomeVersion, AwesomeVersionException
 
-from ..const import MC_BACKEND_HEALTH_PATH, MC_BACKEND_PORT, MC_FRONTEND_PORT
+from ..const import (
+    MC_BACKEND_HEALTH_PATH,
+    MC_BACKEND_PORT,
+    MC_FRONTEND_PORT,
+    MC_POSTGRES_DEFAULT_DB,
+    MC_POSTGRES_DEFAULT_USER,
+)
 from ..coresys import CoreSys, CoreSysAttributes
 from ..docker.const import ContainerState
 from ..docker.interface import DockerInterface
@@ -39,7 +45,15 @@ from ..docker.mc_backend import DockerMcBackend
 from ..docker.mc_frontend import DockerMcFrontend
 from ..docker.mc_postgres import DockerMcPostgres
 from ..docker.mc_redis import DockerMcRedis
+from ..docker.mc_stack_base import (
+    MC_BACKEND_DNS_ALIASES,
+    MC_FRONTEND_DNS_ALIASES,
+    MC_POSTGRES_DNS_ALIASES,
+    MC_REDIS_DNS_ALIASES,
+    mc_stack_container_ip,
+)
 from ..exceptions import (
+    CoreDNSError,
     DockerError,
     MCStackError,
     MCStackStartupError,
@@ -219,6 +233,41 @@ class MCStack(CoreSysAttributes):
                     inst.name,
                 )
 
+        await self.sync_dns()
+
+    async def sync_dns(self) -> None:
+        """Publish MC stack aliases into CoreDNS ``hosts`` (like add-ons).
+
+        Docker embedded DNS (127.0.0.11) does not always resolve stack
+        aliases in MCOS/QEMU even when ``resolv.conf`` lists it first.
+        Registering the IPs with plugin-dns makes ``mc_redis`` /
+        ``mc_postgres`` reachable via the CoreDNS nameserver every
+        container already uses.
+        """
+        registry: tuple[tuple[DockerInterface, tuple[str, ...]], ...] = (
+            (self.postgres, MC_POSTGRES_DNS_ALIASES),
+            (self.redis, MC_REDIS_DNS_ALIASES),
+            (self.backend, MC_BACKEND_DNS_ALIASES),
+            (self.frontend, MC_FRONTEND_DNS_ALIASES),
+        )
+        add_host_coros: list[Awaitable[None]] = []
+        for inst, aliases in registry:
+            if not await inst.is_running():
+                continue
+            ip = mc_stack_container_ip(inst._meta)  # pylint: disable=protected-access
+            if not ip:
+                continue
+            add_host_coros.append(
+                self.sys_plugins.dns.add_host(ipv4=ip, names=list(aliases), write=False)
+            )
+
+        if not add_host_coros:
+            return
+
+        await asyncio.gather(*add_host_coros)
+        with suppress(CoreDNSError):
+            await self.sys_plugins.dns.write_hosts()
+
     async def start(self) -> None:
         """Start the four core containers in dependency order.
 
@@ -238,6 +287,7 @@ class MCStack(CoreSysAttributes):
                     timeout=_TIMEOUT_POSTGRES,
                     health=self._check_postgres_ready,
                 )
+                await self._ensure_postgres_database()
                 await self._start_component(
                     self.redis,
                     timeout=_TIMEOUT_REDIS,
@@ -428,6 +478,7 @@ class MCStack(CoreSysAttributes):
                 while True:
                     if await health():
                         _LOGGER.info("MC stack: %s reported healthy", inst.name)
+                        await self.sync_dns()
                         return
                     if await inst.current_state() in (
                         ContainerState.FAILED,
@@ -447,10 +498,52 @@ class MCStack(CoreSysAttributes):
     async def _check_postgres_ready(self) -> bool:
         """Return True if PostgreSQL accepts connections (pg_isready in-container)."""
         try:
-            result = await self.postgres.run_inside("pg_isready -U postgres")
+            result = await self.postgres.run_inside(
+                f"pg_isready -U {MC_POSTGRES_DEFAULT_USER}"
+            )
         except DockerError:
             return False
         return result.exit_code == 0
+
+    async def _ensure_postgres_database(self) -> None:
+        """Create the mc_bd application database when missing.
+
+        Fresh volumes get ``POSTGRES_DB=mc`` at init time. Legacy volumes
+        created with ``POSTGRES_DB=postgres`` only have the default database;
+        create ``mc`` before starting mc_bd so ``create_tables()`` can connect.
+        """
+        db = MC_POSTGRES_DEFAULT_DB
+        user = MC_POSTGRES_DEFAULT_USER
+        try:
+            check = await self.postgres.run_inside(
+                f"psql -U {user} -tc "
+                f"\"SELECT 1 FROM pg_database WHERE datname = '{db}'\""
+            )
+        except DockerError as err:
+            raise MCStackStartupError(
+                f"Failed to inspect PostgreSQL databases: {err!s}",
+                _LOGGER.error,
+            ) from err
+
+        if check.exit_code == 0 and b"1" in check.output:
+            return
+
+        _LOGGER.info("MC stack: creating PostgreSQL database %s", db)
+        try:
+            create = await self.postgres.run_inside(
+                f'psql -U {user} -c "CREATE DATABASE {db};"'
+            )
+        except DockerError as err:
+            raise MCStackStartupError(
+                f"Failed to create PostgreSQL database {db}: {err!s}",
+                _LOGGER.error,
+            ) from err
+
+        if create.exit_code != 0:
+            raise MCStackStartupError(
+                f"CREATE DATABASE {db} failed: {create.output!r}",
+                _LOGGER.error,
+            )
 
     async def _check_redis_ready(self) -> bool:
         """Return True if Redis answers PING."""

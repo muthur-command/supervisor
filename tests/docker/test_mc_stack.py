@@ -181,6 +181,7 @@ async def test_docker_mc_backend_run(coresys: CoreSys) -> None:
     assert env["APP_PORT"] == str(MC_BACKEND_PORT)
     # PostgreSQL password ends up in mc_bd env, must match the secrets store.
     assert env["DATABASE_PASSWORD"] == coresys.mc_stack.secrets.postgres_password
+    assert env["DATABASE_SCHEMA"] == MC_POSTGRES_DEFAULT_DB
     assert kwargs["networking_config"] == {
         "EndpointsConfig": {DOCKER_NETWORK: {"Aliases": ["mc_bd", "mc-bd"]}}
     }

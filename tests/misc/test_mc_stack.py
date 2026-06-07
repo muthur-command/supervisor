@@ -58,7 +58,12 @@ async def test_start_runs_each_component_in_order(coresys: CoreSys) -> None:
     async def record(inst, *, timeout, health):
         order.append(inst.name)
 
-    with patch.object(coresys.mc_stack, "_start_component", side_effect=record):
+    with (
+        patch.object(coresys.mc_stack, "_start_component", side_effect=record),
+        patch.object(
+            coresys.mc_stack, "_ensure_postgres_database", new=AsyncMock()
+        ),
+    ):
         await coresys.mc_stack.start()
 
     assert order == [

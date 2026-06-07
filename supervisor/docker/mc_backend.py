@@ -94,7 +94,7 @@ class DockerMcBackend(DockerInterface, CoreSysAttributes):
             "DATABASE_PORT": str(MC_POSTGRES_PORT),
             "DATABASE_USER": MC_POSTGRES_DEFAULT_USER,
             "DATABASE_PASSWORD": secrets.postgres_password,
-            "DATABASE_NAME": MC_POSTGRES_DEFAULT_DB,
+            "DATABASE_SCHEMA": MC_POSTGRES_DEFAULT_DB,
             "REDIS_HOST": "mc_redis",
             "REDIS_PORT": str(MC_REDIS_PORT),
             "REDIS_PASSWORD": secrets.redis_password,

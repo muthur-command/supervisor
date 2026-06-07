@@ -18,6 +18,7 @@ These cover the parts that were "wired up but not exercised":
 from __future__ import annotations
 
 import inspect
+from ipaddress import IPv4Address
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -320,6 +321,42 @@ async def test_check_postgres_ready_handles_docker_error(
         new=AsyncMock(side_effect=DockerError("boom")),
     ):
         assert await coresys.mc_stack._check_postgres_ready() is False  # noqa: SLF001
+
+
+@pytest.mark.usefixtures("stack_versions")
+async def test_ensure_postgres_database_skips_when_present(
+    coresys: CoreSys,
+) -> None:
+    """No CREATE DATABASE when the mc_bd database already exists."""
+    with patch.object(
+        DockerMcPostgres,
+        "run_inside",
+        new=AsyncMock(return_value=MagicMock(exit_code=0, output=b" 1\n")),
+    ) as run_inside:
+        await coresys.mc_stack._ensure_postgres_database()  # noqa: SLF001
+
+    run_inside.assert_awaited_once()
+
+
+@pytest.mark.usefixtures("stack_versions")
+async def test_ensure_postgres_database_creates_missing_db(
+    coresys: CoreSys,
+) -> None:
+    """Legacy volumes with only ``postgres`` get an ``mc`` database on boot."""
+    with patch.object(
+        DockerMcPostgres,
+        "run_inside",
+        new=AsyncMock(
+            side_effect=[
+                MagicMock(exit_code=0, output=b""),
+                MagicMock(exit_code=0, output=b"CREATE DATABASE\n"),
+            ]
+        ),
+    ) as run_inside:
+        await coresys.mc_stack._ensure_postgres_database()  # noqa: SLF001
+
+    assert run_inside.await_count == 2
+    assert "CREATE DATABASE mc" in run_inside.await_args_list[1].args[0]
 
 
 @pytest.mark.usefixtures("stack_versions")
@@ -628,6 +665,38 @@ async def test_mc_stack_options_rejects_invalid_payload(
         "/mc_stack/options", json={"boot": "definitely-not-a-bool"}
     )
     assert resp.status == 400
+
+
+# ---------------------------------------------------------------------------
+# CoreDNS host registration for stack aliases
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.usefixtures("stack_versions", "tmp_supervisor_data", "path_extern")
+async def test_mc_stack_sync_dns_registers_running_aliases(coresys: CoreSys) -> None:
+    """Running stack containers are published to plugin-dns hosts."""
+    stack = coresys.mc_stack
+    stack.redis._meta = {  # pylint: disable=protected-access
+        "NetworkSettings": {"Networks": {"mcos": {"IPAddress": "172.30.232.4"}}}
+    }
+
+    with (
+        patch.object(DockerMcRedis, "is_running", new=AsyncMock(return_value=True)),
+        patch.object(
+            type(coresys.plugins.dns), "add_host", new=AsyncMock()
+        ) as add_host,
+        patch.object(
+            type(coresys.plugins.dns), "write_hosts", new=AsyncMock()
+        ) as write_hosts,
+    ):
+        await stack.sync_dns()
+
+    add_host.assert_awaited_once_with(
+        ipv4=IPv4Address("172.30.232.4"),
+        names=["mc_redis", "mc-redis"],
+        write=False,
+    )
+    write_hosts.assert_awaited_once()
 
 
 # ---------------------------------------------------------------------------
