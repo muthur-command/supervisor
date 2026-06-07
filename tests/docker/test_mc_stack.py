@@ -24,6 +24,7 @@ from awesomeversion import AwesomeVersion
 import pytest
 
 from supervisor.const import (
+    DOCKER_EMBEDDED_DNS,
     DOCKER_NETWORK,
     LABEL_MC_MANAGED_BY,
     LABEL_MC_ROLE,
@@ -331,6 +332,8 @@ async def test_postgres_create_container_config_payload(coresys: CoreSys) -> Non
     assert host["RestartPolicy"] == {"Name": RestartPolicy.UNLESS_STOPPED}
     assert host["ShmSize"] == 256 * 1024 * 1024
     assert host["OomScoreAdj"] == -200
+    assert host["Dns"] == [DOCKER_EMBEDDED_DNS, str(coresys.docker.network.dns)]
+    assert host["DnsOptions"] == ["timeout:10"]
 
     # Network endpoint with both alias variants.
     aliases = config["NetworkingConfig"]["EndpointsConfig"][DOCKER_NETWORK]["Aliases"]
