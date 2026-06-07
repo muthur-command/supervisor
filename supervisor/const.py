@@ -91,6 +91,8 @@ DOCKER_CPU_RUNTIME_TOTAL = 950_000
 DOCKER_CPU_RUNTIME_ALLOCATION = int(DOCKER_CPU_RUNTIME_TOTAL / 5)
 
 DNS_SUFFIX = "local.mcos"
+# Docker embedded resolver on user-defined networks (resolves container aliases).
+DOCKER_EMBEDDED_DNS = "127.0.0.11"
 
 LABEL_ARCH = "io.mcos.arch"
 LABEL_DESCRIPTION = "io.mcos.description"

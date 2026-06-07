@@ -11,7 +11,7 @@ from aiodocker.networks import DockerNetwork
 from awesomeversion import AwesomeVersion
 import pytest
 
-from supervisor.const import DNS_SUFFIX, ENV_SUPERVISOR_CPU_RT
+from supervisor.const import DNS_SUFFIX, DOCKER_EMBEDDED_DNS, ENV_SUPERVISOR_CPU_RT
 from supervisor.coresys import CoreSys
 from supervisor.docker.const import (
     LABEL_MANAGED,
@@ -21,6 +21,20 @@ from supervisor.docker.const import (
 )
 from supervisor.docker.manager import CommandReturn, DockerAPI
 from supervisor.exceptions import DockerError
+
+
+def test_create_container_config_prefers_embedded_dns(docker: DockerAPI) -> None:
+    """Stack aliases (mc_redis, …) resolve via Docker embedded DNS 127.0.0.11."""
+    config = docker._create_container_config(  # noqa: SLF001
+        "ghcr.io/example/app:latest",
+        networking_config={
+            "EndpointsConfig": {"mcos": {"Aliases": ["mc_redis"]}},
+        },
+    )
+    assert config["HostConfig"]["Dns"] == [
+        DOCKER_EMBEDDED_DNS,
+        str(docker.network.dns),
+    ]
 
 
 async def test_run_command_success(docker: DockerAPI, container: DockerContainer):
@@ -53,7 +67,7 @@ async def test_run_command_success(docker: DockerAPI, container: DockerContainer
                 "NetworkMode": "mcos",
                 "Init": False,
                 "Privileged": False,
-                "Dns": ["172.30.32.3"],
+                "Dns": ["127.0.0.11", "172.30.32.3"],
                 "DnsSearch": [DNS_SUFFIX],
                 "DnsOptions": ["timeout:10"],
             },
@@ -221,7 +235,7 @@ async def test_run_command_with_mounts(docker: DockerAPI):
                 "NetworkMode": docker.network.name,
                 "Init": False,
                 "Privileged": False,
-                "Dns": [str(docker.network.dns)],
+                "Dns": ["127.0.0.11", str(docker.network.dns)],
                 "DnsSearch": [DNS_SUFFIX],
                 "DnsOptions": ["timeout:10"],
                 "Mounts": [

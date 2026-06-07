@@ -30,6 +30,7 @@ from ..const import (
     ATTR_REGISTRIES,
     DEFAULT_CHUNK_SIZE,
     DNS_SUFFIX,
+    DOCKER_EMBEDDED_DNS,
     DOCKER_NETWORK,
     ENV_SUPERVISOR_CPU_RT,
     FILE_MCOS_DOCKER,
@@ -441,7 +442,10 @@ class DockerAPI(CoreSysAttributes):
 
         # Set up networking
         if dns:
-            host_config["Dns"] = [str(self.network.dns)]
+            # Embedded DNS first: resolves mcos stack aliases (mc_redis, mc_postgres,
+            # mc_bd, …). Plugin DNS alone cannot answer those names reliably when
+            # its forward to 127.0.0.11 fails (see MC stack / QEMU environments).
+            host_config["Dns"] = [DOCKER_EMBEDDED_DNS, str(self.network.dns)]
             host_config["DnsSearch"] = [DNS_SUFFIX]
             # CoreDNS forward plug-in fails in ~6s, then fallback triggers.
             # However, the default timeout of glibc and musl is 5s. Increase

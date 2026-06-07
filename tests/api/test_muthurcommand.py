@@ -409,7 +409,7 @@ async def test_config_check(
                         "ReadOnly": False,
                     },
                 ],
-                "Dns": [str(coresys.docker.network.dns)],
+                "Dns": ["127.0.0.11", str(coresys.docker.network.dns)],
                 "DnsSearch": [DNS_SUFFIX],
                 "DnsOptions": ["timeout:10"],
             },

@@ -47,7 +47,7 @@
     "CapAdd": null,
     "CapDrop": null,
     "CgroupnsMode": "private",
-    "Dns": ["172.30.32.3"],
+    "Dns": ["127.0.0.11", "172.30.32.3"],
     "DnsOptions": null,
     "DnsSearch": ["local.mcos"],
     "ExtraHosts": ["mcos:172.30.32.2", "supervisor:172.30.32.2"],
