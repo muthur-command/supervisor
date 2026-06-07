@@ -29,7 +29,10 @@ from ..jobs.decorator import Job
 from .const import ENV_TIME, DockerMount, MountType
 from .interface import DockerInterface
 from .mc_stack_base import (
+    MC_POSTGRES_DNS_ALIASES,
+    MC_REDIS_DNS_ALIASES,
     MC_STACK_RESTART_POLICY,
+    mc_stack_container_ip,
     mc_stack_labels,
     mc_stack_networking_config,
 )
@@ -79,12 +82,15 @@ class DockerMcBackend(DockerInterface, CoreSysAttributes):
 
     @property
     def environment(self) -> dict[str, str]:
-        """Return mc_bd container environment.
+        """Return mc_bd container environment (hostname defaults).
 
-        Mirrors the field names in ``mc_bd/backend/.env.example`` so the
-        backend's pydantic settings load without an .env file present in
-        the production image.
+        Prefer :meth:`resolve_environment` at container start time so
+        dependency IPs can be injected when Docker DNS is unreliable.
         """
+        return self._base_environment()
+
+    def _base_environment(self) -> dict[str, str]:
+        """Build mc_bd env with logical hostnames for Postgres / Redis."""
         secrets = self.sys_mc_stack.secrets
         return {
             ENV_TIME: self.sys_timezone,
@@ -102,6 +108,23 @@ class DockerMcBackend(DockerInterface, CoreSysAttributes):
             # mc_bd Granian listens on this port (Dockerfile EXPOSE 8001).
             "APP_PORT": str(MC_BACKEND_PORT),
         }
+
+    async def resolve_environment(self) -> dict[str, str]:
+        """Return mc_bd env, preferring dependency container IPs when known."""
+        env = self._base_environment()
+        for inst, host_key, alias in (
+            (self.sys_mc_stack.postgres, "DATABASE_HOST", "mc_postgres"),
+            (self.sys_mc_stack.redis, "REDIS_HOST", "mc_redis"),
+        ):
+            metadata = inst._meta  # pylint: disable=protected-access
+            if not metadata:
+                metadata = await inst._get_container()
+            if ip := mc_stack_container_ip(metadata):
+                env[host_key] = str(ip)
+                _LOGGER.debug(
+                    "mc_bd %s resolved to %s (alias %s)", host_key, ip, alias
+                )
+        return env
 
     @property
     def labels(self) -> dict[str, str]:
@@ -126,18 +149,25 @@ class DockerMcBackend(DockerInterface, CoreSysAttributes):
                 f"Cannot determine version for {self.name}", _LOGGER.error
             )
 
+        extra_hosts = await self.sys_mc_stack.dependency_extra_hosts(
+            (self.sys_mc_stack.postgres, MC_POSTGRES_DNS_ALIASES),
+            (self.sys_mc_stack.redis, MC_REDIS_DNS_ALIASES),
+        )
+        environment = await self.resolve_environment()
+
         await self._run(
             tag=str(version),
             name=self.name,
             hostname=self.hostname,
             detach=True,
             security_opt=self.security_opt,
-            environment=self.environment,
+            environment=environment,
             mounts=self.mounts,
             networking_config=self.networking_config,
             labels=self.labels,
             restart_policy=MC_STACK_RESTART_POLICY,
             oom_score_adj=-200,
+            extra_hosts=extra_hosts or None,
         )
         _LOGGER.info("Starting mc_bd %s with version %s", self.image, version)
 

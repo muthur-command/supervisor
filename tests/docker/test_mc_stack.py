@@ -18,6 +18,7 @@ These tests cover the documented stage-3 deliverables:
 from __future__ import annotations
 
 from typing import Any
+from ipaddress import IPv4Address
 from unittest.mock import ANY, AsyncMock, patch
 
 from awesomeversion import AwesomeVersion
@@ -163,10 +164,27 @@ async def test_docker_mc_redis_password_when_set(coresys: CoreSys) -> None:
 async def test_docker_mc_backend_run(coresys: CoreSys) -> None:
     """DockerMcBackend wires Postgres/Redis env so mc_bd starts correctly."""
     instance, run = _capture_run_kwargs(DockerMcBackend, coresys)
+    extra_hosts = {
+        "mc_postgres": IPv4Address("172.30.1.1"),
+        "mc-postgres": IPv4Address("172.30.1.1"),
+        "mc_redis": IPv4Address("172.30.1.2"),
+        "mc-redis": IPv4Address("172.30.1.2"),
+    }
+    coresys.mc_stack.postgres._meta = {  # pylint: disable=protected-access
+        "NetworkSettings": {"Networks": {"mcos": {"IPAddress": "172.30.1.1"}}}
+    }
+    coresys.mc_stack.redis._meta = {  # pylint: disable=protected-access
+        "NetworkSettings": {"Networks": {"mcos": {"IPAddress": "172.30.1.2"}}}
+    }
 
     with (
         patch.object(DockerMcBackend, "is_running", new=AsyncMock(return_value=False)),
         patch.object(DockerMcBackend, "stop", new=AsyncMock()),
+        patch.object(
+            coresys.mc_stack,
+            "dependency_extra_hosts",
+            new=AsyncMock(return_value=extra_hosts),
+        ),
     ):
         await instance.run()
 
@@ -174,14 +192,15 @@ async def test_docker_mc_backend_run(coresys: CoreSys) -> None:
     env = kwargs["environment"]
     assert kwargs["name"] == MC_BACKEND_DOCKER_NAME
     assert kwargs["hostname"] == "mc-bd"
-    assert env["DATABASE_HOST"] == "mc_postgres"
+    assert env["DATABASE_HOST"] == "172.30.1.1"
     assert env["DATABASE_PORT"] == str(MC_POSTGRES_PORT)
-    assert env["REDIS_HOST"] == "mc_redis"
+    assert env["REDIS_HOST"] == "172.30.1.2"
     assert env["REDIS_PORT"] == str(MC_REDIS_PORT)
     assert env["APP_PORT"] == str(MC_BACKEND_PORT)
     # PostgreSQL password ends up in mc_bd env, must match the secrets store.
     assert env["DATABASE_PASSWORD"] == coresys.mc_stack.secrets.postgres_password
     assert env["DATABASE_SCHEMA"] == MC_POSTGRES_DEFAULT_DB
+    assert kwargs["extra_hosts"] == extra_hosts
     assert kwargs["networking_config"] == {
         "EndpointsConfig": {DOCKER_NETWORK: {"Aliases": ["mc_bd", "mc-bd"]}}
     }
@@ -191,10 +210,19 @@ async def test_docker_mc_backend_run(coresys: CoreSys) -> None:
 async def test_docker_mc_frontend_run(coresys: CoreSys) -> None:
     """DockerMcFrontend exposes the configured backend host/port."""
     instance, run = _capture_run_kwargs(DockerMcFrontend, coresys)
+    extra_hosts = {
+        "mc_bd": IPv4Address("172.30.1.3"),
+        "mc-bd": IPv4Address("172.30.1.3"),
+    }
 
     with (
         patch.object(DockerMcFrontend, "is_running", new=AsyncMock(return_value=False)),
         patch.object(DockerMcFrontend, "stop", new=AsyncMock()),
+        patch.object(
+            coresys.mc_stack,
+            "dependency_extra_hosts",
+            new=AsyncMock(return_value=extra_hosts),
+        ),
     ):
         await instance.run()
 
@@ -205,6 +233,7 @@ async def test_docker_mc_frontend_run(coresys: CoreSys) -> None:
     assert env["MC_BACKEND_HOST"] == "mc_bd"
     assert env["MC_BACKEND_PORT"] == str(MC_BACKEND_PORT)
     assert env["VITE_SERVER_API_PREFIX"] == "/api"
+    assert kwargs["extra_hosts"] == extra_hosts
 
 
 # --- Cross-cutting acceptance: labels, restart policy, fail-fast -----------

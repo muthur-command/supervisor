@@ -21,6 +21,7 @@ from ..jobs.decorator import Job
 from .const import ENV_TIME
 from .interface import DockerInterface
 from .mc_stack_base import (
+    MC_BACKEND_DNS_ALIASES,
     MC_STACK_RESTART_POLICY,
     mc_stack_labels,
     mc_stack_networking_config,
@@ -94,6 +95,10 @@ class DockerMcFrontend(DockerInterface, CoreSysAttributes):
                 f"Cannot determine version for {self.name}", _LOGGER.error
             )
 
+        extra_hosts = await self.sys_mc_stack.dependency_extra_hosts(
+            (self.sys_mc_stack.backend, MC_BACKEND_DNS_ALIASES),
+        )
+
         await self._run(
             tag=str(version),
             name=self.name,
@@ -105,6 +110,7 @@ class DockerMcFrontend(DockerInterface, CoreSysAttributes):
             labels=self.labels,
             restart_policy=MC_STACK_RESTART_POLICY,
             oom_score_adj=-300,
+            extra_hosts=extra_hosts or None,
         )
         _LOGGER.info("Starting mc_fd %s with version %s", self.image, version)
 

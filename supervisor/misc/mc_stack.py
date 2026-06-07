@@ -26,7 +26,8 @@ from dataclasses import dataclass
 from datetime import timedelta
 from enum import StrEnum
 import logging
-from typing import Final
+from ipaddress import IPv4Address
+from typing import Any, Final
 
 import aiohttp
 from awesomeversion import AwesomeVersion, AwesomeVersionException
@@ -50,6 +51,7 @@ from ..docker.mc_stack_base import (
     MC_FRONTEND_DNS_ALIASES,
     MC_POSTGRES_DNS_ALIASES,
     MC_REDIS_DNS_ALIASES,
+    mc_stack_alias_hosts,
     mc_stack_container_ip,
 )
 from ..exceptions import (
@@ -268,6 +270,25 @@ class MCStack(CoreSysAttributes):
         with suppress(CoreDNSError):
             await self.sys_plugins.dns.write_hosts()
 
+    async def dependency_extra_hosts(
+        self,
+        *dependencies: tuple[DockerInterface, tuple[str, ...]],
+    ) -> dict[str, IPv4Address]:
+        """Resolve MC stack aliases to IPs for ``ExtraHosts`` injection.
+
+        Docker embedded DNS does not reliably resolve ``mcos`` network
+        aliases in MCOS/QEMU. Writing names into ``/etc/hosts`` at
+        container create time avoids Redis/Postgres connection timeouts
+        in ``mc_bd`` even when CoreDNS or ``127.0.0.11`` fail.
+        """
+        entries: list[tuple[dict[str, Any] | None, tuple[str, ...]]] = []
+        for inst, aliases in dependencies:
+            metadata = inst._meta  # pylint: disable=protected-access
+            if not metadata:
+                metadata = await inst._get_container()
+            entries.append((metadata, aliases))
+        return mc_stack_alias_hosts(*entries)
+
     async def start(self) -> None:
         """Start the four core containers in dependency order.
 
@@ -448,8 +469,16 @@ class MCStack(CoreSysAttributes):
             )
 
         if await inst.is_running():
-            _LOGGER.debug("MC stack: %s already running", inst.name)
-        else:
+            if inst in (self.backend, self.frontend):
+                _LOGGER.info(
+                    "MC stack: recreating %s to refresh dependency networking",
+                    inst.name,
+                )
+                await inst.stop(remove_container=True)
+            else:
+                _LOGGER.debug("MC stack: %s already running", inst.name)
+
+        if not await inst.is_running():
             if not await inst.exists():
                 _LOGGER.info(
                     "MC stack: pulling %s:%s for %s",

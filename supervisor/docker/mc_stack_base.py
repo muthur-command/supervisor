@@ -74,3 +74,17 @@ def mc_stack_container_ip(metadata: dict[str, Any] | None) -> IPv4Address | None
         )
     except (KeyError, TypeError, ValueError):
         return None
+
+
+def mc_stack_alias_hosts(
+    *entries: tuple[dict[str, Any] | None, tuple[str, ...]],
+) -> dict[str, IPv4Address]:
+    """Build ``extra_hosts`` entries mapping stack aliases to container IPs."""
+    hosts: dict[str, IPv4Address] = {}
+    for metadata, aliases in entries:
+        ip = mc_stack_container_ip(metadata)
+        if not ip:
+            continue
+        for name in aliases:
+            hosts[name] = ip
+    return hosts

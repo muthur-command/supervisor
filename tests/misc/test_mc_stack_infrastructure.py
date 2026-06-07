@@ -699,6 +699,30 @@ async def test_mc_stack_sync_dns_registers_running_aliases(coresys: CoreSys) -> 
     write_hosts.assert_awaited_once()
 
 
+@pytest.mark.usefixtures("stack_versions", "tmp_supervisor_data", "path_extern")
+async def test_mc_stack_dependency_extra_hosts(coresys: CoreSys) -> None:
+    """``dependency_extra_hosts`` maps stack aliases to dependency IPs."""
+    stack = coresys.mc_stack
+    stack.postgres._meta = {  # pylint: disable=protected-access
+        "NetworkSettings": {"Networks": {"mcos": {"IPAddress": "172.30.1.1"}}}
+    }
+    stack.redis._meta = {  # pylint: disable=protected-access
+        "NetworkSettings": {"Networks": {"mcos": {"IPAddress": "172.30.1.2"}}}
+    }
+
+    hosts = await stack.dependency_extra_hosts(
+        (stack.postgres, ("mc_postgres", "mc-postgres")),
+        (stack.redis, ("mc_redis", "mc-redis")),
+    )
+
+    assert hosts == {
+        "mc_postgres": IPv4Address("172.30.1.1"),
+        "mc-postgres": IPv4Address("172.30.1.1"),
+        "mc_redis": IPv4Address("172.30.1.2"),
+        "mc-redis": IPv4Address("172.30.1.2"),
+    }
+
+
 # ---------------------------------------------------------------------------
 # Resolution wiring: check + fixup auto-discovered
 # ---------------------------------------------------------------------------
