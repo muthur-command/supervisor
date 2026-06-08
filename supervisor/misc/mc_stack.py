@@ -239,9 +239,7 @@ class MCStack(CoreSysAttributes):
 
         await self.sync_dns()
 
-    async def inspect_container(
-        self, inst: DockerInterface
-    ) -> dict[str, Any] | None:
+    async def inspect_container(self, inst: DockerInterface) -> dict[str, Any] | None:
         """Return Docker inspect metadata for a stack container."""
         try:
             container = await self.sys_docker.containers.get(inst.name)
@@ -566,8 +564,8 @@ class MCStack(CoreSysAttributes):
 
         try:
             check = await self.postgres.run_inside(
-                'psql -U postgres -tc '
-                '"SELECT 1 FROM pg_database WHERE datname = \'mc\'"'
+                "psql -U postgres -tc "
+                "\"SELECT 1 FROM pg_database WHERE datname = 'mc'\""
             )
         except DockerError as err:
             raise MCStackStartupError(
