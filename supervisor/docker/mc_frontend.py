@@ -13,7 +13,12 @@ from typing import Final
 
 from awesomeversion import AwesomeVersion
 
-from ..const import MC_BACKEND_PORT, MC_FRONTEND_DOCKER_NAME, MC_ROLE_FRONTEND
+from ..const import (
+    DOCKER_NETWORK,
+    MC_BACKEND_PORT,
+    MC_FRONTEND_DOCKER_NAME,
+    MC_ROLE_FRONTEND,
+)
 from ..coresys import CoreSysAttributes
 from ..exceptions import DockerJobError
 from ..jobs.const import JobConcurrency
@@ -106,6 +111,7 @@ class DockerMcFrontend(DockerInterface, CoreSysAttributes):
             detach=True,
             security_opt=self.security_opt,
             environment=self.environment,
+            network_mode=DOCKER_NETWORK,
             networking_config=self.networking_config,
             labels=self.labels,
             restart_policy=MC_STACK_RESTART_POLICY,

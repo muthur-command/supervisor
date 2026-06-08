@@ -110,6 +110,7 @@ async def test_docker_mc_postgres_run(coresys: CoreSys) -> None:
     assert kwargs["environment"]["POSTGRES_DB"] == MC_POSTGRES_DEFAULT_DB
     assert kwargs["environment"]["POSTGRES_PASSWORD"], "Password must be generated"
     assert kwargs["environment"]["PGDATA"].startswith("/var/lib/postgresql/data")
+    assert kwargs["network_mode"] == DOCKER_NETWORK
     assert kwargs["networking_config"] == {
         "EndpointsConfig": {DOCKER_NETWORK: {"Aliases": ["mc_postgres", "mc-postgres"]}}
     }
@@ -138,6 +139,7 @@ async def test_docker_mc_redis_run(coresys: CoreSys) -> None:
     assert kwargs["tag"] == "7.2.4"
     assert "redis-server" in kwargs["command"]
     assert "--appendonly" in kwargs["command"]
+    assert kwargs["network_mode"] == DOCKER_NETWORK
     assert kwargs["networking_config"] == {
         "EndpointsConfig": {DOCKER_NETWORK: {"Aliases": ["mc_redis", "mc-redis"]}}
     }
@@ -209,6 +211,7 @@ async def test_docker_mc_backend_run(coresys: CoreSys) -> None:
     assert env["DATABASE_PASSWORD"] == coresys.mc_stack.secrets.postgres_password
     assert env["DATABASE_SCHEMA"] == MC_POSTGRES_DEFAULT_DB
     assert kwargs["extra_hosts"] == extra_hosts
+    assert kwargs["network_mode"] == DOCKER_NETWORK
     assert kwargs["networking_config"] == {
         "EndpointsConfig": {DOCKER_NETWORK: {"Aliases": ["mc_bd", "mc-bd"]}}
     }
@@ -242,6 +245,10 @@ async def test_docker_mc_frontend_run(coresys: CoreSys) -> None:
     assert env["MC_BACKEND_PORT"] == str(MC_BACKEND_PORT)
     assert env["VITE_SERVER_API_PREFIX"] == "/api"
     assert kwargs["extra_hosts"] == extra_hosts
+    assert kwargs["network_mode"] == DOCKER_NETWORK
+    assert kwargs["networking_config"] == {
+        "EndpointsConfig": {DOCKER_NETWORK: {"Aliases": ["mc_fd", "mc-fd"]}}
+    }
 
 
 # --- Cross-cutting acceptance: labels, restart policy, fail-fast -----------

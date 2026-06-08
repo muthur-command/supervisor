@@ -24,6 +24,7 @@ from typing import Final
 from awesomeversion import AwesomeVersion
 
 from ..const import (
+    DOCKER_NETWORK,
     MC_POSTGRES_DEFAULT_DB,
     MC_POSTGRES_DEFAULT_USER,
     MC_POSTGRES_DOCKER_NAME,
@@ -132,6 +133,7 @@ class DockerMcPostgres(DockerInterface, CoreSysAttributes):
             security_opt=self.security_opt,
             environment=self.environment,
             mounts=self.mounts,
+            network_mode=DOCKER_NETWORK,
             networking_config=self.networking_config,
             labels=self.labels,
             restart_policy=MC_STACK_RESTART_POLICY,

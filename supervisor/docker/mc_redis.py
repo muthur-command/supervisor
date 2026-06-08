@@ -15,7 +15,7 @@ from typing import Final
 
 from awesomeversion import AwesomeVersion
 
-from ..const import MC_REDIS_DOCKER_NAME, MC_ROLE_REDIS
+from ..const import DOCKER_NETWORK, MC_REDIS_DOCKER_NAME, MC_ROLE_REDIS
 from ..coresys import CoreSysAttributes
 from ..exceptions import DockerJobError
 from ..jobs.const import JobConcurrency
@@ -121,6 +121,7 @@ class DockerMcRedis(DockerInterface, CoreSysAttributes):
             security_opt=self.security_opt,
             environment=self.environment,
             mounts=self.mounts,
+            network_mode=DOCKER_NETWORK,
             networking_config=self.networking_config,
             command=self.command,
             labels=self.labels,
