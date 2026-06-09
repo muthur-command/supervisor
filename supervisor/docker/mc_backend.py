@@ -30,6 +30,7 @@ from ..jobs.decorator import Job
 from .const import ENV_TIME, DockerMount, MountType
 from .interface import DockerInterface
 from .mc_stack_base import (
+    MC_BACKEND_DNS_ALIASES,
     MC_POSTGRES_DNS_ALIASES,
     MC_REDIS_DNS_ALIASES,
     MC_STACK_RESTART_POLICY,
@@ -42,7 +43,6 @@ _LOGGER: logging.Logger = logging.getLogger(__name__)
 
 _BD_DATA_TARGET: Final[str] = "/mc/data"
 
-_BD_ALIAS_PRIMARY: Final[str] = "mc_bd"
 _BD_ALIAS_DNS: Final[str] = "mc-bd"
 
 
@@ -131,7 +131,7 @@ class DockerMcBackend(DockerInterface, CoreSysAttributes):
     @property
     def networking_config(self) -> dict[str, dict[str, dict]]:
         """Network endpoint config attaching to ``mcos`` with stack alias."""
-        return mc_stack_networking_config(_BD_ALIAS_PRIMARY, _BD_ALIAS_DNS)
+        return mc_stack_networking_config(*MC_BACKEND_DNS_ALIASES)
 
     @Job(
         name="docker_mc_backend_run",
