@@ -77,6 +77,8 @@ _TIMEOUT_MC_BD: Final[timedelta] = timedelta(minutes=5)
 _TIMEOUT_MC_FD: Final[timedelta] = timedelta(seconds=60)
 
 _HEALTH_POLL_SECONDS: Final[int] = 2
+# mc_bd cold start (DB migrations, plugin init) can exceed a few seconds.
+_HEALTH_HTTP_TIMEOUT_SECONDS: Final[int] = 15
 
 # Total upper bound for ``MCStack.start``. Exceeds the sum of per-step
 # timeouts to leave room for image pull on first boot.
@@ -515,6 +517,11 @@ class MCStack(CoreSysAttributes):
                     _LOGGER.error,
                 ) from err
 
+            # Register stack aliases in CoreDNS before HTTP health probes.
+            # sync_dns() used to run only after healthy, so mc_bd/mc_fd names
+            # were missing from hosts while aiohttp tried to resolve them.
+            await self.sync_dns()
+
         try:
             async with asyncio.timeout(timeout.total_seconds()):
                 while True:
@@ -603,19 +610,39 @@ class MCStack(CoreSysAttributes):
 
     async def _check_backend_ready(self) -> bool:
         """HTTP-poll mc_bd's health endpoint."""
-        return await self._http_alive(
-            host="mc_bd",
+        return await self._http_alive_stack(
+            self.backend,
             port=MC_BACKEND_PORT,
             path=MC_BACKEND_HEALTH_PATH,
         )
 
     async def _check_frontend_ready(self) -> bool:
         """Treat ``mc_fd`` as ready when its Nginx port answers."""
-        return await self._http_alive(
-            host="mc_fd",
+        return await self._http_alive_stack(
+            self.frontend,
             port=MC_FRONTEND_PORT,
             path="/",
             accept_status_below=500,
+        )
+
+    async def _http_alive_stack(
+        self,
+        inst: DockerInterface,
+        *,
+        port: int,
+        path: str,
+        accept_status_below: int = 500,
+    ) -> bool:
+        """HTTP probe using the container IP (avoids QEMU/CoreDNS alias gaps)."""
+        metadata = await self.inspect_container(inst)
+        ip = mc_stack_container_ip(metadata)
+        if not ip:
+            return False
+        return await self._http_alive(
+            host=str(ip),
+            port=port,
+            path=path,
+            accept_status_below=accept_status_below,
         )
 
     async def _http_alive(
@@ -625,11 +652,12 @@ class MCStack(CoreSysAttributes):
         port: int,
         path: str,
         accept_status_below: int = 500,
+        timeout_seconds: int = _HEALTH_HTTP_TIMEOUT_SECONDS,
     ) -> bool:
         """Return True if a 2xx/3xx/4xx response comes back from host:port."""
         url = f"http://{host}:{port}{path}"
         try:
-            timeout = aiohttp.ClientTimeout(total=2)
+            timeout = aiohttp.ClientTimeout(total=timeout_seconds)
             async with self.sys_websession.get(url, timeout=timeout) as response:
                 return response.status < accept_status_below
         except (aiohttp.ClientError, TimeoutError):
