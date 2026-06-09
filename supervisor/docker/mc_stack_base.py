@@ -25,7 +25,8 @@ from .const import RestartPolicy
 # DNS names exposed on the ``mcos`` network (underscore + hyphen variants).
 MC_POSTGRES_DNS_ALIASES: Final[tuple[str, ...]] = ("mc_postgres", "mc-postgres")
 MC_REDIS_DNS_ALIASES: Final[tuple[str, ...]] = ("mc_redis", "mc-redis")
-MC_BACKEND_DNS_ALIASES: Final[tuple[str, ...]] = ("mc_bd", "mc-bd")
+# ``mc_server`` is kept for mc_fd images that still proxy to that legacy hostname.
+MC_BACKEND_DNS_ALIASES: Final[tuple[str, ...]] = ("mc_bd", "mc-bd", "mc_server")
 MC_FRONTEND_DNS_ALIASES: Final[tuple[str, ...]] = ("mc_fd", "mc-fd")
 
 # All stack containers should auto-restart with the daemon but respect a

@@ -213,7 +213,7 @@ async def test_docker_mc_backend_run(coresys: CoreSys) -> None:
     assert kwargs["extra_hosts"] == extra_hosts
     assert kwargs["network_mode"] == DOCKER_NETWORK
     assert kwargs["networking_config"] == {
-        "EndpointsConfig": {DOCKER_NETWORK: {"Aliases": ["mc_bd", "mc-bd"]}}
+        "EndpointsConfig": {DOCKER_NETWORK: {"Aliases": ["mc_bd", "mc-bd", "mc_server"]}}
     }
 
 
