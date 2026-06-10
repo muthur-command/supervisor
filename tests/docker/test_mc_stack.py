@@ -33,6 +33,8 @@ from supervisor.const import (
     MC_BACKEND_DOCKER_NAME,
     MC_BACKEND_PORT,
     MC_FRONTEND_DOCKER_NAME,
+    MC_FRONTEND_HOST_PORT,
+    MC_FRONTEND_PORT,
     MC_POSTGRES_DEFAULT_DB,
     MC_POSTGRES_DEFAULT_USER,
     MC_POSTGRES_DOCKER_NAME,
@@ -251,6 +253,31 @@ async def test_docker_mc_frontend_run(coresys: CoreSys) -> None:
     assert kwargs["networking_config"] == {
         "EndpointsConfig": {DOCKER_NETWORK: {"Aliases": ["mc_fd", "mc-fd"]}}
     }
+    assert kwargs["ports"] == {f"{MC_FRONTEND_PORT}/tcp": MC_FRONTEND_HOST_PORT}
+
+
+@pytest.mark.usefixtures("stack_versions", "tmp_supervisor_data", "path_extern")
+async def test_docker_mc_frontend_run_skips_host_port_when_core_active(
+    coresys: CoreSys,
+) -> None:
+    """mc_fd must not grab :8123 while the legacy Core/landingpage owns it."""
+    coresys.muthurcommand._data["version"] = AwesomeVersion("2026.06.0")  # noqa: SLF001
+    coresys.updater._data["muthurcommand"] = AwesomeVersion("2026.06.0")  # noqa: SLF001
+
+    instance, run = _capture_run_kwargs(DockerMcFrontend, coresys)
+
+    with (
+        patch.object(DockerMcFrontend, "is_running", new=AsyncMock(return_value=False)),
+        patch.object(DockerMcFrontend, "stop", new=AsyncMock()),
+        patch.object(
+            coresys.mc_stack,
+            "dependency_extra_hosts",
+            new=AsyncMock(return_value={}),
+        ),
+    ):
+        await instance.run()
+
+    assert "ports" not in _last_kwargs(run)
 
 
 # --- Cross-cutting acceptance: labels, restart policy, fail-fast -----------

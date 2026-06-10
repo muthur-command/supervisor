@@ -42,6 +42,8 @@ MC_POSTGRES_PORT: int = 5432
 MC_REDIS_PORT: int = 6379
 MC_BACKEND_PORT: int = 8001
 MC_FRONTEND_PORT: int = 80
+# Host-published port for mc_fd when Muthur Command Core is unused (MCOS MC stack).
+MC_FRONTEND_HOST_PORT: int = 8123
 MC_BACKEND_HEALTH_PATH: str = "/v1/health/ping"
 
 URL_MCOS_ADDONS = "https://github.com/muthur-command/addons"

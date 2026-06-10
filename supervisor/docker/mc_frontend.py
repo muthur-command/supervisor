@@ -17,6 +17,8 @@ from ..const import (
     DOCKER_NETWORK,
     MC_BACKEND_PORT,
     MC_FRONTEND_DOCKER_NAME,
+    MC_FRONTEND_HOST_PORT,
+    MC_FRONTEND_PORT,
     MC_ROLE_FRONTEND,
 )
 from ..coresys import CoreSysAttributes
@@ -104,20 +106,27 @@ class DockerMcFrontend(DockerInterface, CoreSysAttributes):
             (self.sys_mc_stack.backend, MC_BACKEND_DNS_ALIASES),
         )
 
-        await self._run(
-            tag=str(version),
-            name=self.name,
-            hostname=self.hostname,
-            detach=True,
-            security_opt=self.security_opt,
-            environment=self.environment,
-            network_mode=DOCKER_NETWORK,
-            networking_config=self.networking_config,
-            labels=self.labels,
-            restart_policy=MC_STACK_RESTART_POLICY,
-            oom_score_adj=-300,
-            extra_hosts=extra_hosts or None,
-        )
+        run_kwargs: dict = {
+            "tag": str(version),
+            "name": self.name,
+            "hostname": self.hostname,
+            "detach": True,
+            "security_opt": self.security_opt,
+            "environment": self.environment,
+            "network_mode": DOCKER_NETWORK,
+            "networking_config": self.networking_config,
+            "labels": self.labels,
+            "restart_policy": MC_STACK_RESTART_POLICY,
+            "oom_score_adj": -300,
+            "extra_hosts": extra_hosts or None,
+        }
+        # When the legacy Core container is unused, mc_fd is the user-facing
+        # entry point and must bind the well-known host port (8123), matching
+        # QEMU port forwards and landingpage documentation.
+        if self.sys_muthurcommand.unused:
+            run_kwargs["ports"] = {f"{MC_FRONTEND_PORT}/tcp": MC_FRONTEND_HOST_PORT}
+
+        await self._run(**run_kwargs)
         _LOGGER.info("Starting mc_fd %s with version %s", self.image, version)
 
     async def is_initialize(self) -> bool:
