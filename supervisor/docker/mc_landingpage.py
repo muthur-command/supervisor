@@ -22,7 +22,6 @@ from ..coresys import CoreSysAttributes
 from ..exceptions import DockerJobError
 from ..jobs.const import JobConcurrency
 from ..jobs.decorator import Job
-from ..muthurcommand.const import LANDINGPAGE
 from .const import ENV_TIME, ENV_TOKEN, MOUNT_DBUS, MOUNT_DEV, MOUNT_UDEV
 from .interface import DockerInterface
 from .mc_stack_base import MC_STACK_RESTART_POLICY, mc_stack_labels
@@ -47,10 +46,8 @@ class DockerMcLandingpage(DockerInterface, CoreSysAttributes):
 
     @property
     def version(self) -> AwesomeVersion | None:  # type: ignore[override]
-        """Return the fixed ``landingpage`` image tag."""
-        if not self.image:
-            return None
-        return LANDINGPAGE
+        """Return configured landingpage version from updater."""
+        return self.sys_updater.version_landingpage
 
     @property
     def labels(self) -> dict[str, str]:

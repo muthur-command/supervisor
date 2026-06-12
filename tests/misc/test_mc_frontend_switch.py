@@ -20,7 +20,7 @@ def landingpage_versions(coresys: CoreSys, stack_versions: None) -> None:
     updater = coresys.updater
     updater._data["landingpage"] = AwesomeVersion("landingpage")  # noqa: SLF001
     updater._data["image"]["landingpage"] = (  # noqa: SLF001
-        "ghcr.io/muthur-command/{machine}-muthurcommand"
+        "ghcr.io/muthur-command/{machine}-landingpage"
     )
 
 
