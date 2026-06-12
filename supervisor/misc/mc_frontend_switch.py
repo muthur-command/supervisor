@@ -38,6 +38,7 @@ class MCFrontendSwitch(CoreSysAttributes):
             self._config.dual_frontend
             and self.sys_muthurcommand.unused
             and self.sys_updater.image_landingpage is not None
+            and self.sys_updater.version_landingpage is not None
         )
 
     @property

@@ -47,6 +47,17 @@ def test_dual_frontend_disabled_without_landingpage_image(
     assert coresys.mc_stack.frontend_switch.publish_mc_fd_host_port is True
 
 
+def test_dual_frontend_disabled_without_landingpage_version(
+    coresys: CoreSys, stack_versions: None
+) -> None:
+    """Image template alone is not enough; the version tag must be configured."""
+    coresys.updater._data["image"]["landingpage"] = (  # noqa: SLF001
+        "ghcr.io/muthur-command/{machine}-landingpage"
+    )
+    assert coresys.mc_stack.dual_frontend is False
+    assert coresys.mc_stack.frontend_switch.publish_mc_fd_host_port is True
+
+
 def test_dual_frontend_enabled_with_landingpage_image(
     coresys: CoreSys, landingpage_versions: None
 ) -> None:
