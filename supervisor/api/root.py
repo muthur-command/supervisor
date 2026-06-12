@@ -70,6 +70,7 @@ class APIRoot(CoreSysAttributes):
             # the MC stack is the user-facing entry point.
             ATTR_MC_STACK: {
                 ATTR_ENABLED: self.sys_mc_stack.enabled,
+                **self.sys_mc_stack.frontend_switch.to_dict(),
                 ATTR_MC_BD: {
                     ATTR_VERSION: self.sys_mc_stack.backend.version,
                     ATTR_VERSION_LATEST: self.sys_updater.version_mc_bd,

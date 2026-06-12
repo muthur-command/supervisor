@@ -28,11 +28,19 @@ _LOGGER: logging.Logger = logging.getLogger(__name__)
 
 ATTR_BOOT = "boot"
 ATTR_WATCHDOG = "watchdog"
+ATTR_DUAL_FRONTEND = "dual_frontend"
+ATTR_FRONTEND_ROUTE = "frontend_route"
+
+_FRONTEND_ROUTE_LANDINGPAGE = "landingpage"
 
 SCHEMA_MC_STACK_CONFIG = vol.Schema(
     {
         vol.Optional(ATTR_BOOT, default=True): bool,
         vol.Optional(ATTR_WATCHDOG, default=True): bool,
+        vol.Optional(ATTR_DUAL_FRONTEND, default=True): bool,
+        vol.Optional(
+            ATTR_FRONTEND_ROUTE, default=_FRONTEND_ROUTE_LANDINGPAGE
+        ): vol.Any("landingpage", "mc_fd"),
     },
     extra=vol.REMOVE_EXTRA,
 )
@@ -70,6 +78,31 @@ class MCStackConfig(FileConfiguration, CoreSysAttributes):
         """Persist whether the periodic watchdog may act on the stack."""
         self._data[ATTR_WATCHDOG] = bool(value)
 
+    @property
+    def dual_frontend(self) -> bool:
+        """Return True when bootstrap landingpage routing is allowed."""
+        return self._data[ATTR_DUAL_FRONTEND]
+
+    @dual_frontend.setter
+    def dual_frontend(self, value: bool) -> None:
+        """Persist whether the dual-frontend bootstrap flow is enabled."""
+        self._data[ATTR_DUAL_FRONTEND] = bool(value)
+
+    @property
+    def frontend_route(self) -> str:
+        """Return which frontend currently owns host port 8123."""
+        return self._data[ATTR_FRONTEND_ROUTE]
+
+    @frontend_route.setter
+    def frontend_route(self, value: str) -> None:
+        """Persist the active frontend route."""
+        self._data[ATTR_FRONTEND_ROUTE] = value
+
     def to_dict(self) -> dict[str, Any]:
         """Return a JSON-friendly snapshot of the current runtime config."""
-        return {ATTR_BOOT: self.boot, ATTR_WATCHDOG: self.watchdog}
+        return {
+            ATTR_BOOT: self.boot,
+            ATTR_WATCHDOG: self.watchdog,
+            ATTR_DUAL_FRONTEND: self.dual_frontend,
+            ATTR_FRONTEND_ROUTE: self.frontend_route,
+        }

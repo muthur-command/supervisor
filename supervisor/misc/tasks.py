@@ -485,6 +485,24 @@ class Tasks(CoreSysAttributes):
                 _LOGGER.error("MC stack watchdog: stack restart failed: %s", err)
                 await async_capture_exception(err)
 
+        await self._watchdog_mc_frontend(stack)
+
+    async def _watchdog_mc_frontend(self, stack) -> None:
+        """Promote or fall back between landingpage and mc_fd on :8123."""
+        if not stack.dual_frontend:
+            return
+
+        if stack.frontend_switch.route.value == "mc_fd":
+            if not await stack.frontend.is_running():
+                await stack.fallback_to_landingpage()
+                return
+            if not await stack._check_frontend_ready():  # noqa: SLF001
+                await stack.fallback_to_landingpage()
+            return
+
+        with suppress(MCStackError):
+            await stack.try_promote_mc_fd()
+
     @Job(name="tasks_core_backup_cleanup", conditions=[JobCondition.HEALTHY])
     async def _core_backup_cleanup(self) -> None:
         """Core backup is intended for transient use, remove any old backups that got left behind."""

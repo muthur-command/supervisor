@@ -37,6 +37,7 @@ from awesomeversion import AwesomeVersion, AwesomeVersionException
 from ..const import (
     MC_BACKEND_HEALTH_PATH,
     MC_BACKEND_PORT,
+    MC_FRONTEND_HOST_PORT,
     MC_FRONTEND_PORT,
     MC_POSTGRES_DEFAULT_DB,
     MC_POSTGRES_DEFAULT_USER,
@@ -46,6 +47,7 @@ from ..docker.const import ContainerState
 from ..docker.interface import DockerInterface
 from ..docker.mc_backend import DockerMcBackend
 from ..docker.mc_frontend import DockerMcFrontend
+from ..docker.mc_landingpage import DockerMcLandingpage
 from ..docker.mc_postgres import DockerMcPostgres
 from ..docker.mc_redis import DockerMcRedis
 from ..docker.mc_stack_base import (
@@ -64,6 +66,7 @@ from ..exceptions import (
     MCStackUpdateError,
 )
 from ..muthurcommand.mc_stack_secrets import MCStackSecrets
+from .mc_frontend_switch import FrontendRoute, MCFrontendSwitch
 from .mc_stack_config import MCStackConfig
 
 _LOGGER: logging.Logger = logging.getLogger(__name__)
@@ -77,6 +80,8 @@ _TIMEOUT_MC_BD: Final[timedelta] = timedelta(minutes=5)
 _TIMEOUT_MC_FD: Final[timedelta] = timedelta(seconds=60)
 
 _HEALTH_POLL_SECONDS: Final[int] = 2
+# Consecutive healthy probes required before promoting mc_fd to :8123.
+_FRONTEND_STABLE_CHECKS: Final[int] = 3
 # mc_bd cold start (DB migrations, plugin init) can exceed a few seconds.
 _HEALTH_HTTP_TIMEOUT_SECONDS: Final[int] = 15
 
@@ -147,6 +152,8 @@ class MCStack(CoreSysAttributes):
         self.redis = DockerMcRedis(coresys)
         self.backend = DockerMcBackend(coresys)
         self.frontend = DockerMcFrontend(coresys)
+        self.landingpage = DockerMcLandingpage(coresys)
+        self.frontend_switch = MCFrontendSwitch(coresys, self._config)
 
     # --- Public properties -------------------------------------------------
 
@@ -209,6 +216,11 @@ class MCStack(CoreSysAttributes):
         return self.version_info.is_complete and all(
             inst.image for inst in self.components
         )
+
+    @property
+    def dual_frontend(self) -> bool:
+        """Return True when bootstrap landingpage should front :8123."""
+        return self.frontend_switch.dual_frontend_enabled
 
     # --- Lifecycle ---------------------------------------------------------
 
@@ -311,6 +323,10 @@ class MCStack(CoreSysAttributes):
         started, and finally awaited for readiness. The whole flow is
         wrapped in a generous total timeout to avoid a single hang stalling
         Supervisor startup.
+
+        When :attr:`dual_frontend` is active, the bootstrap landingpage binds
+        host port 8123 first; ``mc_fd`` starts on the internal ``mcos``
+        network only and is promoted once it passes a stability window.
         """
         if not self.enabled:
             _LOGGER.info("MC stack: not all four images are configured; staying idle")
@@ -318,6 +334,11 @@ class MCStack(CoreSysAttributes):
 
         try:
             async with asyncio.timeout(_TOTAL_START_TIMEOUT.total_seconds()):
+                if self.dual_frontend:
+                    self.frontend_switch.route = FrontendRoute.LANDINGPAGE
+                    await self.config.save_data()
+                    await self._ensure_landingpage_running()
+
                 await self._start_component(
                     self.postgres,
                     timeout=_TIMEOUT_POSTGRES,
@@ -334,11 +355,22 @@ class MCStack(CoreSysAttributes):
                     timeout=_TIMEOUT_MC_BD,
                     health=self._check_backend_ready,
                 )
-                await self._start_component(
-                    self.frontend,
-                    timeout=_TIMEOUT_MC_FD,
-                    health=self._check_frontend_ready,
-                )
+
+                if self.dual_frontend:
+                    await self._start_component(
+                        self.frontend,
+                        timeout=_TIMEOUT_MC_FD,
+                        health=self._check_frontend_ready,
+                        publish_host_port=False,
+                    )
+                    await self._wait_frontend_stable()
+                    await self._promote_mc_fd()
+                else:
+                    await self._start_component(
+                        self.frontend,
+                        timeout=_TIMEOUT_MC_FD,
+                        health=self._check_frontend_ready,
+                    )
         except TimeoutError as err:
             raise MCStackStartupError(
                 "MC stack failed to come up within the total budget",
@@ -354,6 +386,9 @@ class MCStack(CoreSysAttributes):
         for inst in reversed(self.components):
             with suppress(DockerError):
                 await inst.stop(remove_container=remove_container)
+        if self.dual_frontend or await self.landingpage.is_running():
+            with suppress(DockerError):
+                await self.landingpage.stop(remove_container=remove_container)
 
     async def restart(self) -> None:
         """Restart the whole stack (stop → start)."""
@@ -468,12 +503,134 @@ class MCStack(CoreSysAttributes):
 
     # --- Internal helpers --------------------------------------------------
 
+    async def _ensure_landingpage_running(self) -> None:
+        """Install and start the bootstrap landingpage on host port 8123."""
+        inst = self.landingpage
+        version = inst.version
+        if not version or not inst.image:
+            raise MCStackStartupError(
+                "MC stack: landingpage image is not configured",
+                _LOGGER.error,
+            )
+
+        if await inst.is_running():
+            return
+
+        if not await inst.exists():
+            _LOGGER.info(
+                "MC stack: pulling %s:%s for %s",
+                inst.image,
+                version,
+                inst.name,
+            )
+            try:
+                await inst.install(version, image=inst.image)
+            except DockerError as err:
+                raise MCStackStartupError(
+                    f"Pulling {inst.image}:{version} failed: {err!s}",
+                    _LOGGER.error,
+                ) from err
+
+        try:
+            await inst.run()
+        except DockerError as err:
+            raise MCStackStartupError(
+                f"Running container {inst.name} failed: {err!s}",
+                _LOGGER.error,
+            ) from err
+
+    async def _stop_landingpage(self, *, remove_container: bool = True) -> None:
+        """Stop the bootstrap landingpage so mc_fd can bind :8123."""
+        with suppress(DockerError):
+            await self.landingpage.stop(remove_container=remove_container)
+
+    async def _wait_frontend_stable(self) -> None:
+        """Require consecutive healthy probes before promoting mc_fd."""
+        successes = 0
+        while successes < _FRONTEND_STABLE_CHECKS:
+            if await self._check_frontend_ready():
+                successes += 1
+            else:
+                successes = 0
+            if successes < _FRONTEND_STABLE_CHECKS:
+                await asyncio.sleep(_HEALTH_POLL_SECONDS)
+
+    async def _promote_mc_fd(self) -> None:
+        """Hand host port 8123 from landingpage to mc_fd."""
+        _LOGGER.info("MC frontend: promoting mc_fd to host port %s", MC_FRONTEND_HOST_PORT)
+        await self._stop_landingpage()
+        with suppress(DockerError):
+            await self.frontend.stop(remove_container=True)
+        try:
+            await self.frontend.run(publish_host_port=True)
+        except DockerError as err:
+            self.frontend_switch.route = FrontendRoute.LANDINGPAGE
+            await self.config.save_data()
+            await self._ensure_landingpage_running()
+            raise MCStackStartupError(
+                f"Promoting mc_fd to host port failed: {err!s}",
+                _LOGGER.error,
+            ) from err
+
+        try:
+            async with asyncio.timeout(_TIMEOUT_MC_FD.total_seconds()):
+                while True:
+                    if await self._check_frontend_ready():
+                        break
+                    await asyncio.sleep(_HEALTH_POLL_SECONDS)
+        except TimeoutError as err:
+            await self.fallback_to_landingpage()
+            raise MCStackStartupError(
+                "mc_fd did not answer after promotion to host port",
+                _LOGGER.error,
+            ) from err
+
+        self.frontend_switch.route = FrontendRoute.MC_FD
+        await self.config.save_data()
+        _LOGGER.info("MC frontend: mc_fd is now serving on host port %s", MC_FRONTEND_HOST_PORT)
+
+    async def fallback_to_landingpage(self) -> None:
+        """Re-publish landingpage on :8123 when mc_fd is degraded."""
+        if not self.dual_frontend:
+            return
+        if self.frontend_switch.route != FrontendRoute.MC_FD:
+            return
+        _LOGGER.warning("MC frontend: mc_fd degraded — falling back to landingpage")
+        self.frontend_switch.route = FrontendRoute.LANDINGPAGE
+        await self.config.save_data()
+        with suppress(DockerError):
+            await self.frontend.stop(remove_container=True)
+        await self._ensure_landingpage_running()
+
+    async def try_promote_mc_fd(self) -> None:
+        """Attempt promotion after a fallback once the stack is healthy again."""
+        if not self.dual_frontend:
+            return
+        if self.frontend_switch.route == FrontendRoute.MC_FD:
+            return
+        if not await self.backend.is_running():
+            return
+        if not await self._check_backend_ready():
+            return
+        if not await self.frontend.is_running():
+            await self._start_component(
+                self.frontend,
+                timeout=_TIMEOUT_MC_FD,
+                health=self._check_frontend_ready,
+                publish_host_port=False,
+            )
+        elif not await self._check_frontend_ready():
+            return
+        await self._wait_frontend_stable()
+        await self._promote_mc_fd()
+
     async def _start_component(
         self,
         inst: DockerInterface,
         *,
         timeout: timedelta,
         health: Callable[[], Awaitable[bool]],
+        publish_host_port: bool | None = None,
     ) -> None:
         """Install (if needed), run and wait for readiness of a component."""
         version = inst.version
@@ -510,7 +667,10 @@ class MCStack(CoreSysAttributes):
                     ) from err
 
             try:
-                await inst.run()
+                if inst is self.frontend:
+                    await inst.run(publish_host_port=publish_host_port)
+                else:
+                    await inst.run()
             except DockerError as err:
                 raise MCStackStartupError(
                     f"Running container {inst.name} failed: {err!s}",

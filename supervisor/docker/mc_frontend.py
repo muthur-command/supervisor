@@ -94,7 +94,7 @@ class DockerMcFrontend(DockerInterface, CoreSysAttributes):
         on_condition=DockerJobError,
         concurrency=JobConcurrency.GROUP_REJECT,
     )
-    async def run(self) -> None:
+    async def run(self, *, publish_host_port: bool | None = None) -> None:
         """Run mc_fd Docker image."""
         version = self.version
         if not version:
@@ -105,6 +105,9 @@ class DockerMcFrontend(DockerInterface, CoreSysAttributes):
         extra_hosts = await self.sys_mc_stack.dependency_extra_hosts(
             (self.sys_mc_stack.backend, MC_BACKEND_DNS_ALIASES),
         )
+
+        if publish_host_port is None:
+            publish_host_port = self.sys_mc_stack.frontend_switch.publish_mc_fd_host_port
 
         run_kwargs: dict = {
             "tag": str(version),
@@ -120,10 +123,10 @@ class DockerMcFrontend(DockerInterface, CoreSysAttributes):
             "oom_score_adj": -300,
             "extra_hosts": extra_hosts or None,
         }
-        # When the legacy Core container is unused, mc_fd is the user-facing
-        # entry point and must bind the well-known host port (8123), matching
-        # QEMU port forwards and landingpage documentation.
-        if self.sys_muthurcommand.unused:
+        # Publish :8123 only when this container is the active user-facing
+        # frontend. During dual-frontend bootstrap the landingpage container
+        # owns the host port until ``mc_fd`` is promoted.
+        if publish_host_port:
             run_kwargs["ports"] = {f"{MC_FRONTEND_PORT}/tcp": MC_FRONTEND_HOST_PORT}
 
         await self._run(**run_kwargs)

@@ -132,9 +132,19 @@ async def test_mc_stack_config_persists_boot_flag(
 def test_mc_stack_config_to_dict_snapshot(coresys: CoreSys) -> None:
     """``to_dict`` returns a JSON-friendly snapshot of the runtime flags."""
     cfg = MCStackConfig(coresys)
-    assert cfg.to_dict() == {"boot": True, "watchdog": True}
+    assert cfg.to_dict() == {
+        "boot": True,
+        "watchdog": True,
+        "dual_frontend": True,
+        "frontend_route": "landingpage",
+    }
     cfg.boot = False
-    assert cfg.to_dict() == {"boot": False, "watchdog": True}
+    assert cfg.to_dict() == {
+        "boot": False,
+        "watchdog": True,
+        "dual_frontend": True,
+        "frontend_route": "landingpage",
+    }
 
 
 # ---------------------------------------------------------------------------

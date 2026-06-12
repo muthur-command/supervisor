@@ -16,6 +16,7 @@ from .const import (
     ATTR_CLI,
     ATTR_DNS,
     ATTR_IMAGE,
+    ATTR_LANDINGPAGE,
     ATTR_MC_BD,
     ATTR_MC_FD,
     ATTR_MCOS_UNRESTRICTED,
@@ -265,6 +266,22 @@ class Updater(FileConfiguration, CoreSysAttributes):
         )
 
     @property
+    def version_landingpage(self) -> AwesomeVersion | None:
+        """Return the landingpage image tag (always ``landingpage`` when configured)."""
+        return self._data.get(ATTR_LANDINGPAGE)
+
+    @property
+    def image_landingpage(self) -> str | None:
+        """Return resolved image repository (no tag) for the bootstrap landingpage."""
+        if ATTR_LANDINGPAGE not in self._data.get(ATTR_IMAGE, {}):
+            return None
+        return format_version_image_template(
+            self._data[ATTR_IMAGE][ATTR_LANDINGPAGE],
+            arch=self.sys_arch.supervisor,
+            machine=self.sys_machine,
+        )
+
+    @property
     def image_postgresql(self) -> str | None:
         """Return resolved image name (no tag) for PostgreSQL."""
         if ATTR_POSTGRESQL not in self._data[ATTR_IMAGE]:
@@ -480,7 +497,13 @@ class Updater(FileConfiguration, CoreSysAttributes):
             self._data[ATTR_IMAGE][ATTR_OBSERVER] = images["observer"]
             self._data[ATTR_IMAGE][ATTR_MULTICAST] = images["multicast"]
 
-            for key in (ATTR_MC_BD, ATTR_MC_FD, ATTR_POSTGRESQL, ATTR_REDIS):
+            for key in (
+                ATTR_LANDINGPAGE,
+                ATTR_MC_BD,
+                ATTR_MC_FD,
+                ATTR_POSTGRESQL,
+                ATTR_REDIS,
+            ):
                 if key in images:
                     self._data[ATTR_IMAGE][key] = images[key]
                 else:
@@ -491,6 +514,11 @@ class Updater(FileConfiguration, CoreSysAttributes):
                     self._data[key] = AwesomeVersion(data[key])
                 else:
                     self._data.pop(key, None)
+
+            if ATTR_LANDINGPAGE in data:
+                self._data[ATTR_LANDINGPAGE] = AwesomeVersion(data[ATTR_LANDINGPAGE])
+            else:
+                self._data.pop(ATTR_LANDINGPAGE, None)
 
         except KeyError as err:
             raise UpdaterError(
