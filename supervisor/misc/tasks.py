@@ -496,7 +496,7 @@ class Tasks(CoreSysAttributes):
             if not await stack.frontend.is_running():
                 await stack.fallback_to_landingpage()
                 return
-            if not await stack._check_frontend_ready():  # noqa: SLF001
+            if not await stack._check_frontend_ready():  # noqa: SLF001  # pylint: disable=protected-access
                 await stack.fallback_to_landingpage()
             return
 
