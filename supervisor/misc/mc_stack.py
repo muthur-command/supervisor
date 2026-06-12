@@ -557,7 +557,9 @@ class MCStack(CoreSysAttributes):
 
     async def _promote_mc_fd(self) -> None:
         """Hand host port 8123 from landingpage to mc_fd."""
-        _LOGGER.info("MC frontend: promoting mc_fd to host port %s", MC_FRONTEND_HOST_PORT)
+        _LOGGER.info(
+            "MC frontend: promoting mc_fd to host port %s", MC_FRONTEND_HOST_PORT
+        )
         await self._stop_landingpage()
         with suppress(DockerError):
             await self.frontend.stop(remove_container=True)
@@ -587,7 +589,9 @@ class MCStack(CoreSysAttributes):
 
         self.frontend_switch.route = FrontendRoute.MC_FD
         await self.config.save_data()
-        _LOGGER.info("MC frontend: mc_fd is now serving on host port %s", MC_FRONTEND_HOST_PORT)
+        _LOGGER.info(
+            "MC frontend: mc_fd is now serving on host port %s", MC_FRONTEND_HOST_PORT
+        )
 
     async def fallback_to_landingpage(self) -> None:
         """Re-publish landingpage on :8123 when mc_fd is degraded."""

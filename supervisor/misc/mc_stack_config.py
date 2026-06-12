@@ -38,9 +38,9 @@ SCHEMA_MC_STACK_CONFIG = vol.Schema(
         vol.Optional(ATTR_BOOT, default=True): bool,
         vol.Optional(ATTR_WATCHDOG, default=True): bool,
         vol.Optional(ATTR_DUAL_FRONTEND, default=True): bool,
-        vol.Optional(
-            ATTR_FRONTEND_ROUTE, default=_FRONTEND_ROUTE_LANDINGPAGE
-        ): vol.Any("landingpage", "mc_fd"),
+        vol.Optional(ATTR_FRONTEND_ROUTE, default=_FRONTEND_ROUTE_LANDINGPAGE): vol.Any(
+            "landingpage", "mc_fd"
+        ),
     },
     extra=vol.REMOVE_EXTRA,
 )

@@ -107,7 +107,9 @@ class DockerMcFrontend(DockerInterface, CoreSysAttributes):
         )
 
         if publish_host_port is None:
-            publish_host_port = self.sys_mc_stack.frontend_switch.publish_mc_fd_host_port
+            publish_host_port = (
+                self.sys_mc_stack.frontend_switch.publish_mc_fd_host_port
+            )
 
         run_kwargs: dict = {
             "tag": str(version),

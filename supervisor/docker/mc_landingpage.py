@@ -94,6 +94,4 @@ class DockerMcLandingpage(DockerInterface, CoreSysAttributes):
             tmpfs={"/tmp": ""},  # noqa: S108
             oom_score_adj=-300,
         )
-        _LOGGER.info(
-            "Starting MC landingpage %s with version %s", self.image, version
-        )
+        _LOGGER.info("Starting MC landingpage %s with version %s", self.image, version)
