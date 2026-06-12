@@ -11,7 +11,21 @@ from supervisor.coresys import CoreSys
 from supervisor.docker.mc_frontend import DockerMcFrontend
 from supervisor.misc.mc_frontend_switch import FrontendRoute
 
-from tests.misc.test_mc_stack_stages_4_5_6 import stack_versions
+from tests.docker.test_mc_stack import _capture_run_kwargs, _last_kwargs
+
+
+@pytest.fixture
+def stack_versions(coresys: CoreSys) -> None:
+    """Populate updater state so MC stack flips into ``enabled``."""
+    updater = coresys.updater
+    updater._data["mc_bd"] = AwesomeVersion("0.1.0")  # noqa: SLF001
+    updater._data["mc_fd"] = AwesomeVersion("0.1.0")  # noqa: SLF001
+    updater._data["postgresql"] = AwesomeVersion("16.3")  # noqa: SLF001
+    updater._data["redis"] = AwesomeVersion("7.2.4")  # noqa: SLF001
+    updater._data["image"]["mc_bd"] = "ghcr.io/muthur-command/{arch}-mc-bd"  # noqa: SLF001
+    updater._data["image"]["mc_fd"] = "ghcr.io/muthur-command/mc-fd"  # noqa: SLF001
+    updater._data["image"]["postgresql"] = "docker.io/library/postgres"  # noqa: SLF001
+    updater._data["image"]["redis"] = "docker.io/library/redis"  # noqa: SLF001
 
 
 @pytest.fixture
@@ -46,8 +60,6 @@ def test_dual_frontend_enabled_with_landingpage_image(
 @pytest.mark.usefixtures("landingpage_versions", "tmp_supervisor_data", "path_extern")
 async def test_mc_fd_skips_host_port_during_bootstrap(coresys: CoreSys) -> None:
     """mc_fd must not bind :8123 while landingpage owns the host port."""
-    from tests.docker.test_mc_stack import _capture_run_kwargs, _last_kwargs
-
     instance, run = _capture_run_kwargs(DockerMcFrontend, coresys)
 
     with (

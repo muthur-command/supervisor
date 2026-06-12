@@ -14,10 +14,7 @@ from typing import Final
 
 from awesomeversion import AwesomeVersion
 
-from ..const import (
-    MC_LANDINGPAGE_DOCKER_NAME,
-    MC_ROLE_LANDINGPAGE,
-)
+from ..const import MC_LANDINGPAGE_DOCKER_NAME, MC_ROLE_LANDINGPAGE
 from ..coresys import CoreSysAttributes
 from ..exceptions import DockerJobError
 from ..jobs.const import JobConcurrency

@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-import logging
 from enum import StrEnum
+import logging
 from typing import Final
 
 from ..const import ATTR_DUAL_FRONTEND, ATTR_FRONTEND_ROUTE
