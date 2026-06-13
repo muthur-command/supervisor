@@ -104,6 +104,8 @@ _POSTGRES_TRANSIENT_OUTPUTS: Final[tuple[bytes, ...]] = (
 def _is_transient_postgres_output(output: bytes) -> bool:
     """Return True for psql output that indicates a transient init-phase race."""
     return any(token in output for token in _POSTGRES_TRANSIENT_OUTPUTS)
+
+
 # mc_bd cold start (DB migrations, plugin init) can exceed a few seconds.
 _HEALTH_HTTP_TIMEOUT_SECONDS: Final[int] = 15
 
