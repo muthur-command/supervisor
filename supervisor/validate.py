@@ -23,6 +23,7 @@ from .const import (
     ATTR_FORCE_SECURITY,
     ATTR_ID,
     ATTR_IMAGE,
+    ATTR_LANDINGPAGE,
     ATTR_LAST_BOOT,
     ATTR_LOGGING,
     ATTR_MC_BD,
@@ -182,6 +183,7 @@ SCHEMA_UPDATER_CONFIG = vol.Schema(
         vol.Optional(ATTR_MULTICAST): version_tag,
         vol.Optional(ATTR_MC_BD): version_tag,
         vol.Optional(ATTR_MC_FD): version_tag,
+        vol.Optional(ATTR_LANDINGPAGE): version_tag,
         vol.Optional(ATTR_POSTGRESQL): version_tag,
         vol.Optional(ATTR_REDIS): version_tag,
         vol.Optional(ATTR_IMAGE, default=dict): vol.Schema(
@@ -195,6 +197,7 @@ SCHEMA_UPDATER_CONFIG = vol.Schema(
                 vol.Optional(ATTR_MULTICAST): docker_image,
                 vol.Optional(ATTR_MC_BD): docker_image,
                 vol.Optional(ATTR_MC_FD): docker_image,
+                vol.Optional(ATTR_LANDINGPAGE): docker_image,
                 vol.Optional(ATTR_POSTGRESQL): docker_image,
                 vol.Optional(ATTR_REDIS): docker_image,
             },
