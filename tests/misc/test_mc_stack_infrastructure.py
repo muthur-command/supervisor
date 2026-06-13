@@ -372,6 +372,48 @@ async def test_ensure_postgres_database_creates_missing_db(
 
 
 @pytest.mark.usefixtures("stack_versions")
+async def test_ensure_postgres_database_retries_transient_shutdown(
+    coresys: CoreSys,
+) -> None:
+    """Transient ``database system is shutting down`` retries instead of aborting."""
+    with (
+        patch.object(
+            DockerMcPostgres,
+            "run_inside",
+            new=AsyncMock(
+                side_effect=[
+                    MagicMock(
+                        exit_code=2,
+                        output=b"FATAL:  the database system is shutting down\n",
+                    ),
+                    MagicMock(exit_code=0, output=b""),
+                    MagicMock(exit_code=0, output=b"CREATE DATABASE\n"),
+                ]
+            ),
+        ) as run_inside,
+        patch("supervisor.misc.mc_stack.asyncio.sleep", new=AsyncMock()),
+    ):
+        await coresys.mc_stack._ensure_postgres_database()  # noqa: SLF001
+
+    assert run_inside.await_count == 3
+
+
+@pytest.mark.usefixtures("stack_versions")
+async def test_check_postgres_ready_uses_tcp_probe(coresys: CoreSys) -> None:
+    """The postgres readiness probe must force a TCP connection check."""
+    with patch.object(
+        DockerMcPostgres,
+        "run_inside",
+        new=AsyncMock(return_value=MagicMock(exit_code=0)),
+    ) as run_inside:
+        assert await coresys.mc_stack._check_postgres_ready() is True  # noqa: SLF001
+
+    cmd = run_inside.await_args.args[0]
+    assert "pg_isready" in cmd
+    assert "-h 127.0.0.1" in cmd
+
+
+@pytest.mark.usefixtures("stack_versions")
 async def test_check_redis_ready_requires_pong(coresys: CoreSys) -> None:
     """Redis probe needs both exit-code 0 *and* PONG in the output."""
     with patch.object(

@@ -41,6 +41,7 @@ from ..const import (
     MC_FRONTEND_PORT,
     MC_POSTGRES_DEFAULT_DB,
     MC_POSTGRES_DEFAULT_USER,
+    MC_POSTGRES_PORT,
 )
 from ..coresys import CoreSys, CoreSysAttributes
 from ..docker.const import ContainerState
@@ -82,6 +83,27 @@ _TIMEOUT_MC_FD: Final[timedelta] = timedelta(seconds=60)
 _HEALTH_POLL_SECONDS: Final[int] = 2
 # Consecutive healthy probes required before promoting mc_fd to :8123.
 _FRONTEND_STABLE_CHECKS: Final[int] = 3
+# CREATE DATABASE may race the docker-entrypoint init phase shutdown on the
+# very first boot of a fresh PostgreSQL volume; small bounded retries cover it.
+_POSTGRES_BOOTSTRAP_RETRIES: Final[int] = 12
+_POSTGRES_BOOTSTRAP_DELAY: Final[int] = 2
+
+# Bytes substrings that the official ``postgres`` image emits while the
+# docker-entrypoint init-phase server is shutting down or while the real
+# server has not yet finished its post-init startup. Hitting any of these
+# means we should retry rather than abort the whole stack startup.
+_POSTGRES_TRANSIENT_OUTPUTS: Final[tuple[bytes, ...]] = (
+    b"the database system is shutting down",
+    b"the database system is starting up",
+    b"could not connect to server",
+    b"Connection refused",
+    b"server closed the connection unexpectedly",
+)
+
+
+def _is_transient_postgres_output(output: bytes) -> bool:
+    """Return True for psql output that indicates a transient init-phase race."""
+    return any(token in output for token in _POSTGRES_TRANSIENT_OUTPUTS)
 # mc_bd cold start (DB migrations, plugin init) can exceed a few seconds.
 _HEALTH_HTTP_TIMEOUT_SECONDS: Final[int] = 15
 
@@ -709,10 +731,19 @@ class MCStack(CoreSysAttributes):
             ) from err
 
     async def _check_postgres_ready(self) -> bool:
-        """Return True if PostgreSQL accepts connections (pg_isready in-container)."""
+        """Return True if PostgreSQL accepts TCP connections.
+
+        The official ``postgres`` image's docker-entrypoint runs a temporary
+        unix-socket-only server during ``initdb`` (``pg_ctl ... -h ''``) so a
+        default ``pg_isready`` over the unix socket reports "ready" before
+        the real, network-listening server is up. Force a TCP probe via
+        ``-h 127.0.0.1`` so we only return ``True`` once the post-init
+        server is actually listening.
+        """
         try:
             result = await self.postgres.run_inside(
-                f"pg_isready -U {MC_POSTGRES_DEFAULT_USER}"
+                "pg_isready "
+                f"-h 127.0.0.1 -p {MC_POSTGRES_PORT} -U {MC_POSTGRES_DEFAULT_USER}"
             )
         except DockerError:
             return False
@@ -733,36 +764,67 @@ class MCStack(CoreSysAttributes):
                 _LOGGER.error,
             )
 
-        try:
-            check = await self.postgres.run_inside(
-                "psql -U postgres -tc "
-                "\"SELECT 1 FROM pg_database WHERE datname = 'mc'\""
-            )
-        except DockerError as err:
-            raise MCStackStartupError(
-                f"Failed to inspect PostgreSQL databases: {err!s}",
-                _LOGGER.error,
-            ) from err
+        check = await self._postgres_psql_with_retry(
+            "psql -U postgres -h 127.0.0.1 -tc "
+            "\"SELECT 1 FROM pg_database WHERE datname = 'mc'\"",
+            action=f"inspect {db} database",
+        )
 
         if check.exit_code == 0 and b"1" in check.output:
             return
 
         _LOGGER.info("MC stack: creating PostgreSQL database %s", db)
-        try:
-            create = await self.postgres.run_inside(
-                'psql -U postgres -c "CREATE DATABASE mc;"'
-            )
-        except DockerError as err:
-            raise MCStackStartupError(
-                f"Failed to create PostgreSQL database {db}: {err!s}",
-                _LOGGER.error,
-            ) from err
+        create = await self._postgres_psql_with_retry(
+            'psql -U postgres -h 127.0.0.1 -c "CREATE DATABASE mc;"',
+            action=f"create {db} database",
+        )
 
         if create.exit_code != 0:
             raise MCStackStartupError(
                 f"CREATE DATABASE {db} failed: {create.output!r}",
                 _LOGGER.error,
             )
+
+    async def _postgres_psql_with_retry(self, command: str, *, action: str) -> Any:
+        """Run a psql command, retrying transient init-phase shutdowns.
+
+        Even after ``pg_isready -h 127.0.0.1`` succeeds, the official
+        ``postgres`` image can briefly shut down the post-init server when
+        applying defaults; treat connection refusals and the
+        "database system is shutting down" / "starting up" messages as
+        transient and retry within a small budget.
+        """
+        last_output: bytes = b""
+        for attempt in range(_POSTGRES_BOOTSTRAP_RETRIES):
+            try:
+                result = await self.postgres.run_inside(command)
+            except DockerError as err:
+                if attempt == _POSTGRES_BOOTSTRAP_RETRIES - 1:
+                    raise MCStackStartupError(
+                        f"Failed to {action}: {err!s}",
+                        _LOGGER.error,
+                    ) from err
+                await asyncio.sleep(_POSTGRES_BOOTSTRAP_DELAY)
+                continue
+
+            output = result.output or b""
+            last_output = output
+            if result.exit_code == 0 or not _is_transient_postgres_output(output):
+                return result
+
+            _LOGGER.debug(
+                "MC stack: PostgreSQL %s transient (%d/%d): %r",
+                action,
+                attempt + 1,
+                _POSTGRES_BOOTSTRAP_RETRIES,
+                output,
+            )
+            await asyncio.sleep(_POSTGRES_BOOTSTRAP_DELAY)
+
+        raise MCStackStartupError(
+            f"Failed to {action} after retries: {last_output!r}",
+            _LOGGER.error,
+        )
 
     async def _check_redis_ready(self) -> bool:
         """Return True if Redis answers PING."""
