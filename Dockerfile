@@ -1,9 +1,10 @@
 ARG BUILD_FROM=ghcr.io/muthur-command/base-python:3.14-alpine3.23-2026.06.2
-FROM ${BUILD_FROM}
+
+# Build stage: install the Python dependencies (including Rust-compiled wheels)
+# with the full toolchain. None of this toolchain is carried into the final image.
+FROM ${BUILD_FROM} AS builder
 
 ENV \
-    S6_SERVICES_GRACETIME=10000 \
-    SUPERVISOR_API=http://localhost \
     CRYPTOGRAPHY_OPENSSL_NO_LEGACY=1 \
     UV_SYSTEM_PYTHON=true
 
@@ -54,8 +55,32 @@ COPY . supervisor
 RUN \
     sed -i "s/^SUPERVISOR_VERSION =.*/SUPERVISOR_VERSION = \"${BUILD_VERSION}\"/g" /usr/src/supervisor/supervisor/const.py \
     && uv pip install --no-cache -e ./supervisor \
-    && python3 -m compileall ./supervisor/supervisor
+    && python3 -m compileall ./supervisor/supervisor \
+    # Drop build-only artifacts that are not needed at runtime.
+    && rm -rf /usr/src/supervisor/wheels
 
+
+# Runtime stage: ship only the installed Python environment, the Supervisor
+# source (required by the editable install) and the runtime shared libraries.
+FROM ${BUILD_FROM}
+
+ENV \
+    S6_SERVICES_GRACETIME=10000 \
+    SUPERVISOR_API=http://localhost \
+    CRYPTOGRAPHY_OPENSSL_NO_LEGACY=1 \
+    UV_SYSTEM_PYTHON=true
+
+# Runtime shared libraries the compiled Python extensions link against.
+RUN \
+    apk add --no-cache \
+        eudev-libs \
+        libffi \
+        libpulse \
+        openssl \
+        yaml
+
+COPY --from=builder /usr/local /usr/local
+COPY --from=builder /usr/src/supervisor /usr/src/supervisor
 
 WORKDIR /
 COPY rootfs /
