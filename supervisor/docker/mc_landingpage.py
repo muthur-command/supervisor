@@ -1,10 +1,10 @@
 """Docker wrapper for the MCOS bootstrap landingpage container.
 
-The landingpage image is a lightweight Go static server that binds host port
-8123 (``network_mode=host``) and shows first-boot progress while the MC stack
-(``mc_bd`` / ``mc_fd``) is still coming up. Supervisor tears it down once
-``mc_fd`` is healthy and re-publishes :data:`MC_FRONTEND_HOST_PORT` on
-``mc_fd`` instead.
+The landingpage image is a lightweight Go static server that listens on
+container port :data:`MC_FRONTEND_HOST_PORT` and is published to the same
+host port while the MC stack (``mc_bd`` / ``mc_fd``) is still coming up.
+Supervisor tears it down once ``mc_fd`` is healthy and re-publishes the host
+port on ``mc_fd`` instead.
 """
 
 from __future__ import annotations
@@ -14,7 +14,11 @@ from typing import Final
 
 from awesomeversion import AwesomeVersion
 
-from ..const import MC_LANDINGPAGE_DOCKER_NAME, MC_ROLE_LANDINGPAGE
+from ..const import (
+    MC_FRONTEND_HOST_PORT,
+    MC_LANDINGPAGE_DOCKER_NAME,
+    MC_ROLE_LANDINGPAGE,
+)
 from ..coresys import CoreSysAttributes
 from ..exceptions import DockerJobError
 from ..jobs.const import JobConcurrency
@@ -57,7 +61,7 @@ class DockerMcLandingpage(DockerInterface, CoreSysAttributes):
         concurrency=JobConcurrency.GROUP_REJECT,
     )
     async def run(self) -> None:
-        """Run the landingpage container on the host network (port 8123)."""
+        """Run the landingpage container with host port :8123 published."""
         version = self.version
         if not version or not self.image:
             raise DockerJobError(
@@ -79,8 +83,10 @@ class DockerMcLandingpage(DockerInterface, CoreSysAttributes):
             privileged=False,
             init=False,
             security_opt=self.security_opt,
-            network_mode="host",
             mounts=[MOUNT_DEV, MOUNT_DBUS, MOUNT_UDEV],
+            ports={
+                f"{MC_FRONTEND_HOST_PORT}/tcp": MC_FRONTEND_HOST_PORT,
+            },
             extra_hosts={
                 "supervisor": self.sys_docker.network.supervisor,
                 "observer": self.sys_docker.network.observer,

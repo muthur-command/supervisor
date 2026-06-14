@@ -613,12 +613,44 @@ class MCStack(CoreSysAttributes):
             if successes < _FRONTEND_STABLE_CHECKS:
                 await asyncio.sleep(_HEALTH_POLL_SECONDS)
 
+    async def _wait_frontend_host_port_free(self) -> None:
+        """Wait until host :8123 stops answering after landingpage shutdown.
+
+        The bootstrap landingpage publishes :8123 via ``docker-proxy``.
+        Docker must not publish ``mc_fd`` on the same port until the
+        landingpage container has stopped and its proxy has released the
+        socket, otherwise the host port stays unreachable.
+        """
+        try:
+            async with asyncio.timeout(15):
+                while await self._http_alive(
+                    host="127.0.0.1",
+                    port=MC_FRONTEND_HOST_PORT,
+                    path="/",
+                    timeout_seconds=2,
+                ):
+                    await asyncio.sleep(_HEALTH_POLL_SECONDS)
+        except TimeoutError as err:
+            raise MCStackStartupError(
+                f"Host port {MC_FRONTEND_HOST_PORT} still held after landingpage stop",
+                _LOGGER.error,
+            ) from err
+
+    async def _check_frontend_host_port_ready(self) -> bool:
+        """Return True when the user-facing host port answers HTTP."""
+        return await self._http_alive(
+            host="127.0.0.1",
+            port=MC_FRONTEND_HOST_PORT,
+            path="/",
+        )
+
     async def _promote_mc_fd(self) -> None:
         """Hand host port 8123 from landingpage to mc_fd."""
         _LOGGER.info(
             "MC frontend: promoting mc_fd to host port %s", MC_FRONTEND_HOST_PORT
         )
         await self._stop_landingpage()
+        await self._wait_frontend_host_port_free()
         with suppress(DockerError):
             await self.frontend.stop(remove_container=True)
         try:
@@ -635,13 +667,13 @@ class MCStack(CoreSysAttributes):
         try:
             async with asyncio.timeout(_TIMEOUT_MC_FD.total_seconds()):
                 while True:
-                    if await self._check_frontend_ready():
+                    if await self._check_frontend_host_port_ready():
                         break
                     await asyncio.sleep(_HEALTH_POLL_SECONDS)
         except TimeoutError as err:
             await self.fallback_to_landingpage()
             raise MCStackStartupError(
-                "mc_fd did not answer after promotion to host port",
+                "mc_fd did not answer on host port after promotion",
                 _LOGGER.error,
             ) from err
 

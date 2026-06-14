@@ -414,6 +414,23 @@ async def test_check_postgres_ready_uses_tcp_probe(coresys: CoreSys) -> None:
 
 
 @pytest.mark.usefixtures("stack_versions")
+async def test_check_frontend_host_port_ready_uses_localhost(coresys: CoreSys) -> None:
+    """Promotion must verify the published host port, not only the bridge IP."""
+    with patch.object(
+        coresys.mc_stack,
+        "_http_alive",
+        new=AsyncMock(return_value=True),
+    ) as http_alive:
+        assert await coresys.mc_stack._check_frontend_host_port_ready()  # noqa: SLF001
+
+    http_alive.assert_awaited_once_with(
+        host="127.0.0.1",
+        port=8123,
+        path="/",
+    )
+
+
+@pytest.mark.usefixtures("stack_versions")
 async def test_check_redis_ready_requires_pong(coresys: CoreSys) -> None:
     """Redis probe needs both exit-code 0 *and* PONG in the output."""
     with patch.object(

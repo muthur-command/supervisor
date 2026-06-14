@@ -96,9 +96,12 @@ async def test_promote_mc_fd_switches_route(coresys: CoreSys) -> None:
 
     with (
         patch.object(stack, "_stop_landingpage", new=AsyncMock()) as stop_lp,
+        patch.object(stack, "_wait_frontend_host_port_free", new=AsyncMock()),
         patch.object(stack.frontend, "stop", new=AsyncMock()),
         patch.object(stack.frontend, "run", new=AsyncMock()) as run_fd,
-        patch.object(stack, "_check_frontend_ready", new=AsyncMock(return_value=True)),
+        patch.object(
+            stack, "_check_frontend_host_port_ready", new=AsyncMock(return_value=True)
+        ),
         patch.object(stack.config, "save_data", new=AsyncMock()) as save,
     ):
         await stack._promote_mc_fd()  # noqa: SLF001
