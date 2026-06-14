@@ -248,6 +248,36 @@ class MCStack(CoreSysAttributes):
 
     # --- Lifecycle ---------------------------------------------------------
 
+    async def bootstrap_landingpage(self) -> None:
+        """Start the bootstrap landingpage as early as possible during boot.
+
+        Called from :meth:`supervisor.core.Core.setup` so the operator sees
+        the static landingpage on :8123 right after the Supervisor wakes
+        up, instead of waiting for the long Core.start chain (plugin
+        attach + DNS refresh + addons boot + the full MC stack startup).
+        Errors are intentionally swallowed: a failure here only loses the
+        bootstrap UX, the regular :meth:`start` flow will retry on its
+        own and the rest of Supervisor setup must continue.
+        """
+        if not self.dual_frontend:
+            return
+        try:
+            if await self.landingpage.is_running():
+                return
+        except DockerError:
+            return
+
+        self.frontend_switch.route = FrontendRoute.LANDINGPAGE
+        with suppress(Exception):
+            await self.config.save_data()
+
+        try:
+            await self._ensure_landingpage_running()
+        except MCStackError as err:
+            _LOGGER.warning(
+                "MC stack: bootstrap landingpage early-start failed: %s", err
+            )
+
     async def load(self) -> None:
         """Load persisted stack state and attach to running containers.
 
@@ -359,8 +389,12 @@ class MCStack(CoreSysAttributes):
         try:
             async with asyncio.timeout(_TOTAL_START_TIMEOUT.total_seconds()):
                 if self.dual_frontend:
-                    self.frontend_switch.route = FrontendRoute.LANDINGPAGE
-                    await self.config.save_data()
+                    if self.frontend_switch.route != FrontendRoute.LANDINGPAGE:
+                        self.frontend_switch.route = FrontendRoute.LANDINGPAGE
+                        await self.config.save_data()
+                    # ``bootstrap_landingpage`` may already have started the
+                    # container during ``Core.setup``; ``_ensure_landingpage_running``
+                    # is idempotent, so this is safe either way.
                     await self._ensure_landingpage_running()
 
                 await self._start_component(

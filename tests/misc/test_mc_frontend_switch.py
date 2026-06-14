@@ -9,6 +9,7 @@ import pytest
 
 from supervisor.coresys import CoreSys
 from supervisor.docker.mc_frontend import DockerMcFrontend
+from supervisor.exceptions import MCStackStartupError
 from supervisor.misc.mc_frontend_switch import FrontendRoute
 
 from tests.docker.test_mc_stack import _capture_run_kwargs, _last_kwargs
@@ -106,6 +107,84 @@ async def test_promote_mc_fd_switches_route(coresys: CoreSys) -> None:
     run_fd.assert_awaited_once_with(publish_host_port=True)
     assert stack.frontend_switch.route == FrontendRoute.MC_FD
     save.assert_awaited()
+
+
+@pytest.mark.usefixtures("stack_versions")
+async def test_bootstrap_landingpage_skipped_without_dual_frontend(
+    coresys: CoreSys,
+) -> None:
+    """Without dual-frontend (no landingpage image/version) bootstrap is a no-op."""
+    stack = coresys.mc_stack
+    with patch.object(
+        stack,
+        "_ensure_landingpage_running",
+        new=AsyncMock(),
+    ) as ensure:
+        await stack.bootstrap_landingpage()
+    ensure.assert_not_awaited()
+
+
+@pytest.mark.usefixtures("landingpage_versions")
+async def test_bootstrap_landingpage_starts_and_persists_route(
+    coresys: CoreSys,
+) -> None:
+    """With dual-frontend enabled, bootstrap starts landingpage + sets route."""
+    stack = coresys.mc_stack
+    stack.frontend_switch.route = FrontendRoute.MC_FD
+    with (
+        patch.object(
+            type(stack.landingpage),
+            "is_running",
+            new=AsyncMock(return_value=False),
+        ),
+        patch.object(stack, "_ensure_landingpage_running", new=AsyncMock()) as ensure,
+        patch.object(stack.config, "save_data", new=AsyncMock()) as save,
+    ):
+        await stack.bootstrap_landingpage()
+
+    ensure.assert_awaited_once()
+    save.assert_awaited_once()
+    assert stack.frontend_switch.route == FrontendRoute.LANDINGPAGE
+
+
+@pytest.mark.usefixtures("landingpage_versions")
+async def test_bootstrap_landingpage_skips_when_already_running(
+    coresys: CoreSys,
+) -> None:
+    """If the landingpage container is already up, bootstrap returns early."""
+    stack = coresys.mc_stack
+    with (
+        patch.object(
+            type(stack.landingpage),
+            "is_running",
+            new=AsyncMock(return_value=True),
+        ),
+        patch.object(stack, "_ensure_landingpage_running", new=AsyncMock()) as ensure,
+    ):
+        await stack.bootstrap_landingpage()
+    ensure.assert_not_awaited()
+
+
+@pytest.mark.usefixtures("landingpage_versions")
+async def test_bootstrap_landingpage_swallows_errors(
+    coresys: CoreSys,
+) -> None:
+    """A failure in early-start must not break Supervisor setup."""
+    stack = coresys.mc_stack
+    with (
+        patch.object(
+            type(stack.landingpage),
+            "is_running",
+            new=AsyncMock(return_value=False),
+        ),
+        patch.object(
+            stack,
+            "_ensure_landingpage_running",
+            new=AsyncMock(side_effect=MCStackStartupError("boom")),
+        ),
+        patch.object(stack.config, "save_data", new=AsyncMock()),
+    ):
+        await stack.bootstrap_landingpage()
 
 
 @pytest.mark.usefixtures("landingpage_versions")

@@ -161,14 +161,21 @@ class Core(CoreSysAttributes):
             self.sys_docker.load(),
             # load last available data
             self.sys_updater.load(),
+            # Load MC application stack (PostgreSQL → Redis → mc_bd → mc_fd)
+            # *before* the slow plugin attach so we know whether the
+            # bootstrap landingpage should claim :8123 right after.
+            self.sys_mc_stack.load(),
+            # Bootstrap landingpage early so :8123 shows progress while
+            # plugin attach / addons boot / mc_bd cold-start are still
+            # running. Idempotent and safely no-ops when dual-frontend
+            # is disabled or the container is already up.
+            self.sys_mc_stack.bootstrap_landingpage(),
             # Load Plugins container (DNS re-inits websession — see #5857)
             self.sys_plugins.load(),
             # Adjust timezone / time settings (after DNS is available)
             self._adjust_system_datetime(),
             # Load Muthur Command
             self.sys_muthurcommand.load(),
-            # Load MC application stack (PostgreSQL → Redis → mc_bd → mc_fd)
-            self.sys_mc_stack.load(),
             # Load CPU/Arch
             self.sys_arch.load(),
             # Load Stores
