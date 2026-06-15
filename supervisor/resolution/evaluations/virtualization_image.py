@@ -36,4 +36,5 @@ class EvaluateVirtualizationImage(EvaluateBase):
         return bool(self.sys_host.info.virtualization) and self.sys_os.board not in {
             "ova",
             "generic-aarch64",
+            "generic-x86-64",
         }
