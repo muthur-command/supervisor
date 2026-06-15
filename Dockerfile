@@ -70,10 +70,12 @@ ENV \
     CRYPTOGRAPHY_OPENSSL_NO_LEGACY=1 \
     UV_SYSTEM_PYTHON=true
 
-# Runtime shared libraries the compiled Python extensions link against.
+# Runtime shared libraries and tools required at startup.
 RUN \
     apk add --no-cache \
+        eudev \
         eudev-libs \
+        git \
         libffi \
         libpulse \
         openssl \
