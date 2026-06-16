@@ -24,7 +24,7 @@ async def test_evaluation(
     await coresys.core.set_state(CoreState.SETUP)
 
     with patch(
-        "supervisor.os.manager.CPE.get_target_hardware", return_value=["generic-x86-64"]
+        "supervisor.os.manager.CPE.get_target_hardware", return_value=["odroid-n2"]
     ):
         systemd_service.virtualization = "vmware"
         await coresys.dbus.systemd.update()
@@ -44,7 +44,7 @@ async def test_evaluation(
         assert virtualization.reason not in coresys.resolution.unsupported
 
 
-@pytest.mark.parametrize("board", ["ova", "generic-aarch64"])
+@pytest.mark.parametrize("board", ["ova", "generic-aarch64", "generic-x86-64"])
 async def test_evaluation_supported_images(
     coresys: CoreSys,
     all_dbus_services: dict[str, DBusServiceMock | dict[str, DBusServiceMock]],
