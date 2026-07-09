@@ -214,6 +214,11 @@ class OSManager(CoreSysAttributes):
     @Job(name="os_manager_reload", conditions=[JobCondition.MCOS], internal=True)
     async def reload(self) -> None:
         """Update cache of slot statuses."""
+        if not self.sys_dbus.rauc.is_connected:
+            _LOGGER.debug("Skipping RAUC slot reload: host has no rauc support")
+            self._slots = {}
+            return
+
         self._slots = {
             slot[0]: SlotStatus.from_dict(slot[1])
             for slot in await self.sys_dbus.rauc.get_slot_status()
@@ -241,14 +246,22 @@ class OSManager(CoreSysAttributes):
         self._board = cpe.get_target_hardware()[0]
         self._os_name = cpe.get_product()[0]
 
-        await self.reload()
+        if self.sys_dbus.rauc.is_connected:
+            await self.reload()
+        else:
+            self._slots = {}
 
         await self.datadisk.load()
 
+        boot_slot = (
+            self.sys_dbus.rauc.boot_slot
+            if self.sys_dbus.rauc.is_connected
+            else "n/a"
+        )
         _LOGGER.info(
             "Detect Muthur Command OS %s / BootSlot %s",
             self.version,
-            self.sys_dbus.rauc.boot_slot,
+            boot_slot,
         )
 
     @Job(

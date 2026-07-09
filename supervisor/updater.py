@@ -462,7 +462,13 @@ class Updater(FileConfiguration, CoreSysAttributes):
 
             # Update Muthur Command OS version
             if self.sys_os.board:
-                self._data[ATTR_OTA] = data["ota"]
+                if ota := data.get("ota"):
+                    self._data[ATTR_OTA] = ota
+                else:
+                    _LOGGER.warning(
+                        "Board '%s' has no OTA URL in version file",
+                        self.sys_os.board,
+                    )
                 if version := data["mcos"].get(self.sys_os.board):
                     self._data[ATTR_MCOS_UNRESTRICTED] = AwesomeVersion(version)
                     # Store the upgrade map for persistent access
