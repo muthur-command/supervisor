@@ -254,9 +254,7 @@ class OSManager(CoreSysAttributes):
         await self.datadisk.load()
 
         boot_slot = (
-            self.sys_dbus.rauc.boot_slot
-            if self.sys_dbus.rauc.is_connected
-            else "n/a"
+            self.sys_dbus.rauc.boot_slot if self.sys_dbus.rauc.is_connected else "n/a"
         )
         _LOGGER.info(
             "Detect Muthur Command OS %s / BootSlot %s",
