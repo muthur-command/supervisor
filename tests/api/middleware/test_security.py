@@ -217,6 +217,13 @@ async def test_token_validation(
 
 
 @pytest.mark.usefixtures("plugin_tokens")
+async def test_landingpage_bootstrap_network_info(api_token_validation: TestClient):
+    """Bootstrap landingpage may query default interface info without a token."""
+    resp = await api_token_validation.get("/network/interface/default/info")
+    assert resp.status == 200
+
+
+@pytest.mark.usefixtures("plugin_tokens")
 async def test_muthurcommand_paths(api_token_validation: TestClient, coresys: CoreSys):
     """Test Muthur Command only paths."""
     coresys.muthurcommand.supervisor_token = "abc123"

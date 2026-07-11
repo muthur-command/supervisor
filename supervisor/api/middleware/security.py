@@ -60,6 +60,8 @@ NO_SECURITY_CHECK: Final = re.compile(
     r"|/mc_fd/web"
     r"|/mc_fd/web/.*"
     r"|/supervisor/ping"
+    # Bootstrap landingpage polls this for mDNS before mc_bd provides a token.
+    r"|/network/interface/default/info"
     r"|/ingress/[-_A-Za-z0-9]+/.*"
     + _CORE_FRONTEND_PATHS
     + r")$"

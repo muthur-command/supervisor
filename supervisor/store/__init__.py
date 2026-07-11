@@ -18,7 +18,7 @@ from ..jobs.decorator import Job, JobCondition
 from ..resolution.const import ContextType, IssueType, SuggestionType
 from ..utils.common import FileConfiguration
 from .addon import AddonStore
-from .const import FILE_MCOS_STORE, BuiltinRepository
+from .const import FILE_MCOS_STORE, BuiltinRepository, REPOSITORY_URL_MIGRATIONS
 from .data import StoreData
 from .repository import Repository
 from .validate import DEFAULT_REPOSITORIES, SCHEMA_STORE_FILE
@@ -67,9 +67,16 @@ class StoreManager(CoreSysAttributes, FileConfiguration):
         # Make sure the built-in repositories are all present
         # This is especially important when adding new built-in repositories
         # to make sure existing installations have them.
-        all_repositories: set[str] = (
-            set(self._data.get(ATTR_REPOSITORIES, [])) | DEFAULT_REPOSITORIES
-        )
+        persisted = set(self._data.get(ATTR_REPOSITORIES, []))
+        migrated = {
+            REPOSITORY_URL_MIGRATIONS.get(repository, repository)
+            for repository in persisted
+        }
+        if migrated != persisted:
+            self._data[ATTR_REPOSITORIES] = list(migrated)
+            await self.save_data()
+
+        all_repositories: set[str] = migrated | DEFAULT_REPOSITORIES
         await self.update_repositories(all_repositories, issue_on_error=True)
 
     @Job(

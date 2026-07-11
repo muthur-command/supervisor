@@ -40,15 +40,11 @@ async def test_default_load(coresys: CoreSys):
     ):
         await store_manager.load()
 
-    assert len(store_manager.all) == 5
+    assert len(store_manager.all) == 4
     assert isinstance(store_manager.get("core"), Repository)
     assert isinstance(store_manager.get("local"), Repository)
 
-    assert len(store_manager.repository_urls) == 3
-    assert (
-        "https://github.com/mcos-addons/addons-repository"
-        in store_manager.repository_urls
-    )
+    assert len(store_manager.repository_urls) == 2
     assert (
         "https://github.com/esphome/home-assistant-addon"
         in store_manager.repository_urls
@@ -94,15 +90,11 @@ async def test_load_with_custom_repository(coresys: CoreSys):
     ):
         await store_manager.load()
 
-    assert len(store_manager.all) == 6
+    assert len(store_manager.all) == 5
     assert isinstance(store_manager.get("core"), Repository)
     assert isinstance(store_manager.get("local"), Repository)
 
-    assert len(store_manager.repository_urls) == 4
-    assert (
-        "https://github.com/mcos-addons/addons-repository"
-        in store_manager.repository_urls
-    )
+    assert len(store_manager.repository_urls) == 3
     assert (
         "https://github.com/esphome/home-assistant-addon"
         in store_manager.repository_urls

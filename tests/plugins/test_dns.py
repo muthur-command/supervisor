@@ -4,7 +4,7 @@ import asyncio
 import errno
 from ipaddress import IPv4Address
 from pathlib import Path
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, Mock, PropertyMock, patch
 
 from aiodocker.containers import DockerContainer
 import pytest
@@ -45,6 +45,25 @@ def fixture_mock_call_later(coresys: CoreSys):
         return coresys.call_later(0, *args, **kwargs)
 
     return mock_call_later
+
+
+async def test_locals_from_host_resolv_without_network_manager(
+    coresys: CoreSys, tmp_path: Path
+):
+    """Use host resolv.conf when NetworkManager provides no DNS servers."""
+    host_resolv = tmp_path / "resolv.conf"
+    host_resolv.write_text("search mshome.net\nnameserver 192.168.137.1\n")
+
+    with (
+        patch.object(
+            type(coresys.host.network),
+            "dns_servers",
+            new=PropertyMock(return_value=[]),
+        ),
+        patch("supervisor.plugins.dns.HOST_RESOLV_MOUNT", host_resolv),
+    ):
+        coresys.plugins.dns._cached_locals = None  # noqa: SLF001
+        assert coresys.plugins.dns.locals == ["dns://192.168.137.1"]
 
 
 async def test_config_write(

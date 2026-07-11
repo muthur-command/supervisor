@@ -48,11 +48,26 @@ from .validate import SCHEMA_DNS_CONFIG
 
 _LOGGER: logging.Logger = logging.getLogger(__name__)
 
+HOST_RESOLV: Path = Path("/etc/resolv.conf")
+HOST_RESOLV_MOUNT: Path = Path("/run/host/etc/resolv.conf")
+
+
+def _read_resolv_nameservers(resolv_path: Path) -> list[str]:
+    """Return nameserver entries from a resolv.conf file."""
+    if not resolv_path.is_file():
+        return []
+
+    nameservers: list[str] = []
+    for line in resolv_path.read_text(encoding="utf-8").splitlines():
+        parts = line.strip().split()
+        if len(parts) >= 2 and parts[0] == "nameserver":
+            nameservers.append(parts[1])
+    return nameservers
+
 # pylint: disable=no-member
 HOSTS_TMPL: Path = Path(__file__).parents[1].joinpath("data/hosts.tmpl")
 RESOLV_TMPL: Path = Path(__file__).parents[1].joinpath("data/resolv.tmpl")
 # pylint: enable=no-member
-HOST_RESOLV: Path = Path("/etc/resolv.conf")
 
 
 @attr.s
@@ -112,6 +127,11 @@ class PluginDns(PluginBase):
         ]:
             with suppress(vol.Invalid):
                 servers.append(dns_url(server))
+
+        if not servers:
+            for nameserver in _read_resolv_nameservers(HOST_RESOLV_MOUNT):
+                with suppress(vol.Invalid):
+                    servers.append(dns_url(f"dns://{nameserver}"))
 
         return servers
 

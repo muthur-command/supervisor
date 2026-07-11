@@ -8,6 +8,12 @@ from ..const import REPOSITORY_CORE, REPOSITORY_LOCAL, SUPERVISOR_DATA, URL_MCOS
 FILE_MCOS_STORE = Path(SUPERVISOR_DATA, "store.json")
 """Repository type definitions for the store."""
 
+# Legacy store URLs folded into the built-in core repository.
+REPOSITORY_URL_MIGRATIONS: dict[str, str] = {
+    "https://github.com/mcos-addons/addons-repository": REPOSITORY_CORE,
+    URL_MCOS_ADDONS: REPOSITORY_CORE,
+}
+
 
 class BuiltinRepository(StrEnum):
     """All built-in repositories that come pre-configured."""
@@ -17,7 +23,6 @@ class BuiltinRepository(StrEnum):
 
     # Git-based built-in repositories
     CORE = REPOSITORY_CORE
-    COMMUNITY_ADDONS = "https://github.com/mcos-addons/addons-repository"
     ESPHOME = "https://github.com/esphome/home-assistant-addon"
     MUSIC_ASSISTANT = "https://github.com/music-assistant/home-assistant-addon"
 

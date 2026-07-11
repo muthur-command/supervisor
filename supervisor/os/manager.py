@@ -335,6 +335,10 @@ class OSManager(CoreSysAttributes):
     @Job(name="os_manager_mark_healthy", conditions=[JobCondition.MCOS], internal=True)
     async def mark_healthy(self) -> None:
         """Set booted partition as good for rauc."""
+        if not self.sys_dbus.rauc.is_connected:
+            _LOGGER.debug("Skipping RAUC mark healthy: host has no rauc support")
+            return
+
         try:
             responses = [
                 await self.sys_dbus.rauc.mark(RaucState.ACTIVE, "booted"),

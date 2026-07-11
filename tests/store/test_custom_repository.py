@@ -352,7 +352,4 @@ async def test_repositories_loaded_ignore_updates(
         await store_manager.load()
 
     assert len(coresys.resolution.issues) == 0
-    assert (
-        "https://github.com/mcos-addons/addons-repository"
-        in coresys.store.repository_urls
-    )
+    assert "core" in coresys.store.repositories
