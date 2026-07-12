@@ -18,7 +18,7 @@ from ..jobs.decorator import Job, JobCondition
 from ..resolution.const import ContextType, IssueType, SuggestionType
 from ..utils.common import FileConfiguration
 from .addon import AddonStore
-from .const import FILE_MCOS_STORE, BuiltinRepository, REPOSITORY_URL_MIGRATIONS
+from .const import FILE_MCOS_STORE, REPOSITORY_URL_MIGRATIONS, BuiltinRepository
 from .data import StoreData
 from .repository import Repository
 from .validate import DEFAULT_REPOSITORIES, SCHEMA_STORE_FILE

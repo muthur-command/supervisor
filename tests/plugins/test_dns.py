@@ -63,7 +63,10 @@ async def test_locals_from_host_resolv_without_network_manager(
         patch("supervisor.plugins.dns.HOST_RESOLV_MOUNT", host_resolv),
     ):
         coresys.plugins.dns._cached_locals = None  # noqa: SLF001
-        assert coresys.plugins.dns.locals == ["dns://192.168.137.1"]
+        locals_result = await coresys.run_in_executor(
+            lambda: coresys.plugins.dns.locals
+        )
+        assert locals_result == ["dns://192.168.137.1"]
 
 
 async def test_config_write(

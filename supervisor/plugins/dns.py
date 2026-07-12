@@ -64,6 +64,7 @@ def _read_resolv_nameservers(resolv_path: Path) -> list[str]:
             nameservers.append(parts[1])
     return nameservers
 
+
 # pylint: disable=no-member
 HOSTS_TMPL: Path = Path(__file__).parents[1].joinpath("data/hosts.tmpl")
 RESOLV_TMPL: Path = Path(__file__).parents[1].joinpath("data/resolv.tmpl")

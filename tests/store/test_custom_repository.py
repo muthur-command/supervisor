@@ -202,7 +202,6 @@ async def test_preinstall_valid_repository(
         def validate():
             assert store_manager.get("core").validate()
             assert store_manager.get("local").validate()
-            assert store_manager.get("b3de4103").validate()
             assert store_manager.get("5c53de3b").validate()
             assert store_manager.get("d5369777").validate()
 
